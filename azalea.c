@@ -53,7 +53,7 @@ PHP_INI_END()
 /* {{{ proto long now(void) */
 PHP_FUNCTION(now)
 {
-    RETURN_LOG(1);
+    RETURN_LONG(1);
 }
 /* }}} */
 
@@ -97,13 +97,15 @@ PHP_FUNCTION(randomString)
     char result[len + 1];
     result[len] = '\0';
     php_uint32 number;
+    l -= 1; // for RAND_RANGE
+    bool upper = mode && *mode == 'u';
     if (!BG(mt_rand_is_seeded)) {
         php_mt_srand(GENERATE_SEED());
     }
     for (long i = 0; i < len; ++i) {
         number = php_mt_rand() >> 1;
-        RAND_RANGE(number, 0, l - 1, PHP_MT_RAND_MAX);
-        result[i] = (mode && *mode == 'u') ? toupper(*(p + number)) : *(p + number);
+        RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
+        result[i] = upper ? toupper(*(p + number)) : *(p + number);
     }
     RETURN_STRING(result);
 }
