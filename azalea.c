@@ -72,24 +72,35 @@ PHP_FUNCTION(randomString)
         RETURN_FALSE;
     }
 
-    static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     char *p = base;
     size_t l = 62;
 
     if (mode) {
         if (strcmp(mode, "10") == 0) {
+            // [0-9]
+            l = 10;
+        } else if (strcmp(mode, "16") == 0) {
             // [0-9a-f]
             l = 16;
         } else if (*mode == 'c') {
             // [a-zA-Z]
             p += 10;
             l = 52;
-        } else if (strcmp(mode, "ln") == 0 || strcmp(mode, "un") == 0) {
-            // [0-9a-z] || [0-9A-Z]
+        } else if (strcmp(mode, "ln") == 0) {
+            // [0-9a-z]
             l = 36;
-        } else if (*mode == 'l' || *mode == 'u') {
-            // [a-z] || [A-Z]
+        } else if (strcmp(mode, "un") == 0) {
+            // [0-9A-Z]
+            p += 36;
+            l = 36;
+        } else if (*mode == 'l') {
+            // [a-z]
             p += 10;
+            l = 26;
+        } else if (*mode == 'u') {
+            // [A-Z]
+            p += 36;
             l = 26;
         }
     }
@@ -98,14 +109,13 @@ PHP_FUNCTION(randomString)
     result[len] = '\0';
     php_uint32 number;
     l -= 1; // for RAND_RANGE
-    bool upper = mode && *mode == 'u';
     if (!BG(mt_rand_is_seeded)) {
         php_mt_srand(GENERATE_SEED());
     }
     for (long i = 0; i < len; ++i) {
         number = php_mt_rand() >> 1;
         RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-        result[i] = upper ? toupper(*(p + number)) : *(p + number);
+        result[i] = *(p + number);
     }
     RETURN_STRING(result);
 }
