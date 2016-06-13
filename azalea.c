@@ -25,8 +25,8 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
-#include "ext/standard/php_rand.h"
 #include "php_azalea.h"
+#include "c_azalea.h"
 
 /* If you declare any globals in php_azalea.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(azalea)
@@ -45,81 +45,13 @@ PHP_INI_END()
 */
 /* }}} */
 
+
 /* Remove the following function when you have successfully modified config.m4
    so that your module can be compiled into PHP, it exists only for testing
    purposes. */
 
 /* Every user-visible function in PHP should document itself in the source */
-/* {{{ proto long now(void) */
-PHP_FUNCTION(now)
-{
-    RETURN_LONG(1);
-}
-/* }}} */
 
-/* {{{ proto string randomString(long len, string mode) */
-PHP_FUNCTION(randomString)
-{
-    long len;
-	char *mode = NULL;
-	size_t mode_len;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|s", &len, &mode, &mode_len) == FAILURE) {
-		return;
-	}
-    if (len < 1) {
-        php_error_docref(NULL, E_WARNING, "String length is smaller than 1");
-        RETURN_FALSE;
-    }
-
-    static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    char *p = base;
-    size_t l = 62;
-
-    if (mode) {
-        if (strcmp(mode, "10") == 0) {
-            // [0-9]
-            l = 10;
-        } else if (strcmp(mode, "16") == 0) {
-            // [0-9a-f]
-            l = 16;
-        } else if (*mode == 'c') {
-            // [a-zA-Z]
-            p += 10;
-            l = 52;
-        } else if (strcmp(mode, "ln") == 0) {
-            // [0-9a-z]
-            l = 36;
-        } else if (strcmp(mode, "un") == 0) {
-            // [0-9A-Z]
-            p += 36;
-            l = 36;
-        } else if (*mode == 'l') {
-            // [a-z]
-            p += 10;
-            l = 26;
-        } else if (*mode == 'u') {
-            // [A-Z]
-            p += 36;
-            l = 26;
-        }
-    }
-
-    char result[len + 1];
-    result[len] = '\0';
-    php_uint32 number;
-    l -= 1; // for RAND_RANGE
-    if (!BG(mt_rand_is_seeded)) {
-        php_mt_srand(GENERATE_SEED());
-    }
-    for (long i = 0; i < len; ++i) {
-        number = php_mt_rand() >> 1;
-        RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-        result[i] = *(p + number);
-    }
-    RETURN_STRING(result);
-}
-/* }}} */
 /* The previous line is meant for vim and emacs, so it can correctly fold and
    unfold functions in source code. See the corresponding marks just before
    function definition, where the functions purpose is also documented. Please
@@ -142,6 +74,11 @@ static void php_azalea_init_globals(zend_azalea_globals *azalea_globals)
  */
 PHP_MINIT_FUNCTION(azalea)
 {
+    REGISTER_BOOL_CONSTANT("AZALEA", 1, CONST_CS | CONST_PERSISTENT);
+    REGISTER_STRING_CONSTANT("AZALEA_VERSION", "1.0.0", CONST_CS | CONST_PERSISTENT);
+
+    azalea_init_azalea(TSRMLS_CC);
+
 	/* If you have INI entries, uncomment these lines
 	REGISTER_INI_ENTRIES();
 	*/
@@ -200,8 +137,6 @@ PHP_MINFO_FUNCTION(azalea)
  * Every user visible function must have an entry in azalea_functions[].
  */
 const zend_function_entry azalea_functions[] = {
-	PHP_FE(now,	NULL)
-    PHP_FE(randomString, NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */

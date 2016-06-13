@@ -19,3 +19,4 @@ mkinstalldirs
 modules
 run-tests.php
 tmp-php.ini
+*.loT
