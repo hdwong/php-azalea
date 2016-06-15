@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_AZALEA_VERSION "0.1.0"
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)

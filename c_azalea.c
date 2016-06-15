@@ -144,10 +144,53 @@ PHP_METHOD(Azalea, randomString)
 }
 /* }}} */
 
+int callback(zval *val)
+{
+    zval tmp = *val;
+    zval_copy_ctor(&tmp);
+    convert_to_string(&tmp);
+
+    php_printf("The value is: [ ");
+    PHPWRITE(Z_STRVAL(tmp), Z_STRLEN(tmp));
+    php_printf(" ]<br>");
+
+    zval_dtor(&tmp);
+
+    return ZEND_HASH_APPLY_KEEP;
+}
+
+int callback_args(zval *val, int num_args, va_list args, zend_hash_key *hash_key)
+{
+    zval tmp = *val;
+    zval_copy_ctor(&tmp);
+    convert_to_string(&tmp);
+
+    php_printf("THe key is : [ ");
+    if (hash_key->key) {
+        PHPWRITE(ZSTR_VAL(hash_key->key), ZSTR_LEN(hash_key->key));
+    } else {
+        php_printf("%ld", hash_key->h);
+    }
+    php_printf(" ], the value is: [ ");
+    PHPWRITE(Z_STRVAL(tmp), Z_STRLEN(tmp));
+    php_printf(" ]<br>");
+
+    zval_dtor(&tmp);
+
+    return ZEND_HASH_APPLY_KEEP;
+}
+
 /* {{{ proto string ipAddress(void) */
 PHP_METHOD(Azalea, ipAddress)
 {
-    // TODO
+    zval *arr;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "a", &arr) == FAILURE) {
+        RETURN_NULL();
+    }
+
+    zend_hash_apply(Z_ARRVAL_P(arr), callback);
+    zend_hash_apply_with_arguments(Z_ARRVAL_P(arr), callback_args, 0);
 }
 /* }}} */
 
