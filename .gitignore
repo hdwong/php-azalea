@@ -1,9 +1,9 @@
 .deps
 .libs
+.settings
+*.m4
 Makefile
 Makefile.*
-acinclude.m4
-aclocal.m4
 *.cache
 *.la
 *.lo
