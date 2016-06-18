@@ -26,7 +26,8 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_azalea.h"
-#include "c_azalea.h"
+#include "azalea/azalea.h"
+#include "azalea/bootstrap.h"
 
 /* If you declare any globals in php_azalea.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(azalea)
@@ -77,7 +78,8 @@ PHP_MINIT_FUNCTION(azalea)
     REGISTER_BOOL_CONSTANT("AZALEA", 1, CONST_CS | CONST_PERSISTENT);
     REGISTER_STRING_CONSTANT("AZALEA_VERSION", PHP_AZALEA_VERSION, CONST_CS | CONST_PERSISTENT);
 
-    azalea_init_azalea(TSRMLS_CC);
+//    azalea_init_azalea(TSRMLS_CC);
+    azalea_init_bootstrap(TSRMLS_CC);
 
 	/* If you have INI entries, uncomment these lines
 	REGISTER_INI_ENTRIES();
@@ -137,9 +139,15 @@ PHP_MINFO_FUNCTION(azalea)
  * Every user visible function must have an entry in azalea_functions[].
  */
 const zend_function_entry azalea_functions[] = {
+	ZEND_NS_FE(AZALEA_NS, test, NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
+
+PHP_FUNCTION(test)
+{
+	RETURN_TRUE;
+}
 
 /* {{{ azalea_module_entry
  */
