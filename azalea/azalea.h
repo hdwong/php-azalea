@@ -10,6 +10,6 @@
 #define AZALEA_NS "Azalea"
 #define AZALEA_NS_NAME(name) "Azalea\\"#name
 
-PHP_FUNCTION(test);
+PHP_FUNCTION(randomString);
 
 #endif

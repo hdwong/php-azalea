@@ -139,15 +139,10 @@ PHP_MINFO_FUNCTION(azalea)
  * Every user visible function must have an entry in azalea_functions[].
  */
 const zend_function_entry azalea_functions[] = {
-	ZEND_NS_FE(AZALEA_NS, test, NULL)
+	ZEND_NS_FE(AZALEA_NS, randomString, NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
-
-PHP_FUNCTION(test)
-{
-	RETURN_TRUE;
-}
 
 /* {{{ azalea_module_entry
  */
