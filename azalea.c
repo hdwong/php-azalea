@@ -76,7 +76,7 @@ static void php_azalea_init_globals(zend_azalea_globals *azalea_globals)
 PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_BOOL_CONSTANT("AZALEA", 1, CONST_CS | CONST_PERSISTENT);
-    REGISTER_STRING_CONSTANT("AZALEA_VERSION", PHP_AZALEA_VERSION, CONST_CS | CONST_PERSISTENT);
+    REGISTER_STRING_CONSTANT(AZALEA_NS_NAME("VERSION"), PHP_AZALEA_VERSION, CONST_CS | CONST_PERSISTENT);
 
 //    azalea_init_azalea(TSRMLS_CC);
     azalea_init_bootstrap(TSRMLS_CC);
@@ -139,7 +139,8 @@ PHP_MINFO_FUNCTION(azalea)
  * Every user visible function must have an entry in azalea_functions[].
  */
 const zend_function_entry azalea_functions[] = {
-	ZEND_NS_FE(AZALEA_NS, randomString, NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, test, ZEND_FN(azalea_test), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */

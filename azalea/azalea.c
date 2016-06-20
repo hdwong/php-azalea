@@ -18,7 +18,7 @@
 #endif
 #define MICRO_IN_SEC 1000000.00
 
-PHP_FUNCTION(randomString)
+PHP_FUNCTION(azalea_randomString)
 {
 	long len;
 	char *mode = NULL;
@@ -78,4 +78,12 @@ PHP_FUNCTION(randomString)
 		result[i] = *(p + number);
 	}
 	RETURN_STRING(result);
+}
+
+PHP_FUNCTION(azalea_test)
+{
+	FILE *fd;
+	fd = fopen("/tmp/test", "r");
+	fclose(fd);
+
 }

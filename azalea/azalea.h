@@ -8,8 +8,9 @@
 #define AZALEA_AZALEA_H
 
 #define AZALEA_NS "Azalea"
-#define AZALEA_NS_NAME(name) "Azalea\\"#name
+#define AZALEA_NS_NAME(name) AZALEA_NS"\\"#name
 
-PHP_FUNCTION(randomString);
+PHP_FUNCTION(azalea_randomString);
+PHP_FUNCTION(azalea_test);
 
 #endif
