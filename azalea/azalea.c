@@ -79,11 +79,3 @@ PHP_FUNCTION(azalea_randomString)
 	}
 	RETURN_STRING(result);
 }
-
-PHP_FUNCTION(azalea_test)
-{
-	FILE *fd;
-	fd = fopen("/tmp/test", "r");
-	fclose(fd);
-
-}

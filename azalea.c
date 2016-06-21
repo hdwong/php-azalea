@@ -34,7 +34,6 @@ ZEND_DECLARE_MODULE_GLOBALS(azalea)
 */
 
 /* True global resources - no need for thread safety here */
-static int le_azalea;
 
 /* {{{ PHP_INI
  */
@@ -144,6 +143,24 @@ const zend_function_entry azalea_functions[] = {
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
+
+PHP_FUNCTION(azalea_test)
+{
+	const char *filename = "/tmp/test";
+	FILE *fd;
+	fd = fopen(filename, "r");
+	if (!fd) {
+		RETURN_FALSE;
+	}
+	fseek(fd, 0, SEEK_END);
+	long size = ftell(fd);
+	rewind(fd);
+	char *buffer = (char *) emalloc(size + 1);
+	fread(buffer, 1, size, fd);
+	fclose(fd);
+	RETVAL_STRING(buffer);
+	efree(buffer);
+}
 
 /* {{{ azalea_module_entry
  */
