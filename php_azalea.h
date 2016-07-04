@@ -26,6 +26,11 @@ extern zend_module_entry azalea_module_entry;
 
 #define PHP_AZALEA_VERSION "0.1.0"
 
+#define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
+#define AZALEA_STARTUP_FUNCTION(module)		ZEND_MINIT_FUNCTION(azalea_##module)
+#define AZALEA_SHUTDOWN_FUNCTION(module)	ZEND_MSHUTDOWN_FUNCTION(azalea_##module)
+#define AZALEA_SHUTDOWN(module)				ZEND_MODULE_SHUTDOWN_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
+
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -38,15 +43,21 @@ extern zend_module_entry azalea_module_entry;
 #include "TSRM.h"
 #endif
 
-/*
-  	Declare any global variables you may need between the BEGIN
-	and END macros here:
+#define azalea_bootstrap_t zval
+#define azalea_config_t zval
+#define azalea_controller_t zval
+#define azalea_request_t zval
+#define azalea_response_t zval
+#define azalea_view_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
-	zend_long  global_value;
-	char *global_string;
+	double request_time;
+	zend_bool bootstrap;
+	zend_string *environ;
+	HashTable *configs;
 ZEND_END_MODULE_GLOBALS(azalea)
-*/
+
+extern ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
 /* Always refer to the globals in your function as AZALEA_G(variable).
    You are encouraged to rename these macros something shorter, see

@@ -6,7 +6,9 @@
 
 #include "php.h"
 #include "azalea.h"
+#include "php_azalea.h"
 
+#include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
 #ifdef PHP_WIN32
 #include "win32/time.h"
@@ -18,7 +20,9 @@
 #endif
 #define MICRO_IN_SEC 1000000.00
 
-PHP_FUNCTION(azalea_randomString)
+/* {{{ azalea_randomstring
+ */
+PHP_FUNCTION(azalea_randomstring)
 {
 	long len;
 	char *mode = NULL;
@@ -79,3 +83,62 @@ PHP_FUNCTION(azalea_randomString)
 	}
 	RETURN_STRING(result);
 }
+/* }}} */
+
+/* {{{ azalea_url
+ */
+PHP_FUNCTION(azalea_url)
+{
+	RETURN_TRUE;
+}
+/* }}} */
+
+double getMicrotime()
+{
+    struct timeval tp = {0};
+    if (gettimeofday(&tp, NULL)) {
+        return 0;
+    }
+    return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+}
+
+/* {{{ azalea_timer
+ */
+PHP_FUNCTION(azalea_timer)
+{
+	double now = getMicrotime(), diff = now - AZALEA_G(request_time);
+	AZALEA_G(request_time) = now;
+	RETURN_DOUBLE(diff);
+}
+/* }}} */
+
+/* {{{ azalea_env
+ */
+PHP_FUNCTION(azalea_env)
+{
+	RETURN_STR(zend_string_copy(AZALEA_G(environ)));
+}
+/* }}} */
+
+/* {{{ azalea_getmodel
+ */
+PHP_FUNCTION(azalea_ip)
+{
+	zend_string *p = NULL;
+	zval *server, *zv;
+	server = zend_hash_str_find(&EG(symbol_table), "_SERVER", sizeof("_SERVER") - 1);
+	if (Z_TYPE_P(server) == IS_ARRAY) {
+		if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "HTTP_CLIENT_IP", sizeof("HTTP_CLIENT_IP") - 1)) &&
+					Z_TYPE_P(zv) == IS_STRING) {
+			p = Z_STR_P(zv);
+		} else if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "HTTP_X_FORWARDED_FOR", sizeof("HTTP_X_FORWARDED_FOR") - 1)) &&
+					Z_TYPE_P(zv) == IS_STRING) {
+			p = Z_STR_P(zv);
+		} else if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "REMOTE_ADDR", sizeof("REMOTE_ADDR") - 1)) &&
+					Z_TYPE_P(zv) == IS_STRING) {
+			p = Z_STR_P(zv);
+		}
+	}
+	RETURN_STR(zend_string_copy(p));
+}
+/* }}} */

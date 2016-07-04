@@ -7,10 +7,12 @@
 #ifndef AZALEA_AZALEA_H
 #define AZALEA_AZALEA_H
 
-#define AZALEA_NS "Azalea"
-#define AZALEA_NS_NAME(name) AZALEA_NS"\\"#name
+double getMicrotime();
 
-PHP_FUNCTION(azalea_randomString);
-PHP_FUNCTION(azalea_test);
+PHP_FUNCTION(azalea_randomstring);
+PHP_FUNCTION(azalea_timer);
+PHP_FUNCTION(azalea_url);
+PHP_FUNCTION(azalea_env);
+PHP_FUNCTION(azalea_ip);
 
 #endif

@@ -25,65 +25,43 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+
 #include "php_azalea.h"
+#include "azalea/namespace.h"
 #include "azalea/azalea.h"
 #include "azalea/bootstrap.h"
+#include "azalea/config.h"
+#include "azalea/controller.h"
+#include "azalea/request.h"
+#include "azalea/response.h"
+#include "azalea/session.h"
+#include "azalea/model.h"
+#include "azalea/service.h"
+#include "azalea/view.h"
+#include "azalea/exception.h"
 
-/* If you declare any globals in php_azalea.h uncomment this:
-ZEND_DECLARE_MODULE_GLOBALS(azalea)
-*/
-
-/* True global resources - no need for thread safety here */
-
-/* {{{ PHP_INI
- */
-/* Remove comments and fill if you need to have entries in php.ini
-PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("azalea.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_azalea_globals, azalea_globals)
-    STD_PHP_INI_ENTRY("azalea.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_azalea_globals, azalea_globals)
-PHP_INI_END()
-*/
-/* }}} */
-
-
-/* Remove the following function when you have successfully modified config.m4
-   so that your module can be compiled into PHP, it exists only for testing
-   purposes. */
-
-/* Every user-visible function in PHP should document itself in the source */
-
-/* The previous line is meant for vim and emacs, so it can correctly fold and
-   unfold functions in source code. See the corresponding marks just before
-   function definition, where the functions purpose is also documented. Please
-   follow this convention for the convenience of others editing your code.
-*/
-
-
-/* {{{ php_azalea_init_globals
- */
-/* Uncomment this function if you have INI entries
-static void php_azalea_init_globals(zend_azalea_globals *azalea_globals)
-{
-	azalea_globals->global_value = 0;
-	azalea_globals->global_string = NULL;
-}
-*/
-/* }}} */
+ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(azalea)
 {
-    REGISTER_BOOL_CONSTANT("AZALEA", 1, CONST_CS | CONST_PERSISTENT);
-    REGISTER_STRING_CONSTANT(AZALEA_NS_NAME(VERSION), PHP_AZALEA_VERSION, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "E404", -404, CONST_CS | CONST_PERSISTENT);
+    REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "E500", -500, CONST_CS | CONST_PERSISTENT);
 
-//    azalea_init_azalea(TSRMLS_CC);
-    azalea_init_bootstrap(TSRMLS_CC);
+    AZALEA_STARTUP(bootstrap);
+    AZALEA_STARTUP(config);
+//    AZALEA_STARTUP(controller);
+//    AZALEA_STARTUP(request);
+//    AZALEA_STARTUP(response);
+//    AZALEA_STARTUP(session);
+//    AZALEA_STARTUP(model);
+//    AZALEA_STARTUP(service);
+//    AZALEA_STARTUP(view);
+//    AZALEA_STARTUP(exception);
 
-	/* If you have INI entries, uncomment these lines
-	REGISTER_INI_ENTRIES();
-	*/
-	return SUCCESS;
+    return SUCCESS;
 }
 /* }}} */
 
@@ -91,18 +69,21 @@ PHP_MINIT_FUNCTION(azalea)
  */
 PHP_MSHUTDOWN_FUNCTION(azalea)
 {
-	/* uncomment this line if you have INI entries
-	UNREGISTER_INI_ENTRIES();
-	*/
 	return SUCCESS;
 }
 /* }}} */
 
-/* Remove if there's nothing to do at request start */
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(azalea)
 {
+	double now = getMicrotime();
+	AZALEA_G(request_time) = now;
+	AZALEA_G(environ) = zend_string_init("WEB", sizeof("WEB") - 1, 0);
+	AZALEA_G(bootstrap) = 0;
+
+	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
+
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
@@ -110,11 +91,20 @@ PHP_RINIT_FUNCTION(azalea)
 }
 /* }}} */
 
-/* Remove if there's nothing to do at request end */
 /* {{{ PHP_RSHUTDOWN_FUNCTION
  */
 PHP_RSHUTDOWN_FUNCTION(azalea)
 {
+	AZALEA_G(request_time) = 0;
+	if (AZALEA_G(environ)) {
+		zend_string_release(AZALEA_G(environ));
+		AZALEA_G(environ) = NULL;
+	}
+	if (AZALEA_G(configs)) {
+		zend_hash_destroy(AZALEA_G(configs));
+		pefree(AZALEA_G(configs), 1);
+	}
+
 	return SUCCESS;
 }
 /* }}} */
@@ -126,10 +116,6 @@ PHP_MINFO_FUNCTION(azalea)
 	php_info_print_table_start();
 	php_info_print_table_header(2, "azalea support", "enabled");
 	php_info_print_table_end();
-
-	/* Remove comments if you have entries in php.ini
-	DISPLAY_INI_ENTRIES();
-	*/
 }
 /* }}} */
 
@@ -138,29 +124,14 @@ PHP_MINFO_FUNCTION(azalea)
  * Every user visible function must have an entry in azalea_functions[].
  */
 const zend_function_entry azalea_functions[] = {
-	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, test, ZEND_FN(azalea_test), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomstring), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, timer, ZEND_FN(azalea_timer), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
-
-PHP_FUNCTION(azalea_test)
-{
-	const char *filename = "/tmp/test";
-	FILE *fd;
-	fd = fopen(filename, "r");
-	if (!fd) {
-		RETURN_FALSE;
-	}
-	fseek(fd, 0, SEEK_END);
-	long size = ftell(fd);
-	rewind(fd);
-	char *buffer = (char *) emalloc(size + 1);
-	fread(buffer, 1, size, fd);
-	fclose(fd);
-	RETVAL_STRING(buffer);
-	efree(buffer);
-}
 
 /* {{{ azalea_module_entry
  */

@@ -4,11 +4,16 @@
  * Created by Bun Wong on 16-6-18.
  */
 
-#ifndef AZALEA_BOOTSTRAP_H
-#define AZALEA_BOOTSTRAP_H
+#ifndef AZALEA_BOOTSTRAP_H_
+#define AZALEA_BOOTSTRAP_H_
 
-void azalea_init_bootstrap(TSRMLS_D);
+AZALEA_STARTUP_FUNCTION(bootstrap);
 
-PHP_METHOD(Bootstrap, test);
+PHP_METHOD(azalea_bootstrap, init);
+PHP_METHOD(azalea_bootstrap, run);
+PHP_METHOD(azalea_bootstrap, getBaseUri);
+PHP_METHOD(azalea_bootstrap, getUri);
+PHP_METHOD(azalea_bootstrap, getRequestUri);
+PHP_METHOD(azalea_bootstrap, getRoute);
 
-#endif
+#endif /* AZALEA_BOOTSTRAP_H_ */
