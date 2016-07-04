@@ -10,6 +10,8 @@
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 
+#include "ext/standard/php_var.h"
+
 zend_class_entry *azalea_bootstrap_ce;
 
 azalea_bootstrap_t *azalea_bootstrap_insntance(azalea_bootstrap_t *this_ptr)
@@ -49,11 +51,11 @@ AZALEA_STARTUP_FUNCTION(bootstrap)
 /* {{{ proto Bootstrap init(mixed $config, string $environ = AZALEA_G(environ)) */
 PHP_METHOD(azalea_bootstrap, init)
 {
-	zval *config = NULL;
-	zend_array *conf;
+	zval *conf = NULL;
 	zend_string *environ = NULL;
+	HashTable *config;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|zS", &config, &environ) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|zS", &conf, &environ) == FAILURE) {
 		return;
 	}
 
@@ -68,9 +70,7 @@ PHP_METHOD(azalea_bootstrap, init)
 		AZALEA_G(environ) = zend_string_copy(environ);
 	}
 
-	if (config && (Z_TYPE_P(config) == IS_STRING || Z_TYPE_P(config) == IS_ARRAY)) {
-		conf = loadConfig(config);
-	}
+	config = loadConfig(conf);
 
 	azalea_bootstrap_t *instance, rv = {{0}};
 	if ((instance = azalea_bootstrap_insntance(&rv)) != NULL) {

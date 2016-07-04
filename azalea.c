@@ -77,10 +77,14 @@ PHP_MSHUTDOWN_FUNCTION(azalea)
  */
 PHP_RINIT_FUNCTION(azalea)
 {
+	HashTable *ht;
 	double now = getMicrotime();
 	AZALEA_G(request_time) = now;
 	AZALEA_G(environ) = zend_string_init("WEB", sizeof("WEB") - 1, 0);
 	AZALEA_G(bootstrap) = 0;
+	ALLOC_HASHTABLE(ht);
+	zend_hash_init(ht, 32, NULL, NULL, 0);
+	AZALEA_G(config) = ht;
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
 
@@ -100,9 +104,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(environ));
 		AZALEA_G(environ) = NULL;
 	}
-	if (AZALEA_G(configs)) {
-		zend_hash_destroy(AZALEA_G(configs));
-		pefree(AZALEA_G(configs), 1);
+	if (AZALEA_G(config)) {
+		zend_hash_destroy(AZALEA_G(config));
+		efree(AZALEA_G(config));
 	}
 
 	return SUCCESS;
