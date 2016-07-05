@@ -54,7 +54,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	double request_time;
 	zend_bool bootstrap;
 	zend_string *environ;
-	HashTable *config;
+	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(azalea);

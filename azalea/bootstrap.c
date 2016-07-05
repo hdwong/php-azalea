@@ -7,10 +7,12 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/azalea.h"
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
+#include "ext/date/php_date.h"
 
 zend_class_entry *azalea_bootstrap_ce;
 
@@ -51,11 +53,10 @@ AZALEA_STARTUP_FUNCTION(bootstrap)
 /* {{{ proto Bootstrap init(mixed $config, string $environ = AZALEA_G(environ)) */
 PHP_METHOD(azalea_bootstrap, init)
 {
-	zval *conf = NULL;
+	zval *config = NULL;
 	zend_string *environ = NULL;
-	HashTable *config;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|zS", &conf, &environ) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "|zS", &config, &environ) == FAILURE) {
 		return;
 	}
 
@@ -65,20 +66,55 @@ PHP_METHOD(azalea_bootstrap, init)
 	}
 	AZALEA_G(bootstrap) = 1;
 
+	// ---------- START ----------
+
+	zval *field;
+	double now;
+
+	// set timer
+	now = getMicrotime();
+	AZALEA_G(request_time) = now;
+
+	// create output buffer
+	if (php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS) == FAILURE) {
+		php_error_docref(NULL, E_ERROR, "Failed to create output buffer");
+		RETURN_FALSE;
+	}
+
+	// set environ
 	if (environ && ZSTR_LEN(environ)) {
-		// update environ global variable
 		AZALEA_G(environ) = zend_string_copy(environ);
 	}
 
-	config = loadConfig(conf);
+	// load config
+	loadConfig(config);
 
+	// set timezone
+	field = getConfig("timezone");
+//	if (timelib_timezone_id_is_valid(Z_STRVAL_P(field), timelib_builtin_db())) {
+//		DATEG(timezone);
+//		php_printf("%s", Z_STRVAL_P(field));
+//	} else {
+//		php_error_docref(NULL, E_NOTICE, "config.timezone '%s' is invlid", Z_STRVAL_P(field));
+//	}
+
+	// set error reporting while debug is true
+	field = getConfig("debug");
+	if (Z_TYPE_P(field) == IS_TRUE) {
+		EG(error_reporting) = E_ALL;
+		zend_string *keyDisplayErrors = zend_string_init("display_errors", sizeof("display_errors") - 1, 0);
+		zend_alter_ini_entry_chars_ex(keyDisplayErrors, "on", sizeof("on") - 1,
+				PHP_INI_USER, PHP_INI_STAGE_RUNTIME, 0);
+		zend_string_release(keyDisplayErrors);
+	}
+
+	// init bootstrap instance
 	azalea_bootstrap_t *instance, rv = {{0}};
 	if ((instance = azalea_bootstrap_insntance(&rv)) != NULL) {
 		RETURN_ZVAL(instance, 0, 0);
 	} else {
 		RETURN_FALSE;
 	}
-
 }
 /* }}} */
 

@@ -7,10 +7,12 @@
 #ifndef AZALEA_CONFIG_H_
 #define AZALEA_CONFIG_H_
 
-HashTable * loadConfig(const zval *);
+zval * loadConfig(zval *);
+zval * getConfig(const char *key);
 
 AZALEA_STARTUP_FUNCTION(config);
 
+PHP_METHOD(azalea_config, all);
 PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, set);
 
