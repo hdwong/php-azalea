@@ -8,6 +8,8 @@
 #include "azalea.h"
 #include "php_azalea.h"
 
+#include "azalea/config.h"
+
 #include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
 #ifdef PHP_WIN32
@@ -20,15 +22,17 @@
 #endif
 #define MICRO_IN_SEC 1000000.00
 
+#include "ext/standard/php_var.h"	// for php_var_dump function
+#include "ext/standard/php_string.h"  // for php_trim function
+
 /* {{{ azalea_randomstring
  */
 PHP_FUNCTION(azalea_randomstring)
 {
 	long len;
-	char *mode = NULL;
-	size_t mode_len;
+	zend_string *mode;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|s", &len, &mode, &mode_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|S", &len, &mode) == FAILURE) {
 		return;
 	}
 	if (len < 1) {
@@ -41,28 +45,28 @@ PHP_FUNCTION(azalea_randomstring)
 	size_t l = 62;
 
 	if (mode) {
-		if (strcmp(mode, "10") == 0) {
+		if (strcmp(ZSTR_VAL(mode), "10") == 0 || ZSTR_VAL(mode)[0] == 'n') {
 			// [0-9]
 			l = 10;
-		} else if (strcmp(mode, "16") == 0) {
+		} else if (strcmp(ZSTR_VAL(mode), "16") == 0) {
 			// [0-9a-f]
 			l = 16;
-		} else if (*mode == 'c') {
+		} else if (ZSTR_VAL(mode)[0] == 'c') {
 			// [a-zA-Z]
 			p += 10;
 			l = 52;
-		} else if (strcmp(mode, "ln") == 0) {
+		} else if (strcmp(ZSTR_VAL(mode), "ln") == 0) {
 			// [0-9a-z]
 			l = 36;
-		} else if (strcmp(mode, "un") == 0) {
+		} else if (strcmp(ZSTR_VAL(mode), "un") == 0) {
 			// [0-9A-Z]
 			p += 36;
 			l = 36;
-		} else if (*mode == 'l') {
+		} else if (ZSTR_VAL(mode)[0] == 'l') {
 			// [a-z]
 			p += 10;
 			l = 26;
-		} else if (*mode == 'u') {
+		} else if (ZSTR_VAL(mode)[0] == 'u') {
 			// [A-Z]
 			p += 36;
 			l = 26;
@@ -89,11 +93,56 @@ PHP_FUNCTION(azalea_randomstring)
  */
 PHP_FUNCTION(azalea_url)
 {
-	RETURN_TRUE;
+	zend_string *path;
+	zend_bool includeHost = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &path, &includeHost) == FAILURE) {
+		return;
+	}
+
+	if (!AZALEA_G(host)) {
+		zval hostname, *server, *field;
+
+		server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+		if (server && Z_TYPE_P(server) == IS_ARRAY &&
+				zend_hash_str_exists(Z_ARRVAL_P(server), AZALEA_STRING("HTTPS"))) {
+			ZVAL_STRING(&hostname, "https://");
+		} else {
+			ZVAL_STRING(&hostname, "http://");
+		}
+		field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_HOST"));
+		if (!field) {
+			// host not found, try to get from config
+			field = azaleaGetConfig("hostname");
+			if (!field) {
+				zval t;
+				ZVAL_STRING(&t, "localhost");
+				concat_function(&hostname, &hostname, &t);
+				zval_ptr_dtor(&t);
+			} else {
+				concat_function(&hostname, &hostname, field);
+			}
+		} else {
+			concat_function(&hostname, &hostname, field);
+		}
+		AZALEA_G(host) = Z_STR(hostname);
+	}
+
+	convert_to_string_ex(return_value);
+	zval t;
+	if (includeHost) {
+		ZVAL_STR(&t, AZALEA_G(host));
+		concat_function(return_value, return_value, &t);
+	}
+	ZVAL_STR(&t, AZALEA_G(baseUri));
+	concat_function(return_value, return_value, &t);
+	ZVAL_STR(&t, path);
+	concat_function(return_value, return_value, &t);
+	zval_ptr_dtor(&t);
 }
 /* }}} */
 
-double getMicrotime()
+double azaleaGetMicrotime()
 {
     struct timeval tp = {0};
     if (gettimeofday(&tp, NULL)) {
@@ -106,9 +155,9 @@ double getMicrotime()
  */
 PHP_FUNCTION(azalea_timer)
 {
-	double now = getMicrotime(), diff = now - AZALEA_G(request_time);
+	double now = azaleaGetMicrotime();
+	RETVAL_DOUBLE(now - AZALEA_G(request_time));
 	AZALEA_G(request_time) = now;
-	RETURN_DOUBLE(diff);
 }
 /* }}} */
 
@@ -124,21 +173,29 @@ PHP_FUNCTION(azalea_env)
  */
 PHP_FUNCTION(azalea_ip)
 {
-	zend_string *p = NULL;
-	zval *server, *zv;
-	server = zend_hash_str_find(&EG(symbol_table), "_SERVER", sizeof("_SERVER") - 1);
-	if (Z_TYPE_P(server) == IS_ARRAY) {
-		if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "HTTP_CLIENT_IP", sizeof("HTTP_CLIENT_IP") - 1)) &&
-					Z_TYPE_P(zv) == IS_STRING) {
-			p = Z_STR_P(zv);
-		} else if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "HTTP_X_FORWARDED_FOR", sizeof("HTTP_X_FORWARDED_FOR") - 1)) &&
-					Z_TYPE_P(zv) == IS_STRING) {
-			p = Z_STR_P(zv);
-		} else if ((zv = zend_hash_str_find(Z_ARRVAL_P(server), "REMOTE_ADDR", sizeof("REMOTE_ADDR") - 1)) &&
-					Z_TYPE_P(zv) == IS_STRING) {
-			p = Z_STR_P(zv);
+	if (!AZALEA_G(ip)) {
+		zval *server, *field;
+		zend_string *ip = NULL;
+
+		server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+		if (Z_TYPE_P(server) == IS_ARRAY) {
+			if ((field= zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_CLIENT_IP"))) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				ip = Z_STR_P(field);
+			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_X_FORWARDED_FOR"))) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				ip = Z_STR_P(field);
+			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("REMOTE_ADDR"))) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				ip = Z_STR_P(field);
+			}
+		}
+		if (ip) {
+			AZALEA_G(ip) = ip;
+		} else {
+			AZALEA_G(ip) = zend_string_init(AZALEA_STRING("0.0.0.0"), 0);
 		}
 	}
-	RETURN_STR(zend_string_copy(p));
+	RETURN_STR(zend_string_copy(AZALEA_G(ip)));
 }
 /* }}} */

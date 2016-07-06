@@ -11,8 +11,8 @@
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 
-#include "ext/standard/php_var.h"
-#include "ext/date/php_date.h"
+#include "ext/standard/php_var.h"	// for php_var_dump function
+#include "ext/standard/php_string.h"  // for php_trim
 
 zend_class_entry *azalea_bootstrap_ce;
 
@@ -68,11 +68,12 @@ PHP_METHOD(azalea_bootstrap, init)
 
 	// ---------- START ----------
 
-	zval *field;
+	zval *server, *field;
+	zend_string *iniName, *baseUri = NULL, *uri = NULL;
 	double now;
 
 	// set timer
-	now = getMicrotime();
+	now = azaleaGetMicrotime();
 	AZALEA_G(request_time) = now;
 
 	// create output buffer
@@ -87,25 +88,87 @@ PHP_METHOD(azalea_bootstrap, init)
 	}
 
 	// load config
-	loadConfig(config);
+	azaleaLoadConfig(config);
 
 	// set timezone
-	field = getConfig("timezone");
-//	if (timelib_timezone_id_is_valid(Z_STRVAL_P(field), timelib_builtin_db())) {
-//		DATEG(timezone);
-//		php_printf("%s", Z_STRVAL_P(field));
-//	} else {
-//		php_error_docref(NULL, E_NOTICE, "config.timezone '%s' is invlid", Z_STRVAL_P(field));
-//	}
+	field = azaleaGetConfig("timezone");
+	convert_to_string_ex(field);
+	if (Z_STRLEN_P(field)) {
+		iniName = zend_string_init(AZALEA_STRING("date.timezone"), 0);
+		zend_alter_ini_entry(iniName, Z_STR_P(field), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
+	}
 
 	// set error reporting while debug is true
-	field = getConfig("debug");
+	field = azaleaGetConfig("debug");
 	if (Z_TYPE_P(field) == IS_TRUE) {
 		EG(error_reporting) = E_ALL;
-		zend_string *keyDisplayErrors = zend_string_init("display_errors", sizeof("display_errors") - 1, 0);
-		zend_alter_ini_entry_chars_ex(keyDisplayErrors, "on", sizeof("on") - 1,
-				PHP_INI_USER, PHP_INI_STAGE_RUNTIME, 0);
-		zend_string_release(keyDisplayErrors);
+		iniName = zend_string_init(AZALEA_STRING("display_errors"), 0);
+		zend_alter_ini_entry_chars(iniName, AZALEA_STRING("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
+	}
+
+	// set base_uri and uri
+	server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+	if (server && Z_TYPE_P(server) == IS_ARRAY) {
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("SCRIPT_NAME"))) &&
+				Z_TYPE_P(field) == IS_STRING) {
+			baseUri = zend_string_dup(Z_STR_P(field), 0);
+			// dirname
+			ZSTR_LEN(baseUri) = zend_dirname(ZSTR_VAL(baseUri), ZSTR_LEN(baseUri));
+			if (ZSTR_LEN(baseUri) > 1) {
+				// add '/'
+				size_t len = ZSTR_LEN(baseUri);
+				zend_string *ret = zend_string_alloc(len + 1, 0);
+				memcpy(ZSTR_VAL(ret), ZSTR_VAL(baseUri), len);
+				zend_string_free(baseUri);
+				ZSTR_VAL(ret)[len] = '/';
+				ZSTR_VAL(ret)[len + 1] = '\0';
+				baseUri = ret;
+			}
+		}
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("PATH_INFO"))) &&
+				Z_TYPE_P(field) == IS_STRING) {
+			uri = php_trim(Z_STR_P(field), AZALEA_STRING("/"), 3);
+		}
+	}
+	if (!baseUri) {
+		baseUri = zend_string_init(AZALEA_STRING("/"), 0);
+	}
+	AZALEA_G(baseUri) = baseUri;
+	if (!uri) {
+		uri = zend_string_init(AZALEA_STRING(""), 0);
+	}
+	AZALEA_G(uri) = uri;
+
+	// set session
+	// session.name
+	iniName = zend_string_init(AZALEA_STRING("session.name"), 0);
+	zend_alter_ini_entry(iniName, Z_STR_P(azaleaGetSubConfig("session", "name")), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+	zend_string_release(iniName);
+	// session.cookie_lifetime
+	field = azaleaGetSubConfig("session", "lifetime");
+	convert_to_string_ex(field);
+	iniName = zend_string_init(AZALEA_STRING("session.cookie_lifetime"), 0);
+	zend_alter_ini_entry(iniName, Z_STR_P(field), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+	zend_string_release(iniName);
+	// session.cookie_path
+	field = azaleaGetSubConfig("session", "path");
+	convert_to_string_ex(field);
+	if (!Z_STRLEN_P(field)) {
+		// use uri for default path
+		ZVAL_STR(field, baseUri);
+	}
+	iniName = zend_string_init(AZALEA_STRING("session.cookie_path"), 0);
+	zend_alter_ini_entry(iniName, Z_STR_P(field), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+	zend_string_release(iniName);
+	// session.cooke_domain
+	field = azaleaGetSubConfig("session", "domain");
+	convert_to_string_ex(field);
+	if (Z_STRLEN_P(field)) {
+		iniName = zend_string_init(AZALEA_STRING("session.cookie_domain"), 0);
+		zend_alter_ini_entry(iniName, Z_STR_P(field), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
 	}
 
 	// init bootstrap instance
@@ -128,21 +191,37 @@ PHP_METHOD(azalea_bootstrap, run)
 /* {{{ proto string getBaseuri(void) */
 PHP_METHOD(azalea_bootstrap, getBaseUri)
 {
-    RETURN_TRUE;
+	if (!AZALEA_G(baseUri)) {
+		RETURN_NULL();
+	}
+	RETURN_STR(zend_string_copy(AZALEA_G(baseUri)));
 }
 /* }}} */
 
 /* {{{ proto string getUri(void) */
 PHP_METHOD(azalea_bootstrap, getUri)
 {
-    RETURN_TRUE;
+	if (!AZALEA_G(uri)) {
+		RETURN_NULL();
+	}
+	RETURN_STR(zend_string_copy(AZALEA_G(uri)));
 }
 /* }}} */
 
 /* {{{ proto string getRequestUri(void) */
 PHP_METHOD(azalea_bootstrap, getRequestUri)
 {
-    RETURN_TRUE;
+	zval *server, *field;
+
+	server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+	if (server && Z_TYPE_P(server) != IS_ARRAY) {
+		RETURN_NULL();
+	}
+	field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("REQUEST_URI"));
+	if (!field) {
+		RETURN_NULL();
+	}
+    RETURN_ZVAL(field, 1, 0);
 }
 /* }}} */
 

@@ -7,7 +7,9 @@
 #ifndef AZALEA_AZALEA_H
 #define AZALEA_AZALEA_H
 
-double getMicrotime();
+double azaleaGetMicrotime();
+
+zend_string *azaleaUrl(zend_string *url);
 
 PHP_FUNCTION(azalea_randomstring);
 PHP_FUNCTION(azalea_timer);

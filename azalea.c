@@ -77,11 +77,18 @@ PHP_MSHUTDOWN_FUNCTION(azalea)
  */
 PHP_RINIT_FUNCTION(azalea)
 {
-	double now = getMicrotime();
+	double now = azaleaGetMicrotime();
+	zval *server;
+
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
 	AZALEA_G(request_time) = now;
-	AZALEA_G(environ) = zend_string_init("WEB", sizeof("WEB") - 1, 0);
+	AZALEA_G(environ) = zend_string_init(AZALEA_STRING("WEB"), 0);
 	AZALEA_G(bootstrap) = 0;
+	AZALEA_G(uri) = NULL;
+	AZALEA_G(baseUri) = NULL;
+	AZALEA_G(ip) = NULL;
+	AZALEA_G(host) = NULL;
+
 	array_init(&AZALEA_G(config));
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
@@ -99,6 +106,22 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(environ)) {
 		zend_string_release(AZALEA_G(environ));
 		AZALEA_G(environ) = NULL;
+	}
+	if (AZALEA_G(uri)) {
+		zend_string_release(AZALEA_G(uri));
+		AZALEA_G(uri) = NULL;
+	}
+	if (AZALEA_G(baseUri)) {
+		zend_string_release(AZALEA_G(baseUri));
+		AZALEA_G(baseUri) = NULL;
+	}
+	if (AZALEA_G(ip)) {
+		zend_string_release(AZALEA_G(ip));
+		AZALEA_G(ip) = NULL;
+	}
+	if (AZALEA_G(host)) {
+		zend_string_release(AZALEA_G(host));
+		AZALEA_G(host) = NULL;
 	}
 	zval_ptr_dtor(&AZALEA_G(config));
 

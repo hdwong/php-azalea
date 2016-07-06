@@ -7,8 +7,9 @@
 #ifndef AZALEA_CONFIG_H_
 #define AZALEA_CONFIG_H_
 
-zval * loadConfig(zval *);
-zval * getConfig(const char *key);
+zval * azaleaLoadConfig(zval *);
+#define azaleaGetConfig(key) azaleaGetSubConfig(key, NULL)
+zval * azaleaGetSubConfig(const char *key, const char *subKey);
 
 AZALEA_STARTUP_FUNCTION(config);
 
