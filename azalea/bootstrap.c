@@ -119,12 +119,9 @@ PHP_METHOD(azalea_bootstrap, init)
 			if (ZSTR_LEN(baseUri) > 1) {
 				// add '/'
 				size_t len = ZSTR_LEN(baseUri);
-				zend_string *ret = zend_string_alloc(len + 1, 0);
-				memcpy(ZSTR_VAL(ret), ZSTR_VAL(baseUri), len);
-				zend_string_free(baseUri);
-				ZSTR_VAL(ret)[len] = '/';
-				ZSTR_VAL(ret)[len + 1] = '\0';
-				baseUri = ret;
+				zend_string_extend(baseUri, len + 1, 0);
+				ZSTR_VAL(baseUri)[len] = '/';
+				ZSTR_VAL(baseUri)[len + 1] = '\0';
 			}
 		}
 		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("PATH_INFO"))) &&
