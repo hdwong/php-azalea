@@ -296,53 +296,58 @@ PHP_METHOD(azalea_bootstrap, run)
 
 	// folder
 	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
-	if (!field) {
-		goto labelDispatch;
-	}
-	zval exists, t1, t2, t3;
-	zend_string *lc = php_string_tolower(Z_STR_P(field));
-	ZVAL_STR(&t1, controllersPath);
-	ZVAL_STRINGL(&t2, "/", sizeof("/") - 1);
-	ZVAL_STR(&t3, lc);
-	concat_function(&t1, &t1, &t2);
-	concat_function(&t1, &t1, &t3);
-	php_stat(Z_STRVAL(t1), (php_stat_len) Z_STRLEN(t1), FS_IS_DIR, &exists);
-	if (Z_TYPE(exists) == IS_TRUE) {
-		++pathsOffset;
-		AZALEA_G(folderName) = zend_string_copy(lc);
-		zval_ptr_dtor(&t1);
-	}
-	zval_ptr_dtor(&t2);
-	zval_ptr_dtor(&t3);
+	if (field) {
+		zval exists, t1, t2, t3;
+		zend_string *lc = php_string_tolower(Z_STR_P(field));
+		ZVAL_STR(&t1, controllersPath);
+		ZVAL_STRINGL(&t2, "/", sizeof("/") - 1);
+		ZVAL_STR(&t3, lc);
+		concat_function(&t1, &t1, &t2);
+		concat_function(&t1, &t1, &t3);
+		php_stat(Z_STRVAL(t1), (php_stat_len) Z_STRLEN(t1), FS_IS_DIR, &exists);
+		if (Z_TYPE(exists) == IS_TRUE) {
+			++pathsOffset;
+			AZALEA_G(folderName) = zend_string_copy(lc);
+			zval_ptr_dtor(&t1);
+		}
+		zval_ptr_dtor(&t2);
+		zval_ptr_dtor(&t3);
 
-	// controller
-	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
-	if (!field) {
-		goto labelDispatch;
-	}
-	++pathsOffset;
-	if (AZALEA_G(controllerName)) {
-		zend_string_release(AZALEA_G(controllerName));
-	}
-	AZALEA_G(controllerName) = php_string_tolower(Z_STR_P(field));
+		// controller
+		field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
+		if (field) {
+			++pathsOffset;
+			if (AZALEA_G(controllerName)) {
+				zend_string_release(AZALEA_G(controllerName));
+			}
+			AZALEA_G(controllerName) = php_string_tolower(Z_STR_P(field));
 
-	// action
-	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
-	if (!field) {
-		goto labelDispatch;
+			// action
+			field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
+			if (field) {
+				++pathsOffset;
+				if (AZALEA_G(actionName)) {
+					zend_string_release(AZALEA_G(actionName));
+				}
+				AZALEA_G(actionName) = php_string_tolower(Z_STR_P(field));
+
+//				php_printf("ControllersPath: %s <br> ModelsPath: %s <br> ViewsPath: %s<br>", ZSTR_VAL(controllersPath), ZSTR_VAL(modelsPath), ZSTR_VAL(viewsPath));
+//				php_printf("Folder: %s <br> Controller: %s <br> Action: %s", AZALEA_G(folderName) ? ZSTR_VAL(AZALEA_G(folderName)) : "--", ZSTR_VAL(AZALEA_G(controllerName)), ZSTR_VAL(AZALEA_G(actionName)));
+
+				// arguments
+				uint32_t num = zend_hash_num_elements(Z_ARRVAL(paths));
+				if (num > pathsOffset) {
+					zval *args = &AZALEA_G(pathArgs);
+					zval_ptr_dtor(args);
+					array_init_size(args, num - pathsOffset);
+					while ((field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset++))) {
+						field = zend_hash_next_index_insert_new(Z_ARRVAL_P(args), field);
+						zval_add_ref(field);
+					}
+				}
+			}
+		}
 	}
-	++pathsOffset;
-	if (AZALEA_G(actionName)) {
-		zend_string_release(AZALEA_G(actionName));
-	}
-	AZALEA_G(actionName) = php_string_tolower(Z_STR_P(field));
-
-//	php_printf("ControllersPath: %s <br> ModelsPath: %s <br> ViewsPath: %s<br>", ZSTR_VAL(controllersPath), ZSTR_VAL(modelsPath), ZSTR_VAL(viewsPath));
-//	php_printf("Folder: %s <br> Controller: %s <br> Action: %s", AZALEA_G(folderName) ? ZSTR_VAL(AZALEA_G(folderName)) : "--", ZSTR_VAL(AZALEA_G(controllerName)), ZSTR_VAL(AZALEA_G(actionName)));
-
-	// arguments
-
-labelDispatch:
 
 	zval_ptr_dtor(&paths);
 
@@ -398,5 +403,7 @@ PHP_METHOD(azalea_bootstrap, getRoute)
     }
     add_assoc_str(return_value, "controller", AZALEA_G(controllerName));
     add_assoc_str(return_value, "action", AZALEA_G(actionName));
+    add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
+    zval_add_ref(&AZALEA_G(pathArgs));
 }
 /* }}} */

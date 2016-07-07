@@ -96,7 +96,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(folderName) = NULL;
 	AZALEA_G(controllerName) = zend_string_init(AZALEA_STRING("default"), 0);
 	AZALEA_G(actionName) = zend_string_init(AZALEA_STRING("index"), 0);
-	zend_hash_init(&AZALEA_G(pathArgs), 0, NULL, NULL, 0);
+	array_init(&AZALEA_G(pathArgs));
 
 	array_init(&AZALEA_G(config));
 
@@ -148,7 +148,7 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(actionName)) {
 		zend_string_release(AZALEA_G(actionName));
 	}
-	zend_hash_destroy(&AZALEA_G(pathArgs));
+	zval_ptr_dtor(&AZALEA_G(pathArgs));
 
 	zval_ptr_dtor(&AZALEA_G(config));
 

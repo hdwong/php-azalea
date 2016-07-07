@@ -67,7 +67,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *folderName;
 	zend_string *controllerName;
 	zend_string *actionName;
-	zend_array pathArgs;
+	zval pathArgs;
 
 	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)
