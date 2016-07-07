@@ -55,10 +55,20 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	double request_time;
 	zend_bool bootstrap;
 	zend_string *environ;
+	zend_string *directory;
 	zend_string *uri;
 	zend_string *baseUri;
 	zend_string *ip;
 	zend_string *host;
+	zend_string *controllersPath;
+	zend_string *modelsPath;
+	zend_string *viewsPath;
+
+	zend_string *folderName;
+	zend_string *controllerName;
+	zend_string *actionName;
+	zend_array pathArgs;
+
 	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)
 

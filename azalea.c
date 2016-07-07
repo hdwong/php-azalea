@@ -84,10 +84,19 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(request_time) = now;
 	AZALEA_G(environ) = zend_string_init(AZALEA_STRING("WEB"), 0);
 	AZALEA_G(bootstrap) = 0;
+	AZALEA_G(directory) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;
 	AZALEA_G(ip) = NULL;
 	AZALEA_G(host) = NULL;
+	AZALEA_G(controllersPath) = NULL;
+	AZALEA_G(modelsPath) = NULL;
+	AZALEA_G(viewsPath) = NULL;
+
+	AZALEA_G(folderName) = NULL;
+	AZALEA_G(controllerName) = zend_string_init(AZALEA_STRING("default"), 0);
+	AZALEA_G(actionName) = zend_string_init(AZALEA_STRING("index"), 0);
+	zend_hash_init(&AZALEA_G(pathArgs), 0, NULL, NULL, 0);
 
 	array_init(&AZALEA_G(config));
 
@@ -102,27 +111,45 @@ PHP_RINIT_FUNCTION(azalea)
  */
 PHP_RSHUTDOWN_FUNCTION(azalea)
 {
-	AZALEA_G(request_time) = 0;
 	if (AZALEA_G(environ)) {
 		zend_string_release(AZALEA_G(environ));
-		AZALEA_G(environ) = NULL;
+	}
+	if (AZALEA_G(directory)) {
+		zend_string_release(AZALEA_G(directory));
 	}
 	if (AZALEA_G(uri)) {
 		zend_string_release(AZALEA_G(uri));
-		AZALEA_G(uri) = NULL;
 	}
 	if (AZALEA_G(baseUri)) {
 		zend_string_release(AZALEA_G(baseUri));
-		AZALEA_G(baseUri) = NULL;
 	}
 	if (AZALEA_G(ip)) {
 		zend_string_release(AZALEA_G(ip));
-		AZALEA_G(ip) = NULL;
 	}
 	if (AZALEA_G(host)) {
 		zend_string_release(AZALEA_G(host));
-		AZALEA_G(host) = NULL;
 	}
+	if (AZALEA_G(controllersPath)) {
+		zend_string_release(AZALEA_G(controllersPath));
+	}
+	if (AZALEA_G(modelsPath)) {
+		zend_string_release(AZALEA_G(modelsPath));
+	}
+	if (AZALEA_G(viewsPath)) {
+		zend_string_release(AZALEA_G(viewsPath));
+	}
+
+	if (AZALEA_G(folderName)) {
+		zend_string_release(AZALEA_G(folderName));
+	}
+	if (AZALEA_G(controllerName)) {
+		zend_string_release(AZALEA_G(controllerName));
+	}
+	if (AZALEA_G(actionName)) {
+		zend_string_release(AZALEA_G(actionName));
+	}
+	zend_hash_destroy(&AZALEA_G(pathArgs));
+
 	zval_ptr_dtor(&AZALEA_G(config));
 
 	return SUCCESS;

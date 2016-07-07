@@ -135,7 +135,7 @@ zval * azaleaLoadConfig(zval *val)
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
 			zval_ptr_dtor(config);
-			ZVAL_ZVAL(config, val, 1, 0);
+			ZVAL_COPY(config, val);
 		}
 	}
 	// DEFAULTS
