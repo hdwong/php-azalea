@@ -82,7 +82,7 @@ PHP_RINIT_FUNCTION(azalea)
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
 	AZALEA_G(request_time) = now;
-	AZALEA_G(environ) = zend_string_init(AZALEA_STRING("WEB"), 0);
+	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	AZALEA_G(bootstrap) = 0;
 	AZALEA_G(directory) = NULL;
 	AZALEA_G(uri) = NULL;
@@ -97,6 +97,9 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(controllerName) = NULL;
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
+
+	array_init(&AZALEA_G(controllerCes));
+	array_init(&AZALEA_G(modelCes));
 
 	array_init(&AZALEA_G(config));
 
@@ -149,6 +152,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(actionName));
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
+
+	zval_ptr_dtor(&AZALEA_G(controllerCes));
+	zval_ptr_dtor(&AZALEA_G(modelCes));
 
 	zval_ptr_dtor(&AZALEA_G(config));
 

@@ -103,14 +103,14 @@ PHP_FUNCTION(azalea_url)
 	if (!AZALEA_G(host)) {
 		zval hostname, *server, *field;
 
-		server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+		server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
 		if (server && Z_TYPE_P(server) == IS_ARRAY &&
-				zend_hash_str_exists(Z_ARRVAL_P(server), AZALEA_STRING("HTTPS"))) {
+				zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTPS"))) {
 			ZVAL_STRING(&hostname, "https://");
 		} else {
 			ZVAL_STRING(&hostname, "http://");
 		}
-		field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_HOST"));
+		field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
 		if (!field) {
 			// host not found, try to get from config
 			field = azaleaGetConfig("hostname");
@@ -177,15 +177,15 @@ PHP_FUNCTION(azalea_ip)
 		zval *server, *field;
 		zend_string *ip = NULL;
 
-		server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+		server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
 		if (Z_TYPE_P(server) == IS_ARRAY) {
-			if ((field= zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_CLIENT_IP"))) &&
+			if ((field= zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_CLIENT_IP"))) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				ip = Z_STR_P(field);
-			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("HTTP_X_FORWARDED_FOR"))) &&
+			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_FORWARDED_FOR"))) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				ip = Z_STR_P(field);
-			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("REMOTE_ADDR"))) &&
+			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REMOTE_ADDR"))) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				ip = Z_STR_P(field);
 			}
@@ -193,7 +193,7 @@ PHP_FUNCTION(azalea_ip)
 		if (ip) {
 			AZALEA_G(ip) = ip;
 		} else {
-			AZALEA_G(ip) = zend_string_init(AZALEA_STRING("0.0.0.0"), 0);
+			AZALEA_G(ip) = zend_string_init(ZEND_STRL("0.0.0.0"), 0);
 		}
 	}
 	RETURN_STR(zend_string_copy(AZALEA_G(ip)));

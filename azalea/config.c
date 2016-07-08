@@ -140,144 +140,144 @@ zval * azaleaLoadConfig(zval *val)
 	// DEFAULTS
 	zval el, *found, *field;
 	// config.debug
-	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("debug")))) {
+	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("debug")))) {
 		add_assoc_bool(config, "debug", 0);
 	} else {
 		convert_to_boolean(found);
 	}
 	// config.timezone
-	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("timezone")))) {
+	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("timezone")))) {
 		add_assoc_string(config, "timezone", "Asia/Shanghai");
 	} else {
 		convert_to_string_ex(found);
 	}
 	// config.theme
-	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("theme")))) {
+	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("theme")))) {
 		add_assoc_null(config, "theme");
 	} else {
 		convert_to_string_ex(found);
 	}
 	// config.session
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("session"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("session"))) {
 		array_init(&el);
 		add_assoc_zval(config, "session", &el);
 	}
 	// config.path
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("path"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("path"))) {
 		array_init(&el);
 		add_assoc_zval(config, "path", &el);
 	}
 	// config.service
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("service"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("service"))) {
 		array_init(&el);
 		add_assoc_zval(config, "service", &el);
 	}
 	// config.dispatch
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("dispatch"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("dispatch"))) {
 		array_init(&el);
 		add_assoc_zval(config, "dispatch", &el);
 	}
 	// config.router
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("router"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("router"))) {
 		array_init(&el);
 		add_assoc_zval(config, "router", &el);
 	}
 	// ---------- sub of config.session ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("session"));
+	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("session"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
 	// config.session.name
-	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("name"));
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("name"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field) ||
 			(Z_STRVAL_P(field)[0] >= '0' && Z_STRVAL_P(field)[0] <= '9')) {
 		add_assoc_string(found, "name", "sid");
 	}
 	// config.session.lifetime
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("lifetime"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("lifetime"))) {
 		add_assoc_long(found, "lifetime", 0);
 	}
 	// config.session.path
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("path"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("path"))) {
 		add_assoc_null(found, "path");
 	}
 	// config.session.domain
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("domain"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("domain"))) {
 		add_assoc_null(found, "domain");
 	}
 	// ---------- sub of config.path ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("path"));
+	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("path"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
 	// config.path.basepath
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("basepath"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("basepath"))) {
 		add_assoc_null(found, "basepath");
 	}
 	// config.path.controllers
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("controllers"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("controllers"))) {
 		add_assoc_string(found, "controllers", "controllers");
 	}
 	// config.path.models
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("models"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("models"))) {
 		add_assoc_string(found, "models", "models");
 	}
 	// config.path.views
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("views"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("views"))) {
 		add_assoc_string(found, "views", "views");
 	}
 	// config.path.static
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("static"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("static"))) {
 		add_assoc_string(found, "static", "static");
 	}
 	// ---------- sub of config.service ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("service"));
+	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("service"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
 	// config.service.timeout
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("timeout"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("timeout"))) {
 		add_assoc_long(found, "timeout", 15);
 	}
 	// config.service.connecttimeout
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("connecttimeout"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("connecttimeout"))) {
 		add_assoc_long(found, "connecttimeout", 2);
 	}
 	// config.service.retry
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("retry"))) {
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("retry"))) {
 		add_assoc_long(found, "retry", 0);
 	}
 	// ---------- sub of config.dispatch ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("dispatch"));
+	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("dispatch"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
 	// config.dispatch.default_controller
-	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("default_controller"));
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("default_controller"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
 		add_assoc_string(found, "default_controller", "default");
 	}
 	// config.dispatch.default_action
-	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("default_action"));
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("default_action"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
 		add_assoc_string(found, "default_action", "index");
 	}
 	// config.dispatch.error_controller
-	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("error_controller"));
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("error_controller"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
 		add_assoc_string(found, "error_controller", "error");
 	}
 	// config.dispatch.error_action
-	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("error_action"));
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("error_action"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
 		add_assoc_string(found, "error_action", "error");
 	}
 	// ---------- sub of config.router ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("router"));
+	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("router"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		zval_ptr_dtor(found);
 		array_init(found);

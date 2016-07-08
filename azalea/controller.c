@@ -7,12 +7,25 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/namespace.h"
+#include "azalea/azalea.h"
+#include "azalea/config.h"
+#include "azalea/controller.h"
 
 zend_class_entry *azalea_controller_ce;
+
+azalea_controller_t *azalea_controller_instance(azalea_controller_t *this_ptr)
+{
+	if (Z_ISUNDEF_P(this_ptr)) {
+		object_init_ex(this_ptr, azalea_controller_ce);
+	}
+	return this_ptr;
+}
 
 /* {{{ class Azalea\Controller methods
  */
 static zend_function_entry azalea_controller_methods[] = {
+//	PHP_ME(azalea_controller, __init, NULL, ZEND_ACC_PROTECTED)
     {NULL, NULL, NULL}
 };
 /* }}} */
@@ -29,3 +42,9 @@ AZALEA_STARTUP_FUNCTION(controller)
 	return SUCCESS;
 }
 /* }}} */
+
+///* {{{ proto bool run(void) */
+//PHP_METHOD(azalea_controller, __init)
+//{
+//}
+///* }}} */

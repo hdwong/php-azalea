@@ -10,8 +10,10 @@
 #include "azalea/azalea.h"
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
+#include "azalea/controller.h"
 
 #include "Zend/zend_exceptions.h"  // for zend_throw_exception
+#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 #include "ext/standard/php_var.h"  // for php_var_dump
 #include "ext/standard/php_string.h"  // for php_trim php_string_tolower
 #include "ext/standard/php_filestat.h"  // for php_stat
@@ -60,11 +62,12 @@ void processContent(zval *result)
 /* }}} */
 
 /* {{{ proto dispatch */
-void dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
-	zval controllerClass;
+	zval controllerClass, actionMethod;
 	zend_string *name;
 	zend_class_entry *ce;
+	azalea_controller_t *instance;
 
 	// controller name
 	if (folderName) {
@@ -84,66 +87,139 @@ void dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 	concat_function(&controllerClass, &controllerClass, &t);
 	zval_ptr_dtor(&t);
 
-	// check controller class
-	if (!(ce = zend_hash_find_ptr(EG(class_table), Z_STR(controllerClass)))) {
-		// class not exists, load controller file
-		zval controllerPath, exists;
-		ZVAL_STR(&controllerPath, zend_string_dup(AZALEA_G(controllersPath), 0));
-		zval t1, t2;
-		if (folderName) {
+	name = zend_string_tolower(Z_STR(controllerClass));
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerCes)), name);
+	if (!instance) {
+		// check controller class
+		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
+			// class not exists, load controller file
+			zval controllerPath, exists;
+			ZVAL_STR(&controllerPath, zend_string_dup(AZALEA_G(controllersPath), 0));
+			zval t1, t2;
+			if (folderName) {
+				ZVAL_STRINGL(&t1, "/", 1);
+				ZVAL_STR(&t2, zend_string_copy(folderName));
+				concat_function(&controllerPath, &controllerPath, &t1);
+				concat_function(&controllerPath, &controllerPath, &t2);
+				zval_ptr_dtor(&t1);
+				zval_ptr_dtor(&t2);
+			}
 			ZVAL_STRINGL(&t1, "/", 1);
-			ZVAL_STR(&t2, zend_string_dup(folderName, 0));
+			ZVAL_STR(&t2, zend_string_copy(controllerName));
 			concat_function(&controllerPath, &controllerPath, &t1);
 			concat_function(&controllerPath, &controllerPath, &t2);
 			zval_ptr_dtor(&t1);
 			zval_ptr_dtor(&t2);
-		}
-		ZVAL_STRINGL(&t1, "/", 1);
-		ZVAL_STR(&t2, zend_string_dup(controllerName, 0));
-		concat_function(&controllerPath, &controllerPath, &t1);
-		concat_function(&controllerPath, &controllerPath, &t2);
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
-		ZVAL_STRINGL(&t1, ".php", sizeof(".php") - 1);
-		concat_function(&controllerPath, &controllerPath, &t1);
-		zval_ptr_dtor(&t1);
-
-		php_stat(Z_STRVAL(controllerPath), (php_stat_len) Z_STRLEN(controllerPath), FS_IS_R, &exists);
-		if (Z_TYPE(exists) == IS_FALSE) {
-			ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
-			ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
-			concat_function(&t1, &t1, &controllerPath);
-			concat_function(&t1, &t1, &t2);
-			zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+			ZVAL_STRINGL(&t1, ".php", sizeof(".php") - 1);
+			concat_function(&controllerPath, &controllerPath, &t1);
 			zval_ptr_dtor(&t1);
-			zval_ptr_dtor(&t2);
-
-			ZVAL_FALSE(ret);
-			return;
+			// check file exists
+			php_stat(Z_STRVAL(controllerPath), (php_stat_len) Z_STRLEN(controllerPath), FS_IS_R, &exists);
+			if (Z_TYPE(exists) == IS_FALSE) {
+				ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
+				ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
+				concat_function(&t1, &t1, &controllerPath);
+				concat_function(&t1, &t1, &t2);
+				zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+				zval_ptr_dtor(&t1);
+				zval_ptr_dtor(&t2);
+				ZVAL_FALSE(ret);
+				return false;
+			}
+			// require controller file
+			int status = azalea_require(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
+			if (!status) {
+				ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
+				ZVAL_STRINGL(&t2, "` compile error.", sizeof("` compile error.") - 1);
+				concat_function(&t1, &t1, &controllerPath);
+				concat_function(&t1, &t1, &t2);
+				zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+				zval_ptr_dtor(&t1);
+				zval_ptr_dtor(&t2);
+				ZVAL_FALSE(ret);
+				return false;
+			}
+			// check controller class again
+			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
+				ZVAL_STRINGL(&t1, "Controller class `", sizeof("Controller class `") - 1);
+				ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
+				concat_function(&t1, &t1, &controllerClass);
+				concat_function(&t1, &t1, &t2);
+				zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+				zval_ptr_dtor(&t1);
+				zval_ptr_dtor(&t2);
+				ZVAL_FALSE(ret);
+				return false;
+			}
+			// check super class name
+			zend_string *superClass = zend_string_init(ZEND_STRL(AZALEA_NS_NAME(Controller)), 0);
+			zend_class_entry *superCe = zend_lookup_class_ex(superClass, NULL, 0);
+			if (!instanceof_function(ce, superCe)) {
+				zend_throw_exception(NULL, "Controller class must be an instance of " AZALEA_NS_NAME(Controller) ".", 0);
+				ZVAL_FALSE(ret);
+				return false;
+			}
+			zend_string_release(superClass);
+			zval_ptr_dtor(&controllerPath);
 		}
 
-		// require controller file
-		int status = azalea_require(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
+		// init controller instance
+		azalea_controller_t rv = {{0}};
+		instance = &rv;
+		object_init_ex(instance, ce);
+		if (!instance) {
+			zend_throw_exception(NULL, "Controller initialization is failed.", 0);
+			ZVAL_FALSE(ret);
+			return false;
+		}
 
-		php_printf("%d", status);
+		// controller construct
+		zend_declare_class_constant_string(ce, ZEND_STRL("__NAME__"), ZSTR_VAL(controllerName));
 
-		php_var_dump(&controllerPath, 0);
+		// call __init method
+		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
+			zend_call_method_with_0_params(instance, ce, NULL, "__init", NULL);
+		}
 
-		zval_ptr_dtor(&controllerPath);
+		// cache instance
+		add_assoc_zval_ex(&AZALEA_G(controllerCes), ZSTR_VAL(name), ZSTR_LEN(name), instance);
+		ZVAL_ZVAL(ret, instance, 0, 0);
 	}
 
-	php_var_dump(&controllerClass, 0);
-
-	// new controller instance
-
 	// dynamic router
+	// TODO
+
+	// action method name
+	ZVAL_STR(&actionMethod, zend_string_dup(actionName, 0));
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+		// not WEB
+		ZVAL_STR(&t, zend_string_copy(AZALEA_G(environ)));
+	} else {
+		// WEB
+		ZVAL_STRINGL(&t, "Action", sizeof("Action") - 1);
+	}
+	concat_function(&actionMethod, &actionMethod, &t);
+	zval_ptr_dtor(&t);
 
 	// execute action
+//	if (!zend_hash_exists(&(ce->function_table), Z_STR(actionMethod))) {
+//		zval t1, t2;
+//		ZVAL_STRINGL(&t1, "Action method `", sizeof("Action method `") - 1);
+//		ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
+//		concat_function(&t1, &t1, &actionMethod);
+//		concat_function(&t1, &t1, &t2);
+//		zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+//		zval_ptr_dtor(&t1);
+//		zval_ptr_dtor(&t2);
+//		ZVAL_FALSE(ret);
+//		return false;
+//	}
 
-
+	zend_string_release(name);
 	zval_ptr_dtor(&controllerClass);
+	zval_ptr_dtor(&actionMethod);
 
-	ZVAL_TRUE(ret);
+	return true;
 }
 /* }}} */
 
@@ -192,7 +268,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	if (Z_STRLEN(conf)) {
-		iniName = zend_string_init(AZALEA_STRING("date.timezone"), 0);
+		iniName = zend_string_init(ZEND_STRL("date.timezone"), 0);
 		zend_alter_ini_entry(iniName, Z_STR(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 		zend_string_release(iniName);
 	}
@@ -202,21 +278,21 @@ PHP_METHOD(azalea_bootstrap, init)
 	field = azaleaGetConfig("debug");
 	if (Z_TYPE_P(field) == IS_TRUE) {
 		EG(error_reporting) = E_ALL;
-		iniName = zend_string_init(AZALEA_STRING("display_errors"), 0);
-		zend_alter_ini_entry_chars(iniName, AZALEA_STRING("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		iniName = zend_string_init(ZEND_STRL("display_errors"), 0);
+		zend_alter_ini_entry_chars(iniName, ZEND_STRL("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 		zend_string_release(iniName);
 	}
 
 	// set directory / base_uri / uri
-	server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+	server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
 	if (server && Z_TYPE_P(server) == IS_ARRAY) {
-		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("SCRIPT_FILENAME"))) &&
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("SCRIPT_FILENAME"))) &&
 				Z_TYPE_P(field) == IS_STRING) {
 			directory = zend_string_dup(Z_STR_P(field), 0);
 			// dirname
 			ZSTR_LEN(directory) = zend_dirname(ZSTR_VAL(directory), ZSTR_LEN(directory));
 		}
-		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("SCRIPT_NAME"))) &&
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("SCRIPT_NAME"))) &&
 				Z_TYPE_P(field) == IS_STRING) {
 			baseUri = zend_string_dup(Z_STR_P(field), 0);
 			// dirname
@@ -232,34 +308,34 @@ PHP_METHOD(azalea_bootstrap, init)
 				baseUri = t;
 			}
 		}
-		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("PATH_INFO"))) &&
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("PATH_INFO"))) &&
 				Z_TYPE_P(field) == IS_STRING) {
-			uri = php_trim(Z_STR_P(field), AZALEA_STRING("/"), 3);
+			uri = php_trim(Z_STR_P(field), ZEND_STRL("/"), 3);
 		}
 	}
 	if (!directory) {
-		directory = zend_string_init(AZALEA_STRING("/"), 0);
+		directory = zend_string_init(ZEND_STRL("/"), 0);
 	}
 	AZALEA_G(directory) = directory;
 	if (!baseUri) {
-		baseUri = zend_string_init(AZALEA_STRING("/"), 0);
+		baseUri = zend_string_init(ZEND_STRL("/"), 0);
 	}
 	AZALEA_G(baseUri) = baseUri;
 	if (!uri) {
-		uri = zend_string_init(AZALEA_STRING(""), 0);
+		uri = zend_string_init(ZEND_STRL(""), 0);
 	}
 	AZALEA_G(uri) = uri;
 
 	// set session
 	// session.name
-	iniName = zend_string_init(AZALEA_STRING("session.name"), 0);
+	iniName = zend_string_init(ZEND_STRL("session.name"), 0);
 	zend_alter_ini_entry(iniName, Z_STR_P(azaleaGetSubConfig("session", "name")), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 	zend_string_release(iniName);
 	// session.cookie_lifetime
 	field = azaleaGetSubConfig("session", "lifetime");
 	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
-	iniName = zend_string_init(AZALEA_STRING("session.cookie_lifetime"), 0);
+	iniName = zend_string_init(ZEND_STRL("session.cookie_lifetime"), 0);
 	zend_alter_ini_entry(iniName, Z_STR(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 	zend_string_release(iniName);
 	zval_ptr_dtor(&conf);
@@ -271,7 +347,7 @@ PHP_METHOD(azalea_bootstrap, init)
 		// use baseUri for default path
 		ZVAL_STR(&conf, baseUri);
 	}
-	iniName = zend_string_init(AZALEA_STRING("session.cookie_path"), 0);
+	iniName = zend_string_init(ZEND_STRL("session.cookie_path"), 0);
 	zend_alter_ini_entry(iniName, Z_STR(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 	zend_string_release(iniName);
 	zval_ptr_dtor(&conf);
@@ -280,7 +356,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	if (Z_STRLEN(conf)) {
-		iniName = zend_string_init(AZALEA_STRING("session.cookie_domain"), 0);
+		iniName = zend_string_init(ZEND_STRL("session.cookie_domain"), 0);
 		zend_alter_ini_entry(iniName, Z_STR(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 		zend_string_release(iniName);
 	}
@@ -319,7 +395,7 @@ PHP_METHOD(azalea_bootstrap, run)
 	// get paths
 	array_init(&paths);
 	if (ZSTR_LEN(uri)) {
-		zend_string *delim = zend_string_init(AZALEA_STRING("/"), 0);
+		zend_string *delim = zend_string_init(ZEND_STRL("/"), 0);
 		php_explode(delim, uri, &paths, ZEND_LONG_MAX);
 		zend_string_release(delim);
 	}
@@ -464,15 +540,15 @@ PHP_METHOD(azalea_bootstrap, run)
 	php_session_start();
 
 	// start dispatch
+	zval ret;
 	zend_try {
-		zval ret;
 		dispatch(AZALEA_G(folderName), AZALEA_G(controllerName), AZALEA_G(actionName), &AZALEA_G(pathArgs), &ret);
 	} zend_catch {
 		// TODO try ... catch and ignore error
 		php_printf("%s", "!!! EXCEPTION CATCH !!!");
 	} zend_end_try();
 
-    RETURN_TRUE;
+    RETURN_ZVAL(&ret, 1, 0);
 }
 /* }}} */
 
@@ -501,11 +577,11 @@ PHP_METHOD(azalea_bootstrap, getRequestUri)
 {
 	zval *server, *field;
 
-	server = zend_hash_str_find(&EG(symbol_table), AZALEA_STRING("_SERVER"));
+	server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
 	if (server && Z_TYPE_P(server) != IS_ARRAY) {
 		RETURN_NULL();
 	}
-	field = zend_hash_str_find(Z_ARRVAL_P(server), AZALEA_STRING("REQUEST_URI"));
+	field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REQUEST_URI"));
 	if (!field) {
 		RETURN_NULL();
 	}

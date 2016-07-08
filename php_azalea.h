@@ -26,7 +26,6 @@ extern zend_module_entry azalea_module_entry;
 
 #define PHP_AZALEA_VERSION "0.1.0"
 
-#define AZALEA_STRING(string)				(string), sizeof(string) - 1
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_STARTUP_FUNCTION(module)		ZEND_MINIT_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN_FUNCTION(module)	ZEND_MSHUTDOWN_FUNCTION(azalea_##module)
@@ -68,6 +67,9 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *controllerName;
 	zend_string *actionName;
 	zval pathArgs;
+
+	zval controllerCes;
+	zval modelCes;
 
 	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)

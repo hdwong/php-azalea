@@ -9,6 +9,8 @@
 
 AZALEA_STARTUP_FUNCTION(controller);
 
+//PHP_METHOD(azalea_controller, __init);
+
 extern zend_class_entry *azalea_controller_ce;
 
 #endif /* AZALEA_CONTROLLER_H_ */
