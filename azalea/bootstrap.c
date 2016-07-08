@@ -11,9 +11,11 @@
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 
-#include "ext/standard/php_var.h"  // for php_var_dump function
-#include "ext/standard/php_string.h"  // for php_trim
+#include "Zend/zend_exceptions.h"  // for zend_throw_exception
+#include "ext/standard/php_var.h"  // for php_var_dump
+#include "ext/standard/php_string.h"  // for php_trim php_string_tolower
 #include "ext/standard/php_filestat.h"  // for php_stat
+#include "ext/session/php_session.h"  // for php_session_start
 
 zend_class_entry *azalea_bootstrap_ce;
 
@@ -48,6 +50,100 @@ AZALEA_STARTUP_FUNCTION(bootstrap)
 	azalea_bootstrap_ce->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto processContent */
+void processContent(zval *result)
+{
+}
+/* }}} */
+
+/* {{{ proto dispatch */
+void dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+{
+	zval controllerClass;
+	zend_string *name;
+	zend_class_entry *ce;
+
+	// controller name
+	if (folderName) {
+		zend_string *ucfFolderName = zend_string_dup(folderName, 0);
+		ZSTR_VAL(ucfFolderName)[0] = toupper(ZSTR_VAL(ucfFolderName)[0]);	// ucfirst
+		ZVAL_STR(&controllerClass, ucfFolderName);
+	} else {
+		ZVAL_STRINGL(&controllerClass, "", 0);
+	}
+	name = zend_string_dup(controllerName, 0);
+	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
+	zval t;
+	ZVAL_STR(&t, name);
+	concat_function(&controllerClass, &controllerClass, &t);
+	zval_ptr_dtor(&t);
+	ZVAL_STRINGL(&t, "Controller", sizeof("Controller") - 1);
+	concat_function(&controllerClass, &controllerClass, &t);
+	zval_ptr_dtor(&t);
+
+	// check controller class
+	if (!(ce = zend_hash_find_ptr(EG(class_table), Z_STR(controllerClass)))) {
+		// class not exists, load controller file
+		zval controllerPath, exists;
+		ZVAL_STR(&controllerPath, zend_string_dup(AZALEA_G(controllersPath), 0));
+		zval t1, t2;
+		if (folderName) {
+			ZVAL_STRINGL(&t1, "/", 1);
+			ZVAL_STR(&t2, zend_string_dup(folderName, 0));
+			concat_function(&controllerPath, &controllerPath, &t1);
+			concat_function(&controllerPath, &controllerPath, &t2);
+			zval_ptr_dtor(&t1);
+			zval_ptr_dtor(&t2);
+		}
+		ZVAL_STRINGL(&t1, "/", 1);
+		ZVAL_STR(&t2, zend_string_dup(controllerName, 0));
+		concat_function(&controllerPath, &controllerPath, &t1);
+		concat_function(&controllerPath, &controllerPath, &t2);
+		zval_ptr_dtor(&t1);
+		zval_ptr_dtor(&t2);
+		ZVAL_STRINGL(&t1, ".php", sizeof(".php") - 1);
+		concat_function(&controllerPath, &controllerPath, &t1);
+		zval_ptr_dtor(&t1);
+
+		php_stat(Z_STRVAL(controllerPath), (php_stat_len) Z_STRLEN(controllerPath), FS_IS_R, &exists);
+		if (Z_TYPE(exists) == IS_FALSE) {
+			ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
+			ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
+			concat_function(&t1, &t1, &controllerPath);
+			concat_function(&t1, &t1, &t2);
+			zend_throw_exception(NULL, Z_STRVAL(t1), 0);
+			zval_ptr_dtor(&t1);
+			zval_ptr_dtor(&t2);
+
+			ZVAL_FALSE(ret);
+			return;
+		}
+
+		// require controller file
+		int status = azalea_require(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
+
+		php_printf("%d", status);
+
+		php_var_dump(&controllerPath, 0);
+
+		zval_ptr_dtor(&controllerPath);
+	}
+
+	php_var_dump(&controllerClass, 0);
+
+	// new controller instance
+
+	// dynamic router
+
+	// execute action
+
+
+	zval_ptr_dtor(&controllerClass);
+
+	ZVAL_TRUE(ret);
 }
 /* }}} */
 
@@ -237,11 +333,11 @@ PHP_METHOD(azalea_bootstrap, run)
 	if (field && Z_TYPE_P(field) == IS_STRING) {
 		ZVAL_COPY(&basePath, field);
 	} else {
-		ZVAL_STR(&basePath, AZALEA_G(directory));
+		ZVAL_STR(&basePath, zend_string_copy(AZALEA_G(directory)));
 	}
 	if (Z_STRVAL(basePath)[Z_STRLEN(basePath) - 1] != '/') {
 		zval t;
-		ZVAL_STRINGL(&t, "/", sizeof("/") - 1);
+		ZVAL_STRINGL(&t, "/", 1);
 		concat_function(&basePath, &basePath, &t);
 		zval_ptr_dtor(&t);
 	}
@@ -280,7 +376,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		// add views subpath
 		zval t1, t2, t3;
 		ZVAL_STR(&t1, viewsPath);
-		ZVAL_STRINGL(&t2, "/", sizeof("/") - 1);
+		ZVAL_STRINGL(&t2, "/", 1);
 		ZVAL_COPY(&t3, field);
 		concat_function(&t1, &t1, &t2);
 		concat_function(&t1, &t1, &t3);
@@ -290,17 +386,17 @@ PHP_METHOD(azalea_bootstrap, run)
 		zval_ptr_dtor(&t3);
 	}
 	zval_ptr_dtor(&basePath);
-	AZALEA_G(controllersPath) = controllersPath;
-	AZALEA_G(modelsPath) = modelsPath;
-	AZALEA_G(viewsPath) = viewsPath;
+	AZALEA_G(controllersPath) = zend_string_dup(controllersPath, 0);
+	AZALEA_G(modelsPath) = zend_string_dup(modelsPath, 0);
+	AZALEA_G(viewsPath) = zend_string_dup(viewsPath, 0);
 
-	// folder
+	// get folder / controller / action / arguments
 	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
 	if (field) {
 		zval exists, t1, t2, t3;
 		zend_string *lc = php_string_tolower(Z_STR_P(field));
-		ZVAL_STR(&t1, controllersPath);
-		ZVAL_STRINGL(&t2, "/", sizeof("/") - 1);
+		ZVAL_STR(&t1, zend_string_copy(controllersPath));
+		ZVAL_STRINGL(&t2, "/", 1);
 		ZVAL_STR(&t3, lc);
 		concat_function(&t1, &t1, &t2);
 		concat_function(&t1, &t1, &t3);
@@ -308,10 +404,10 @@ PHP_METHOD(azalea_bootstrap, run)
 		if (Z_TYPE(exists) == IS_TRUE) {
 			++pathsOffset;
 			AZALEA_G(folderName) = zend_string_copy(lc);
-			zval_ptr_dtor(&t1);
 		}
+		zval_ptr_dtor(&t1);
 		zval_ptr_dtor(&t2);
-		zval_ptr_dtor(&t3);
+		zval_ptr_dtor(&t3);	// for release t3 and lc
 
 		// controller
 		field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
@@ -331,9 +427,6 @@ PHP_METHOD(azalea_bootstrap, run)
 				}
 				AZALEA_G(actionName) = php_string_tolower(Z_STR_P(field));
 
-//				php_printf("ControllersPath: %s <br> ModelsPath: %s <br> ViewsPath: %s<br>", ZSTR_VAL(controllersPath), ZSTR_VAL(modelsPath), ZSTR_VAL(viewsPath));
-//				php_printf("Folder: %s <br> Controller: %s <br> Action: %s", AZALEA_G(folderName) ? ZSTR_VAL(AZALEA_G(folderName)) : "--", ZSTR_VAL(AZALEA_G(controllerName)), ZSTR_VAL(AZALEA_G(actionName)));
-
 				// arguments
 				uint32_t num = zend_hash_num_elements(Z_ARRVAL(paths));
 				if (num > pathsOffset) {
@@ -348,8 +441,36 @@ PHP_METHOD(azalea_bootstrap, run)
 			}
 		}
 	}
-
+	zend_string_release(controllersPath);
+	zend_string_release(modelsPath);
+	zend_string_release(viewsPath);
 	zval_ptr_dtor(&paths);
+	if (!AZALEA_G(controllerName)) {
+		// default controller
+		field = azaleaGetSubConfig("dispatch", "default_controller");
+		AZALEA_G(controllerName) = Z_STR_P(field);
+		zval_add_ref(field);
+	}
+	if (!AZALEA_G(actionName)) {
+		// default controller
+		field = azaleaGetSubConfig("dispatch", "default_action");
+		AZALEA_G(actionName) = Z_STR_P(field);
+		zval_add_ref(field);
+	}
+//	php_printf("ControllersPath: %s <br> ModelsPath: %s <br> ViewsPath: %s<br>", ZSTR_VAL(controllersPath), ZSTR_VAL(modelsPath), ZSTR_VAL(viewsPath));
+//	php_printf("Folder: %s <br> Controller: %s <br> Action: %s", AZALEA_G(folderName) ? ZSTR_VAL(AZALEA_G(folderName)) : "--", ZSTR_VAL(AZALEA_G(controllerName)), ZSTR_VAL(AZALEA_G(actionName)));
+
+	// session start
+	php_session_start();
+
+	// start dispatch
+	zend_try {
+		zval ret;
+		dispatch(AZALEA_G(folderName), AZALEA_G(controllerName), AZALEA_G(actionName), &AZALEA_G(pathArgs), &ret);
+	} zend_catch {
+		// TODO try ... catch and ignore error
+		php_printf("%s", "!!! EXCEPTION CATCH !!!");
+	} zend_end_try();
 
     RETURN_TRUE;
 }
@@ -397,13 +518,57 @@ PHP_METHOD(azalea_bootstrap, getRoute)
 {
     array_init(return_value);
     if (AZALEA_G(folderName)) {
-    	add_assoc_str(return_value, "folder", AZALEA_G(folderName));
+    	add_assoc_str(return_value, "folder", zend_string_copy(AZALEA_G(folderName)));
     } else {
     	add_assoc_null(return_value, "folder");
     }
-    add_assoc_str(return_value, "controller", AZALEA_G(controllerName));
-    add_assoc_str(return_value, "action", AZALEA_G(actionName));
+    add_assoc_str(return_value, "controller", zend_string_copy(AZALEA_G(controllerName)));
+    add_assoc_str(return_value, "action", zend_string_copy(AZALEA_G(actionName)));
     add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
     zval_add_ref(&AZALEA_G(pathArgs));
+}
+/* }}} */
+
+/** {{{ int azalea_require(char *path, size_t len)
+*/
+int azalea_require(char *path, size_t len)
+{
+	zend_file_handle file_handle;
+	zend_op_array *op_array;
+	char realpath[MAXPATHLEN];
+
+	if (!VCWD_REALPATH(path, realpath)) {
+		return 0;
+	}
+
+	file_handle.filename = path;
+	file_handle.free_filename = 0;
+	file_handle.type = ZEND_HANDLE_FILENAME;
+	file_handle.opened_path = NULL;
+	file_handle.handle.fp = NULL;
+	op_array = zend_compile_file(&file_handle, ZEND_REQUIRE);
+
+	if (op_array && file_handle.handle.stream.handle) {
+	    zval dummy;
+	    ZVAL_NULL(&dummy);
+		if (!file_handle.opened_path) {
+			file_handle.opened_path = zend_string_init(path, len, 0);
+		}
+		zend_hash_add(&EG(included_files), file_handle.opened_path, &dummy);
+	}
+	zend_destroy_file_handle(&file_handle);
+
+	if (op_array) {
+		zval result;
+        ZVAL_UNDEF(&result);
+		zend_execute(op_array, &result);
+		destroy_op_array(op_array);
+		efree(op_array);
+        if (!EG(exception)) {
+            zval_ptr_dtor(&result);
+        }
+	    return 1;
+	}
+	return 0;
 }
 /* }}} */
