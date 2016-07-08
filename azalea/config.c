@@ -10,7 +10,6 @@
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
-#include "ext/standard/php_array.h"
 
 zend_class_entry *azalea_config_ce;
 
@@ -173,6 +172,11 @@ zval * azaleaLoadConfig(zval *val)
 		array_init(&el);
 		add_assoc_zval(config, "service", &el);
 	}
+	// config.dispatch
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("dispatch"))) {
+		array_init(&el);
+		add_assoc_zval(config, "dispatch", &el);
+	}
 	// config.router
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), AZALEA_STRING("router"))) {
 		array_init(&el);
@@ -245,6 +249,32 @@ zval * azaleaLoadConfig(zval *val)
 	// config.service.retry
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), AZALEA_STRING("retry"))) {
 		add_assoc_long(found, "retry", 0);
+	}
+	// ---------- sub of config.dispatch ----------
+	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("dispatch"));
+	if (Z_TYPE_P(found) != IS_ARRAY) {
+		zval_ptr_dtor(found);
+		array_init(found);
+	}
+	// config.dispatch.default_controller
+	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("default_controller"));
+	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
+		add_assoc_string(found, "default_controller", "default");
+	}
+	// config.dispatch.default_action
+	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("default_action"));
+	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
+		add_assoc_string(found, "default_action", "index");
+	}
+	// config.dispatch.error_controller
+	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("error_controller"));
+	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
+		add_assoc_string(found, "error_controller", "error");
+	}
+	// config.dispatch.error_action
+	field = zend_hash_str_find(Z_ARRVAL_P(found), AZALEA_STRING("error_action"));
+	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
+		add_assoc_string(found, "error_action", "error");
 	}
 	// ---------- sub of config.router ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), AZALEA_STRING("router"));
