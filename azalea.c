@@ -52,7 +52,7 @@ PHP_MINIT_FUNCTION(azalea)
 
     AZALEA_STARTUP(bootstrap);
     AZALEA_STARTUP(config);
-//    AZALEA_STARTUP(controller);
+    AZALEA_STARTUP(controller);
 //    AZALEA_STARTUP(request);
 //    AZALEA_STARTUP(response);
 //    AZALEA_STARTUP(session);
@@ -94,8 +94,8 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(viewsPath) = NULL;
 
 	AZALEA_G(folderName) = NULL;
-	AZALEA_G(controllerName) = zend_string_init(AZALEA_STRING("default"), 0);
-	AZALEA_G(actionName) = zend_string_init(AZALEA_STRING("index"), 0);
+	AZALEA_G(controllerName) = NULL;
+	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
 
 	array_init(&AZALEA_G(config));

@@ -7,6 +7,8 @@
 #ifndef AZALEA_CONTROLLER_H_
 #define AZALEA_CONTROLLER_H_
 
+AZALEA_STARTUP_FUNCTION(controller);
 
+extern zend_class_entry *azalea_controller_ce;
 
 #endif /* AZALEA_CONTROLLER_H_ */
