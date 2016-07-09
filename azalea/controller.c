@@ -16,7 +16,8 @@ zend_class_entry *azalea_controller_ce;
 /* {{{ class Azalea\Controller methods
  */
 static zend_function_entry azalea_controller_methods[] = {
-//	PHP_ME(azalea_controller, __init, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(azalea_controller, getRequest, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_controller, getResponse, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
     {NULL, NULL, NULL}
 };
 /* }}} */
@@ -34,8 +35,30 @@ AZALEA_STARTUP_FUNCTION(controller)
 }
 /* }}} */
 
-///* {{{ proto bool run(void) */
-//PHP_METHOD(azalea_controller, __init)
-//{
-//}
-///* }}} */
+/* {{{ proto getRequest */
+PHP_METHOD(azalea_controller, getRequest)
+{
+	azalea_request_t *instance, rv = {{0}};
+	instance = &rv;
+	object_init_ex(instance, azalea_request_ce);
+	if (instance) {
+		RETURN_ZVAL(instance, 0, 0);
+	} else {
+		RETURN_FALSE;
+	}
+}
+/* }}} */
+
+/* {{{ proto getResponse */
+PHP_METHOD(azalea_controller, getResponse)
+{
+	azalea_request_t *instance, rv = {{0}};
+	instance = &rv;
+	object_init_ex(instance, azalea_response_ce);
+	if (instance) {
+		RETURN_ZVAL(instance, 0, 0);
+	} else {
+		RETURN_FALSE;
+	}
+}
+/* }}} */

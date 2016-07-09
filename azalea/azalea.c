@@ -103,7 +103,7 @@ PHP_FUNCTION(azalea_url)
 	if (!AZALEA_G(host)) {
 		zval hostname, *server, *field;
 
-		server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
+		server = &PG(http_globals)[TRACK_VARS_SERVER];
 		if (server && Z_TYPE_P(server) == IS_ARRAY &&
 				zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTPS"))) {
 			ZVAL_STRING(&hostname, "https://");
@@ -177,7 +177,7 @@ PHP_FUNCTION(azalea_ip)
 		zval *server, *field;
 		zend_string *ip = NULL;
 
-		server = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SERVER"));
+		server = &PG(http_globals)[TRACK_VARS_SERVER];
 		if (Z_TYPE_P(server) == IS_ARRAY) {
 			if ((field= zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_CLIENT_IP"))) &&
 					Z_TYPE_P(field) == IS_STRING) {

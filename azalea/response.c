@@ -25,7 +25,7 @@ static zend_function_entry azalea_response_methods[] = {
 AZALEA_STARTUP_FUNCTION(response)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Controller), azalea_response_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Response), azalea_response_methods);
 	azalea_response_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_response_ce->ce_flags |= ZEND_ACC_FINAL;
 
