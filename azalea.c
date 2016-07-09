@@ -53,8 +53,8 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(bootstrap);
     AZALEA_STARTUP(config);
     AZALEA_STARTUP(controller);
-//    AZALEA_STARTUP(request);
-//    AZALEA_STARTUP(response);
+    AZALEA_STARTUP(request);
+    AZALEA_STARTUP(response);
 //    AZALEA_STARTUP(session);
 //    AZALEA_STARTUP(model);
 //    AZALEA_STARTUP(service);

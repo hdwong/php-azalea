@@ -7,20 +7,11 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
-#include "azalea/namespace.h"
-#include "azalea/azalea.h"
-#include "azalea/config.h"
 #include "azalea/controller.h"
+#include "azalea/request.h"
+#include "azalea/response.h"
 
 zend_class_entry *azalea_controller_ce;
-
-azalea_controller_t *azalea_controller_instance(azalea_controller_t *this_ptr)
-{
-	if (Z_ISUNDEF_P(this_ptr)) {
-		object_init_ex(this_ptr, azalea_controller_ce);
-	}
-	return this_ptr;
-}
 
 /* {{{ class Azalea\Controller methods
  */
