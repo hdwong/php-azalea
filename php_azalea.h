@@ -48,6 +48,7 @@ extern zend_module_entry azalea_module_entry;
 #define azalea_controller_t zval
 #define azalea_request_t zval
 #define azalea_response_t zval
+#define azalea_session_t zval
 #define azalea_view_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
@@ -68,8 +69,11 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *actionName;
 	zval pathArgs;
 
-	zval controllerCes;
-	zval modelCes;
+	zval controllerInsts;
+	zval modelInsts;
+	azalea_request_t *requestInst;
+	azalea_response_t *responseInst;
+	azalea_session_t *sessionInst;
 
 	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)

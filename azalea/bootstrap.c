@@ -99,7 +99,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 	zval_ptr_dtor(&t);
 
 	name = zend_string_tolower(Z_STR(controllerClass));
-	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerCes)), name);
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerInsts)), name);
 	if (!instance) {
 		// check controller class
 		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
@@ -195,7 +195,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		}
 
 		// cache instance
-		add_assoc_zval_ex(&AZALEA_G(controllerCes), ZSTR_VAL(name), ZSTR_LEN(name), instance);
+		add_assoc_zval_ex(&AZALEA_G(controllerInsts), ZSTR_VAL(name), ZSTR_LEN(name), instance);
 	}
 	zend_string_release(name);
 	zval_ptr_dtor(&controllerClass);

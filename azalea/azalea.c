@@ -209,3 +209,35 @@ PHP_FUNCTION(azalea_ip)
 	RETURN_STR(zend_string_copy(AZALEA_G(ip)));
 }
 /* }}} */
+
+/* {{{ proto azaleaRequestFind */
+PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name)
+{
+	zval *carrier, *field;
+	carrier = &PG(http_globals)[type];
+	if (!name) {
+		return carrier;
+	}
+	field = zend_hash_find(Z_ARRVAL_P(carrier), name);
+	if (!field) {
+		return NULL;
+	}
+	return field;
+}
+/* }}} */
+
+/* {{{ proto azaleaGlobalsStrFind */
+PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
+{
+	zval *carrier, *field;
+	carrier = &PG(http_globals)[type];
+	if (!name) {
+		return carrier;
+	}
+	field = zend_hash_str_find(Z_ARRVAL_P(carrier), name, len);
+	if (!field) {
+		return NULL;
+	}
+	return field;
+}
+/* }}} */

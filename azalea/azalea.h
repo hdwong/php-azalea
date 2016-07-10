@@ -16,5 +16,7 @@ PHP_FUNCTION(azalea_env);
 PHP_FUNCTION(azalea_ip);
 
 PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
+PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name);
+PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
 
 #endif

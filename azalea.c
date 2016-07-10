@@ -55,7 +55,7 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(controller);
     AZALEA_STARTUP(request);
     AZALEA_STARTUP(response);
-//    AZALEA_STARTUP(session);
+    AZALEA_STARTUP(session);
 //    AZALEA_STARTUP(model);
 //    AZALEA_STARTUP(service);
 //    AZALEA_STARTUP(view);
@@ -98,8 +98,11 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
 
-	array_init(&AZALEA_G(controllerCes));
-	array_init(&AZALEA_G(modelCes));
+	array_init(&AZALEA_G(controllerInsts));
+	array_init(&AZALEA_G(modelInsts));
+	AZALEA_G(requestInst) = NULL;
+	AZALEA_G(responseInst) = NULL;
+	AZALEA_G(sessionInst) = NULL;
 
 	array_init(&AZALEA_G(config));
 
@@ -153,8 +156,17 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
 
-	zval_ptr_dtor(&AZALEA_G(controllerCes));
-	zval_ptr_dtor(&AZALEA_G(modelCes));
+	zval_ptr_dtor(&AZALEA_G(controllerInsts));
+	zval_ptr_dtor(&AZALEA_G(modelInsts));
+	if (AZALEA_G(requestInst)) {
+		zval_ptr_dtor(AZALEA_G(requestInst));
+	}
+	if (AZALEA_G(responseInst)) {
+		zval_ptr_dtor(AZALEA_G(responseInst));
+	}
+	if (AZALEA_G(sessionInst)) {
+		zval_ptr_dtor(AZALEA_G(sessionInst));
+	}
 
 	zval_ptr_dtor(&AZALEA_G(config));
 

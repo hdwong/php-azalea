@@ -6,8 +6,8 @@
 
 #include "php.h"
 #include "php_azalea.h"
+#include "azalea/azalea.h"
 #include "azalea/namespace.h"
-#include "azalea/controller.h"
 #include "azalea/request.h"
 
 #include "main/SAPI.h"  // for request_info
@@ -39,38 +39,6 @@ AZALEA_STARTUP_FUNCTION(request)
 	azalea_request_ce->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ proto azaleaRequestFind */
-zval * azaleaGlobalsFind(uint type, zend_string *name)
-{
-	zval *carrier, *field;
-	carrier = &PG(http_globals)[type];
-	if (!name) {
-		return carrier;
-	}
-	field = zend_hash_find(Z_ARRVAL_P(carrier), name);
-	if (!field) {
-		return NULL;
-	}
-	return field;
-}
-/* }}} */
-
-/* {{{ proto azaleaGlobalsStrFind */
-zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
-{
-	zval *carrier, *field;
-	carrier = &PG(http_globals)[type];
-	if (!name) {
-		return carrier;
-	}
-	field = zend_hash_str_find(Z_ARRVAL_P(carrier), name, len);
-	if (!field) {
-		return NULL;
-	}
-	return field;
 }
 /* }}} */
 

@@ -51,12 +51,15 @@ PHP_METHOD(azalea_response, gotoUrl)
 		return;
 	}
 
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+		// not WEB
+		return;
+	}
 	if (strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) &&
 			strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
 		// add url prefix
 		url = azaleaUrl(url, false);
 	}
-
 	ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
 	zend_string_free(url);
 	sapi_header_line ctr = {0};
@@ -126,7 +129,7 @@ PHP_METHOD(azalea_response, setCookie)
 		return;
 	}
 	if (expires > 0) {
-		expires += (long) AZALEA_G(request_time);
+		expires += (zend_long) time(NULL);
 	}
 	if (php_setcookie(name, value, expires, NULL, NULL, 0, 1, 0) == SUCCESS) {
 		RETVAL_TRUE;
