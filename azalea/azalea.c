@@ -89,17 +89,10 @@ PHP_FUNCTION(azalea_randomstring)
 }
 /* }}} */
 
-/* {{{ azalea_url
- */
-PHP_FUNCTION(azalea_url)
+/* {{{ proto azaleaUrl */
+PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 {
-	zend_string *path;
-	zend_bool includeHost = 0;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &path, &includeHost) == FAILURE) {
-		return;
-	}
-
+	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
 		zval hostname, *server, *field;
 
@@ -128,17 +121,34 @@ PHP_FUNCTION(azalea_url)
 		AZALEA_G(host) = Z_STR(hostname);
 	}
 
-	convert_to_string_ex(return_value);
-	zval t;
+	zval ret, t;
+	ZVAL_EMPTY_STRING(&ret);
 	if (includeHost) {
 		ZVAL_STR(&t, AZALEA_G(host));
-		concat_function(return_value, return_value, &t);
+		concat_function(&ret, &ret, &t);
 	}
 	ZVAL_STR(&t, AZALEA_G(baseUri));
-	concat_function(return_value, return_value, &t);
-	ZVAL_STR(&t, path);
-	concat_function(return_value, return_value, &t);
+	concat_function(&ret, &ret, &t);
+	ZVAL_STR(&t, url);
+	concat_function(&ret, &ret, &t);
 	zval_ptr_dtor(&t);
+
+	return Z_STR(ret);
+}
+/* }}} */
+
+/* {{{ azalea_url
+ */
+PHP_FUNCTION(azalea_url)
+{
+	zend_string *url;
+	zend_bool includeHost = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &url, &includeHost) == FAILURE) {
+		return;
+	}
+
+	RETURN_STR(azaleaUrl(url, includeHost));
 }
 /* }}} */
 

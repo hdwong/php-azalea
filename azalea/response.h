@@ -9,11 +9,11 @@
 
 AZALEA_STARTUP_FUNCTION(response);
 
-PHP_METHOD(azalea_request, gotoUrl);
-PHP_METHOD(azalea_request, gotoRoute);
-PHP_METHOD(azalea_request, getBody);
-PHP_METHOD(azalea_request, setBody);
-PHP_METHOD(azalea_request, setCookie);
+PHP_METHOD(azalea_response, gotoUrl);
+PHP_METHOD(azalea_response, gotoRoute);
+PHP_METHOD(azalea_response, getBody);
+PHP_METHOD(azalea_response, setBody);
+PHP_METHOD(azalea_response, setCookie);
 
 extern zend_class_entry *azalea_response_ce;
 

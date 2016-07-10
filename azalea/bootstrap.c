@@ -54,16 +54,20 @@ void processContent(zval *result)
 			smart_str buf = {0};
 			php_json_encode(&buf, result, 0);
 			smart_str_0(&buf);
-			php_printf("%s", ZSTR_VAL(buf.s));
+			PHPWRITE(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 			smart_str_free(&buf);
 			zval_ptr_dtor(result);
 		} else {
 			convert_to_string_ex(result);
-			php_printf("%s", Z_STRVAL_P(result));
+			PHPWRITE(Z_STRVAL_P(result), Z_STRLEN_P(result));
 		}
 	}
 	// ob_end_flush
+	if (!OG(active)) {
+		php_error_docref("ref.outcontrol", E_ERROR, "failed to delete and flush buffer. No buffer to delete or flush");
+	}
 	php_output_end();
+
 	ZVAL_TRUE(result);
 }
 /* }}} */
@@ -182,7 +186,8 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		}
 
 		// controller construct
-		zend_declare_class_constant_string(ce, ZEND_STRL("__NAME__"), ZSTR_VAL(controllerName));
+		zend_declare_class_constant_string(ce, ZEND_STRL("__FNAME__"), folderName ? ZSTR_VAL(folderName) : "");
+		zend_declare_class_constant_string(ce, ZEND_STRL("__CNAME__"), ZSTR_VAL(controllerName));
 
 		// call __init method
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
@@ -574,15 +579,16 @@ PHP_METHOD(azalea_bootstrap, run)
 
 	// start dispatch
 	zval ret;
-	zend_try {
+//	zend_try {
 		dispatch(AZALEA_G(folderName), AZALEA_G(controllerName), AZALEA_G(actionName),
 				&AZALEA_G(pathArgs), &ret);
-	} zend_catch {
-		// TODO try ... catch and ignore error
-		php_output_clean();
-
-		php_printf("%s", "!!! EXCEPTION CATCH !!!");
-	} zend_end_try();
+//	} zend_catch {
+//		// TODO try ... catch and ignore error
+//		php_output_clean();
+//
+//		php_printf("%s", "!!! EXCEPTION CATCH !!!");
+//		// TODO exit();
+//	} zend_end_try();
 
     RETURN_ZVAL(&ret, 1, 0);
 }
