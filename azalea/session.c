@@ -14,7 +14,7 @@
 
 zend_class_entry *azalea_session_ce;
 
-/* {{{ class Azalea\Request methods
+/* {{{ class Azalea\Session methods
  */
 static zend_function_entry azalea_session_methods[] = {
 	PHP_ME(azalea_session, get, NULL, ZEND_ACC_PUBLIC)

@@ -50,6 +50,7 @@ extern zend_module_entry azalea_module_entry;
 #define azalea_response_t zval
 #define azalea_session_t zval
 #define azalea_view_t zval
+#define azalea_exception_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	double request_time;

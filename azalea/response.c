@@ -11,7 +11,6 @@
 #include "azalea/controller.h"
 #include "azalea/response.h"
 
-#include "main/SAPI.h"  // for sapi_header_op
 #include "ext/standard/head.h"  // for php_setcookie
 
 zend_class_entry *azalea_response_ce;
@@ -44,7 +43,7 @@ AZALEA_STARTUP_FUNCTION(response)
 /* {{{ proto void gotoUrl(string url, int httpCode) */
 PHP_METHOD(azalea_response, gotoUrl)
 {
-	zend_string *url = NULL, *ctrLine;
+	zend_string *url = NULL;
 	zend_long httpCode = 302;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|l", &url, &httpCode) == FAILURE) {
@@ -60,15 +59,12 @@ PHP_METHOD(azalea_response, gotoUrl)
 		// add url prefix
 		url = azaleaUrl(url, false);
 	}
-	ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
+	zend_string *ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
 	zend_string_free(url);
-	sapi_header_line ctr = {0};
-	ctr.line = ZSTR_VAL(ctrLine);
-	ctr.line_len = ZSTR_LEN(ctrLine);
-	ctr.response_code = httpCode;
-	sapi_header_op(SAPI_HEADER_REPLACE, &ctr);
+	azaleaSetHeader(ctrLine, httpCode);
 	zend_string_free(ctrLine);
-	// TODO exit()
+	// exit()
+	zend_bailout();
 }
 /* }}} */
 

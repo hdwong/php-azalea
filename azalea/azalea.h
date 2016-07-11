@@ -18,5 +18,8 @@ PHP_FUNCTION(azalea_ip);
 PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
 PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name);
 PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
+PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);
+#define azaleaSetHeader(string, httpCode) azaleaSetHeaderStr((string)->val, (string)->len, httpCode)
+PHPAPI int azaleaRequire(char *path, size_t len);
 
 #endif

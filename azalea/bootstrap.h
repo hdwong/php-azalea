@@ -13,6 +13,4 @@ PHP_METHOD(azalea_bootstrap, init);
 PHP_METHOD(azalea_bootstrap, run);
 PHP_METHOD(azalea_bootstrap, getRoute);
 
-PHPAPI int azaleaRequire(char *path, size_t len);
-
 #endif /* AZALEA_BOOTSTRAP_H_ */

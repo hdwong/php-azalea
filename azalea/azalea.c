@@ -24,6 +24,7 @@
 
 #include "ext/standard/php_var.h"	// for php_var_dump function
 #include "ext/standard/php_string.h"  // for php_trim function
+#include "main/SAPI.h"  // for sapi_header_op
 
 /* {{{ azalea_randomstring
  */
@@ -239,5 +240,60 @@ PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
 		return NULL;
 	}
 	return field;
+}
+/* }}} */
+
+/* {{{ proto azaleaSetHeaderStr */
+PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode)
+{
+	sapi_header_line ctr = {0};
+	ctr.line = line;
+	ctr.line_len = len;
+	ctr.response_code = httpCode;
+	sapi_header_op(SAPI_HEADER_REPLACE, &ctr);
+}
+/* }}} */
+
+/** {{{ int azaleaRequiree(char *path, size_t len)
+*/
+PHPAPI int azaleaRequire(char *path, size_t len)
+{
+	zend_file_handle file_handle;
+	zend_op_array *op_array;
+	char realpath[MAXPATHLEN];
+
+	if (!VCWD_REALPATH(path, realpath)) {
+		return 0;
+	}
+
+	file_handle.filename = path;
+	file_handle.free_filename = 0;
+	file_handle.type = ZEND_HANDLE_FILENAME;
+	file_handle.opened_path = NULL;
+	file_handle.handle.fp = NULL;
+	op_array = zend_compile_file(&file_handle, ZEND_REQUIRE);
+
+	if (op_array && file_handle.handle.stream.handle) {
+	    zval dummy;
+	    ZVAL_NULL(&dummy);
+		if (!file_handle.opened_path) {
+			file_handle.opened_path = zend_string_init(path, len, 0);
+		}
+		zend_hash_add(&EG(included_files), file_handle.opened_path, &dummy);
+	}
+	zend_destroy_file_handle(&file_handle);
+
+	if (op_array) {
+		zval result;
+        ZVAL_UNDEF(&result);
+		zend_execute(op_array, &result);
+		destroy_op_array(op_array);
+		efree(op_array);
+        if (!EG(exception)) {
+            zval_ptr_dtor(&result);
+        }
+	    return 1;
+	}
+	return 0;
 }
 /* }}} */
