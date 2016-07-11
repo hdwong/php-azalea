@@ -95,46 +95,34 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 {
 	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
-		zval hostname, *server, *field;
+		zval *server, *field;
+		zend_string *hostname, *tstr;
 
 		server = &PG(http_globals)[TRACK_VARS_SERVER];
 		if (server && Z_TYPE_P(server) == IS_ARRAY &&
 				zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTPS"))) {
-			ZVAL_STRING(&hostname, "https://");
+			hostname = zend_string_init(ZEND_STRL("https://"), 0);
 		} else {
-			ZVAL_STRING(&hostname, "http://");
+			hostname = zend_string_init(ZEND_STRL("http://"), 0);
 		}
 		field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
 		if (!field) {
 			// host not found, try to get from config
 			field = azaleaGetConfig("hostname");
 			if (!field) {
-				zval t;
-				ZVAL_STRING(&t, "localhost");
-				concat_function(&hostname, &hostname, &t);
-				zval_ptr_dtor(&t);
+				tstr = strpprintf(0, "%slocalhost", ZSTR_VAL(hostname));
 			} else {
-				concat_function(&hostname, &hostname, field);
+				tstr = strpprintf(0, "%s%s", ZSTR_VAL(hostname), Z_STRVAL_P(field));
 			}
 		} else {
-			concat_function(&hostname, &hostname, field);
+			tstr = strpprintf(0, "%s%s", ZSTR_VAL(hostname), Z_STRVAL_P(field));
 		}
-		AZALEA_G(host) = Z_STR(hostname);
+		zend_string_release(hostname);
+		AZALEA_G(host) = tstr;
 	}
 
-	zval ret, t;
-	ZVAL_EMPTY_STRING(&ret);
-	if (includeHost) {
-		ZVAL_STR(&t, AZALEA_G(host));
-		concat_function(&ret, &ret, &t);
-	}
-	ZVAL_STR(&t, AZALEA_G(baseUri));
-	concat_function(&ret, &ret, &t);
-	ZVAL_STR(&t, url);
-	concat_function(&ret, &ret, &t);
-	zval_ptr_dtor(&t);
-
-	return Z_STR(ret);
+	return strpprintf(0, "%s%s%s", includeHost ? ZSTR_VAL(AZALEA_G(host)) : "",
+			ZSTR_VAL(AZALEA_G(baseUri)), ZSTR_VAL(url));
 }
 /* }}} */
 

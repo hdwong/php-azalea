@@ -81,7 +81,8 @@ PHP_METHOD(azalea_controller, getView)
 {
 	azalea_view_t *instance = return_value;
 	object_init_ex(instance, azalea_view_ce);
-	zval data, tpldir, *staticPath, *themeName;
+	zval data, *staticPath, *themeName;
+	zend_string *tpldir, *tstr;
 	// data
 	array_init(&data);
 	zend_update_property(azalea_view_ce, instance, ZEND_STRL("_data"), &data);
@@ -89,24 +90,20 @@ PHP_METHOD(azalea_controller, getView)
 	// environ
 	array_init(&data);
 	// environ.tpldir
-	ZVAL_STRINGL(&tpldir, "", 0);
+	tpldir = zend_string_init(ZEND_STRL(""), 0);
 	staticPath = azaleaGetSubConfig("path", "static");
 	if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
-		zval t;
-		ZVAL_STRING(&t, "/");
-		concat_function(&tpldir, &tpldir, staticPath);
-		concat_function(&tpldir, &tpldir, &t);
-		zval_ptr_dtor(&t);
+		tstr = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
+		zend_string_release(tpldir);
+		tpldir = tstr;
 	}
 	themeName = azaleaGetConfig("theme");
 	if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
-		zval t;
-		ZVAL_STRING(&t, "/");
-		concat_function(&tpldir, &tpldir, themeName);
-		concat_function(&tpldir, &tpldir, &t);
-		zval_ptr_dtor(&t);
+		tstr = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(themeName));
+		zend_string_release(tpldir);
+		tpldir = tstr;
 	}
-	add_assoc_zval_ex(&data, ZEND_STRL("tpldir"), &tpldir);
+	add_assoc_str_ex(&data, ZEND_STRL("tpldir"), tpldir);
 	// environ.debug
 	add_assoc_bool_ex(&data, ZEND_STRL("debug"), Z_LVAL_P(azaleaGetConfig("debug")));
 	zend_update_property(azalea_view_ce, instance, ZEND_STRL("_environ"), &data);

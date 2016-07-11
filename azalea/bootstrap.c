@@ -75,30 +75,25 @@ void processContent(zval *result)
 /* {{{ proto dispatch */
 bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
-	zval controllerClass, actionMethod;
-	zend_string *name;
+	zend_string *name, *controllerClass, *actionMethod, *tstr;
 	zend_class_entry *ce;
 	azalea_controller_t *instance;
 
 	// controller name
 	if (folderName) {
-		zend_string *ucfFolderName = zend_string_dup(folderName, 0);
-		ZSTR_VAL(ucfFolderName)[0] = toupper(ZSTR_VAL(ucfFolderName)[0]);	// ucfirst
-		ZVAL_STR(&controllerClass, ucfFolderName);
+		controllerClass = zend_string_dup(folderName, 0);
+		ZSTR_VAL(controllerClass)[0] = toupper(ZSTR_VAL(controllerClass)[0]);	// ucfirst
 	} else {
-		ZVAL_STRINGL(&controllerClass, "", 0);
+		controllerClass = zend_string_init(ZEND_STRL(""), 0);
 	}
 	name = zend_string_dup(controllerName, 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
-	zval t;
-	ZVAL_STR(&t, name);
-	concat_function(&controllerClass, &controllerClass, &t);
-	zval_ptr_dtor(&t);
-	ZVAL_STRINGL(&t, "Controller", sizeof("Controller") - 1);
-	concat_function(&controllerClass, &controllerClass, &t);
-	zval_ptr_dtor(&t);
+	tstr = strpprintf(0, "%s%sController", ZSTR_VAL(controllerClass), ZSTR_VAL(name));
+	zend_string_release(name);
+	zend_string_release(controllerClass);
+	controllerClass = tstr;
 
-	name = zend_string_tolower(Z_STR(controllerClass));
+	name = zend_string_tolower(controllerClass);
 	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerInsts)), name);
 	if (!instance) {
 		// check controller class
@@ -106,59 +101,37 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 			// class not exists, load controller file
 			zval controllerPath, exists;
 			ZVAL_STR(&controllerPath, zend_string_dup(AZALEA_G(controllersPath), 0));
-			zval t1, t2;
 			if (folderName) {
-				ZVAL_STRINGL(&t1, "/", 1);
-				ZVAL_STR(&t2, zend_string_copy(folderName));
-				concat_function(&controllerPath, &controllerPath, &t1);
-				concat_function(&controllerPath, &controllerPath, &t2);
-				zval_ptr_dtor(&t1);
-				zval_ptr_dtor(&t2);
+				tstr = Z_STR(controllerPath);
+				Z_STR(controllerPath) = strpprintf(0, "%s%c%s", Z_STRVAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(folderName));
+				zend_string_release(tstr);
 			}
-			ZVAL_STRINGL(&t1, "/", 1);
-			ZVAL_STR(&t2, zend_string_copy(controllerName));
-			concat_function(&controllerPath, &controllerPath, &t1);
-			concat_function(&controllerPath, &controllerPath, &t2);
-			zval_ptr_dtor(&t1);
-			zval_ptr_dtor(&t2);
-			ZVAL_STRINGL(&t1, ".php", sizeof(".php") - 1);
-			concat_function(&controllerPath, &controllerPath, &t1);
-			zval_ptr_dtor(&t1);
+			tstr = Z_STR(controllerPath);
+			Z_STR(controllerPath) = strpprintf(0, "%s%c%s.php", Z_STRVAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(controllerName));
+			zend_string_release(tstr);
 			// check file exists
 			php_stat(Z_STRVAL(controllerPath), (php_stat_len) Z_STRLEN(controllerPath), FS_IS_R, &exists);
 			if (Z_TYPE(exists) == IS_FALSE) {
-				ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
-				ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
-				concat_function(&t1, &t1, &controllerPath);
-				concat_function(&t1, &t1, &t2);
-				throw404(Z_STR(t1));
-				zval_ptr_dtor(&t1);
-				zval_ptr_dtor(&t2);
+				tstr = strpprintf(0, "Controller file `%s` not found.", Z_STRVAL(controllerPath));
+				throw404(tstr);
+				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
 				return false;
 			}
 			// require controller file
 			int status = azaleaRequire(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
 			if (!status) {
-				ZVAL_STRINGL(&t1, "Controller file `", sizeof("Controller file `") - 1);
-				ZVAL_STRINGL(&t2, "` compile error.", sizeof("` compile error.") - 1);
-				concat_function(&t1, &t1, &controllerPath);
-				concat_function(&t1, &t1, &t2);
-				throw404(Z_STR(t1));
-				zval_ptr_dtor(&t1);
-				zval_ptr_dtor(&t2);
+				tstr = strpprintf(0, "Controller file `%s` compile error.", Z_STRVAL(controllerPath));
+				throw404(tstr);
+				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
 				return false;
 			}
 			// check controller class again
 			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
-				ZVAL_STRINGL(&t1, "Controller class `", sizeof("Controller class `") - 1);
-				ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
-				concat_function(&t1, &t1, &controllerClass);
-				concat_function(&t1, &t1, &t2);
-				throw404(Z_STR(t1));
-				zval_ptr_dtor(&t1);
-				zval_ptr_dtor(&t2);
+				tstr = strpprintf(0, "Controller class `%s` not found.", ZSTR_VAL(controllerClass));
+				throw404(tstr);
+				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
 				return false;
 			}
@@ -174,6 +147,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 			zend_string_release(superClass);
 			zval_ptr_dtor(&controllerPath);
 		}
+		zend_string_release(controllerClass);
 
 		// init controller instance
 		azalea_controller_t rv = {{0}};
@@ -198,38 +172,30 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		add_assoc_zval_ex(&AZALEA_G(controllerInsts), ZSTR_VAL(name), ZSTR_LEN(name), instance);
 	}
 	zend_string_release(name);
-	zval_ptr_dtor(&controllerClass);
 
 	// dynamic router
 	// TODO
 
 	// action method name
-	ZVAL_STR(&actionMethod, zend_string_dup(actionName, 0));
 	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
 		// not WEB
-		ZVAL_STR(&t, zend_string_copy(AZALEA_G(environ)));
+		actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(actionName), ZSTR_VAL(AZALEA_G(environ)));
 	} else {
 		// WEB
-		ZVAL_STRINGL(&t, "Action", sizeof("Action") - 1);
+		actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(actionName));
 	}
-	concat_function(&actionMethod, &actionMethod, &t);
-	zval_ptr_dtor(&t);
 
 	// check action method
-	zend_string *lc = zend_string_tolower(Z_STR(actionMethod));
+	zend_string *lc = zend_string_tolower(actionMethod);
 	zend_function *fptr;
 	if (!(fptr = zend_hash_find_ptr(&(ce->function_table), lc))) {
-		zval t1, t2;
-		ZVAL_STRINGL(&t1, "Action method `", sizeof("Action method `") - 1);
-		ZVAL_STRINGL(&t2, "` not found.", sizeof("` not found.") - 1);
-		concat_function(&t1, &t1, &actionMethod);
-		concat_function(&t1, &t1, &t2);
-		throw404(Z_STR(t1));
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
+		tstr = strpprintf(0, "Action method `%s` not found.", ZSTR_VAL(actionMethod));
+		throw404(tstr);
+		zend_string_release(tstr);
 		ZVAL_FALSE(ret);
 		return false;
 	}
+	zend_string_release(actionMethod);
 
 	// execute action
 	ZVAL_NULL(ret);
@@ -250,7 +216,6 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		efree(callArgs);
 	}
 	zval_ptr_dtor(&functionName);
-	zval_ptr_dtor(&actionMethod);
 
 	// process and output result content
 	processContent(ret);
@@ -340,7 +305,7 @@ PHP_METHOD(azalea_bootstrap, init)
 				memcpy(ZSTR_VAL(t), ZSTR_VAL(baseUri), len);
 				ZSTR_VAL(t)[len] = '/';
 				ZSTR_VAL(t)[len + 1] = '\0';
-				zend_string_free(baseUri);
+				zend_string_release(baseUri);
 				baseUri = t;
 			}
 		}
@@ -415,8 +380,8 @@ PHP_METHOD(azalea_bootstrap, init)
 /* {{{ proto bool run(void) */
 PHP_METHOD(azalea_bootstrap, run)
 {
-	zend_string *uri, *controllersPath, *modelsPath, *viewsPath;
-	zval *field, paths, basePath;
+	zend_string *uri, *controllersPath, *modelsPath, *viewsPath, *basePath, *tstr;
+	zval *field, paths;
 	zend_ulong pathsOffset = 0;
 
 	// request uri
@@ -444,62 +409,38 @@ PHP_METHOD(azalea_bootstrap, run)
 	field = azaleaGetSubConfig("path", "views");
 	viewsPath = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
 	field = azaleaGetSubConfig("path", "basepath");
-	if (field && Z_TYPE_P(field) == IS_STRING) {
-		ZVAL_COPY(&basePath, field);
-	} else {
-		ZVAL_STR(&basePath, zend_string_copy(AZALEA_G(directory)));
-	}
-	if (Z_STRVAL(basePath)[Z_STRLEN(basePath) - 1] != '/') {
-		zval t;
-		ZVAL_STRINGL(&t, "/", 1);
-		concat_function(&basePath, &basePath, &t);
-		zval_ptr_dtor(&t);
+	basePath = zend_string_copy(field && Z_TYPE_P(field) == IS_STRING ? Z_STR_P(field) : AZALEA_G(directory));
+	if (ZSTR_VAL(basePath)[ZSTR_LEN(basePath) - 1] != '/') {
+		tstr = strpprintf(0, "%s%c", ZSTR_VAL(basePath), DEFAULT_SLASH);
+		zend_string_release(basePath);
+		basePath = tstr;
 	}
 	if (ZSTR_VAL(controllersPath)[0] != '/') {
 		// relative path
-		zval t1, t2;
-		ZVAL_COPY(&t1, &basePath);
-		ZVAL_STR(&t2, controllersPath);
-		concat_function(&t1, &t1, &t2);
-		controllersPath = zend_string_copy(Z_STR(t1));
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
+		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(controllersPath));
+		zend_string_release(controllersPath);
+		controllersPath = tstr;
 	}
 	if (ZSTR_VAL(modelsPath)[0] != '/') {
 		// relative path
-		zval t1, t2;
-		ZVAL_COPY(&t1, &basePath);
-		ZVAL_STR(&t2, modelsPath);
-		concat_function(&t1, &t1, &t2);
-		modelsPath = zend_string_copy(Z_STR(t1));
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
+		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(modelsPath));
+		zend_string_release(modelsPath);
+		modelsPath = tstr;
 	}
 	if (ZSTR_VAL(viewsPath)[0] != '/') {
 		// relative path
-		zval t1, t2;
-		ZVAL_COPY(&t1, &basePath);
-		ZVAL_STR(&t2, viewsPath);
-		concat_function(&t1, &t1, &t2);
-		viewsPath = zend_string_copy(Z_STR(t1));
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
+		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(viewsPath));
+		zend_string_release(viewsPath);
+		viewsPath = tstr;
 	}
 	field = azaleaGetConfig("theme");
 	if (field && Z_TYPE_P(field) == IS_STRING && Z_STRLEN_P(field)) {
 		// add views subpath
-		zval t1, t2, t3;
-		ZVAL_STR(&t1, viewsPath);
-		ZVAL_STRINGL(&t2, "/", 1);
-		ZVAL_COPY(&t3, field);
-		concat_function(&t1, &t1, &t2);
-		concat_function(&t1, &t1, &t3);
-		viewsPath = zend_string_copy(Z_STR(t1));
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
-		zval_ptr_dtor(&t3);
+		tstr = strpprintf(0, "%s%c%s", ZSTR_VAL(viewsPath), DEFAULT_SLASH, Z_STRVAL_P(field));
+		zend_string_release(viewsPath);
+		viewsPath = tstr;
 	}
-	zval_ptr_dtor(&basePath);
+	zend_string_free(basePath);
 	AZALEA_G(controllersPath) = zend_string_dup(controllersPath, 0);
 	AZALEA_G(modelsPath) = zend_string_dup(modelsPath, 0);
 	AZALEA_G(viewsPath) = zend_string_dup(viewsPath, 0);
@@ -507,21 +448,17 @@ PHP_METHOD(azalea_bootstrap, run)
 	// get folder / controller / action / arguments
 	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
 	if (field) {
-		zval exists, t1, t2, t3;
-		zend_string *lc = zend_string_tolower(Z_STR_P(field));
-		ZVAL_STR(&t1, zend_string_copy(controllersPath));
-		ZVAL_STRINGL(&t2, "/", 1);
-		ZVAL_STR(&t3, lc);
-		concat_function(&t1, &t1, &t2);
-		concat_function(&t1, &t1, &t3);
-		php_stat(Z_STRVAL(t1), (php_stat_len) Z_STRLEN(t1), FS_IS_DIR, &exists);
+		zend_string *lc, *folderPath;
+		lc = zend_string_tolower(Z_STR_P(field));
+		folderPath = strpprintf(0, "%s%c%s", ZSTR_VAL(controllersPath), DEFAULT_SLASH, ZSTR_VAL(lc));
+		zval exists;
+		php_stat(ZSTR_VAL(folderPath), (php_stat_len) ZSTR_LEN(folderPath), FS_IS_DIR, &exists);
+		zend_string_release(folderPath);
 		if (Z_TYPE(exists) == IS_TRUE) {
 			++pathsOffset;
 			AZALEA_G(folderName) = zend_string_copy(lc);
 		}
-		zval_ptr_dtor(&t1);
-		zval_ptr_dtor(&t2);
-		zval_ptr_dtor(&t3);	// for release t3 and lc
+		zend_string_release(lc);
 
 		// controller
 		field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
