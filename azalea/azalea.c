@@ -122,7 +122,7 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 	}
 
 	return strpprintf(0, "%s%s%s", includeHost ? ZSTR_VAL(AZALEA_G(host)) : "",
-			ZSTR_VAL(AZALEA_G(baseUri)), ZSTR_VAL(url));
+			AZALEA_G(baseUri) ? ZSTR_VAL(AZALEA_G(baseUri)) : "/", ZSTR_VAL(url));
 }
 /* }}} */
 

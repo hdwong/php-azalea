@@ -554,8 +554,16 @@ PHP_METHOD(azalea_bootstrap, getRoute)
     } else {
     	add_assoc_null(return_value, "folder");
     }
-    add_assoc_str(return_value, "controller", zend_string_copy(AZALEA_G(controllerName)));
-    add_assoc_str(return_value, "action", zend_string_copy(AZALEA_G(actionName)));
+    if (AZALEA_G(controllerName)) {
+    	add_assoc_str(return_value, "controller", zend_string_copy(AZALEA_G(controllerName)));
+    } else {
+    	add_assoc_null(return_value, "controller");
+    }
+    if (AZALEA_G(actionName)) {
+    	add_assoc_str(return_value, "action", zend_string_copy(AZALEA_G(actionName)));
+    } else {
+    	add_assoc_null(return_value, "action");
+    }
     add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
     zval_add_ref(&AZALEA_G(pathArgs));
 }
