@@ -73,7 +73,7 @@ void processContent(zval *result)
 /* }}} */
 
 /* {{{ proto dispatch */
-bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
 	zend_string *name, *controllerClass, *actionMethod, *tstr;
 	zend_class_entry *ce;
@@ -116,7 +116,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 				throw404(tstr);
 				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
-				return false;
+				return 0;
 			}
 			// require controller file
 			int status = azaleaRequire(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
@@ -125,7 +125,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 				throw404(tstr);
 				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
-				return false;
+				return 0;
 			}
 			// check controller class again
 			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
@@ -133,7 +133,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 				throw404(tstr);
 				zend_string_release(tstr);
 				ZVAL_FALSE(ret);
-				return false;
+				return 0;
 			}
 			// check super class name
 			zend_string *superClass = zend_string_init(ZEND_STRL(AZALEA_NS_NAME(Controller)), 0);
@@ -142,7 +142,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 				throw404Str(ZEND_STRL("Controller class must be an instance of "
 						AZALEA_NS_NAME(Controller) "."));
 				ZVAL_FALSE(ret);
-				return false;
+				return 0;
 			}
 			zend_string_release(superClass);
 			zval_ptr_dtor(&controllerPath);
@@ -156,7 +156,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		if (!instance) {
 			throw404Str(ZEND_STRL("Controller initialization is failed."));
 			ZVAL_FALSE(ret);
-			return false;
+			return 0;
 		}
 
 		// controller construct
@@ -192,7 +192,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 		throw404(tstr);
 		zend_string_release(tstr);
 		ZVAL_FALSE(ret);
-		return false;
+		return 0;
 	}
 	zend_string_release(actionMethod);
 
@@ -219,7 +219,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 	// process and output result content
 	processContent(ret);
 
-	return true;
+	return 1;
 }
 /* }}} */
 
