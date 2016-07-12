@@ -7,7 +7,6 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
-#include "azalea/azalea.h"
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
@@ -134,7 +133,8 @@ zval * azaleaLoadConfig(zval *val)
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
-			azaleaDeepCopy(config, val);
+			zval_ptr_dtor(config);
+			ZVAL_COPY(config, val);
 		}
 	}
 	// DEFAULTS
@@ -153,7 +153,7 @@ zval * azaleaLoadConfig(zval *val)
 	}
 	// config.theme
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("theme")))) {
-		add_assoc_null(config, "theme");
+		add_assoc_null_ex(config, ZEND_STRL("theme"));
 	} else {
 		convert_to_string_ex(found);
 	}
