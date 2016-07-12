@@ -7,6 +7,7 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/azalea.h"
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
@@ -133,8 +134,7 @@ zval * azaleaLoadConfig(zval *val)
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
-			zval_ptr_dtor(config);
-			ZVAL_DUP(config, val);
+			azaleaDeepCopy(config, val);
 		}
 	}
 	// DEFAULTS

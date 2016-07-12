@@ -205,7 +205,7 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 		callArgs = safe_emalloc(sizeof(zval), callArgsCount, 0);
 		for (current = 0; current < callArgsCount; ++current) {
 			arg = zend_hash_index_find(Z_ARRVAL_P(pathArgs), current);
-			ZVAL_DUP(&(callArgs[current]), arg);
+			ZVAL_COPY_VALUE(&(callArgs[current]), arg);
 		}
 	}
 	ZVAL_STR(&functionName, lc);
@@ -265,7 +265,7 @@ PHP_METHOD(azalea_bootstrap, init)
 
 	// set timezone
 	field = azaleaGetConfig("timezone");
-	ZVAL_DUP(&conf, field);
+	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	if (Z_STRLEN(conf)) {
 		iniName = zend_string_init(ZEND_STRL("date.timezone"), 0);
@@ -339,7 +339,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	zend_string_release(iniName);
 	// session.cookie_lifetime
 	field = azaleaGetSubConfig("session", "lifetime");
-	ZVAL_DUP(&conf, field);
+	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	iniName = zend_string_init(ZEND_STRL("session.cookie_lifetime"), 0);
 	zend_alter_ini_entry(iniName, Z_STR(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
@@ -347,7 +347,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	zval_ptr_dtor(&conf);
 	// session.cookie_path
 	field = azaleaGetSubConfig("session", "path");
-	ZVAL_DUP(&conf, field);
+	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	if (!Z_STRLEN(conf)) {
 		// use baseUri for default path
@@ -359,7 +359,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	zval_ptr_dtor(&conf);
 	// session.cooke_domain
 	field = azaleaGetSubConfig("session", "domain");
-	ZVAL_DUP(&conf, field);
+	ZVAL_COPY(&conf, field);
 	convert_to_string_ex(&conf);
 	if (Z_STRLEN(conf)) {
 		iniName = zend_string_init(ZEND_STRL("session.cookie_domain"), 0);
@@ -395,7 +395,7 @@ PHP_METHOD(azalea_bootstrap, run)
 	if (field) {
 		// TODO check static router
 		zval staticRouter;
-		ZVAL_DUP(&staticRouter, field);
+		ZVAL_COPY(&staticRouter, field);
 		zval_ptr_dtor(&staticRouter);
 	}
 
