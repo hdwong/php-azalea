@@ -74,14 +74,14 @@ PHP_FUNCTION(azalea_randomstring)
 		}
 	}
 
-	char result[len + 1];
+	char result[len + 1], i;
 	result[len] = '\0';
 	php_uint32 number;
 	l -= 1; // for RAND_RANGE
 	if (!BG(mt_rand_is_seeded)) {
 		php_mt_srand(GENERATE_SEED());
 	}
-	for (long i = 0; i < len; ++i) {
+	for (i = 0; i < len; ++i) {
 		number = php_mt_rand() >> 1;
 		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
 		result[i] = *(p + number);
