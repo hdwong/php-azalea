@@ -60,9 +60,9 @@ PHP_METHOD(azalea_response, gotoUrl)
 		url = azaleaUrl(url, false);
 	}
 	zend_string *ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
-	zend_string_free(url);
+	zend_string_release(url);
 	azaleaSetHeader(ctrLine, httpCode);
-	zend_string_free(ctrLine);
+	zend_string_release(ctrLine);
 	// exit()
 	zend_bailout();
 }

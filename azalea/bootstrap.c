@@ -210,8 +210,8 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 	}
 	ZVAL_STR(&functionName, lc);
 	ZVAL_NULL(ret);
-	call_user_function(&(ce)->function_table, instance, &functionName, ret, callArgsCount, callArgs);
-	zval_ptr_dtor(&functionName);
+	call_user_function(&(ce->function_table), instance, &functionName, ret, callArgsCount, callArgs);
+	zend_string_release(lc);
 	if (callArgs) {
 		efree(callArgs);
 	}
@@ -439,7 +439,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		zend_string_release(viewsPath);
 		viewsPath = tstr;
 	}
-	zend_string_free(basePath);
+	zend_string_release(basePath);
 	AZALEA_G(controllersPath) = zend_string_dup(controllersPath, 0);
 	AZALEA_G(modelsPath) = zend_string_dup(modelsPath, 0);
 	AZALEA_G(viewsPath) = zend_string_dup(viewsPath, 0);
