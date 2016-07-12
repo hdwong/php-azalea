@@ -74,7 +74,8 @@ PHP_FUNCTION(azalea_randomstring)
 		}
 	}
 
-	char result[len + 1], i;
+	char result[len + 1];
+	long i;
 	result[len] = '\0';
 	php_uint32 number;
 	l -= 1; // for RAND_RANGE
