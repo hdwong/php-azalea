@@ -284,6 +284,11 @@ PHP_METHOD(azalea_bootstrap, init)
 	}
 
 	// set directory / base_uri / uri
+	if (PG(auto_globals_jit)) {
+		zend_string *tstr = zend_string_init(ZEND_STRL("_SERVER"), 0);
+		zend_is_auto_global(tstr);
+		zend_string_release(tstr);
+	}
 	server = &PG(http_globals)[TRACK_VARS_SERVER];
 	if (server && Z_TYPE_P(server) == IS_ARRAY) {
 		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("SCRIPT_FILENAME"))) &&
