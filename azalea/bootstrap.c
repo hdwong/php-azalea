@@ -187,8 +187,7 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 
 	// check action method
 	zend_string *lc = zend_string_tolower(actionMethod);
-	zend_function *fptr;
-	if (!(fptr = zend_hash_find_ptr(&(ce->function_table), lc))) {
+	if (!(zend_hash_exists(&(ce->function_table), lc))) {
 		tstr = strpprintf(0, "Action method `%s` not found.", ZSTR_VAL(actionMethod));
 		throw404(tstr);
 		zend_string_release(tstr);
@@ -198,24 +197,24 @@ bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string 
 	zend_string_release(actionMethod);
 
 	// execute action
-	ZVAL_NULL(ret);
-	zval functionName, *callArgs = NULL, *arg;
+	zval functionName, *callArgs = NULL;
 	uint32_t callArgsCount, current;
-	ZVAL_STR(&functionName, lc);
 	callArgsCount = zend_hash_num_elements(Z_ARRVAL_P(pathArgs));
 	if (callArgsCount) {
+		zval *arg;
 		callArgs = safe_emalloc(sizeof(zval), callArgsCount, 0);
 		for (current = 0; current < callArgsCount; ++current) {
 			arg = zend_hash_index_find(Z_ARRVAL_P(pathArgs), current);
 			ZVAL_COPY_VALUE(&(callArgs[current]), arg);
 		}
 	}
-	call_user_function_ex(&(ce)->function_table, instance, &functionName, ret,
-			callArgsCount, callArgs, 1, NULL);
+	ZVAL_STR(&functionName, lc);
+	ZVAL_NULL(ret);
+	call_user_function(&(ce)->function_table, instance, &functionName, ret, callArgsCount, callArgs);
+	zval_ptr_dtor(&functionName);
 	if (callArgs) {
 		efree(callArgs);
 	}
-	zval_ptr_dtor(&functionName);
 
 	// process and output result content
 	processContent(ret);
