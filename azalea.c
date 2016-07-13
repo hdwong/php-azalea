@@ -39,6 +39,7 @@
 #include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
+#include "main/SAPI.h"  // for sapi_header_op
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -103,6 +104,12 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(sessionInst) = NULL;
 
 	array_init(&AZALEA_G(config));
+
+	// print copyright
+	sapi_header_line ctr = {0};
+	ctr.line = PHP_AZALEA_COPYRIGHT_OUTPUT;
+	ctr.line_len = sizeof(PHP_AZALEA_COPYRIGHT_OUTPUT) - 1;
+	sapi_header_op(SAPI_HEADER_REPLACE, &ctr);
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
