@@ -16,6 +16,7 @@
 #include "Zend/zend_exceptions.h"  // for zend_throw_exception
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 #include "Zend/zend_smart_str.h"  // for smart_str
+#include "ext/standard/url.h"  // for php_url_*
 #include "ext/standard/php_var.h"  // for php_var_dump
 #include "ext/standard/php_string.h"  // for php_trim
 #include "ext/standard/php_filestat.h"  // for php_stat
@@ -312,10 +313,39 @@ PHP_METHOD(azalea_bootstrap, init)
 				baseUri = t;
 			}
 		}
-		if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("PATH_INFO"))) &&
-				Z_TYPE_P(field) == IS_STRING) {
-			uri = php_trim(Z_STR_P(field), ZEND_STRL("/"), 3);
-		}
+		do {
+			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("PATH_INFO"))) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				uri = zend_string_copy(Z_STR_P(field));
+				break;
+			}
+			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REQUEST_URI"))) &&
+								Z_TYPE_P(field) == IS_STRING) {
+				if (strncasecmp(Z_STRVAL_P(field), ZEND_STRL("http://")) &&
+						strncasecmp(Z_STRVAL_P(field), ZEND_STRL("https://"))) {
+					// not http url
+					char *pos = strstr(Z_STRVAL_P(field), "?");
+					if (pos) {
+						// found query
+						uri = zend_string_init(Z_STRVAL_P(field), pos - Z_STRVAL_P(field), 0);
+					} else {
+						uri = zend_string_copy(Z_STR_P(field));
+					}
+				} else {
+					php_url *urlInfo = php_url_parse(Z_STRVAL_P(field));
+					if (urlInfo && urlInfo->path) {
+						uri = zend_string_init(urlInfo->path, strlen(urlInfo->path), 0);
+					}
+					php_url_free(urlInfo);
+				}
+				break;
+			}
+			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("ORIG_PATH_INFO"))) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				uri = zend_string_copy(Z_STR_P(field));
+				break;
+			}
+		} while (0);
 	}
 	if (!directory) {
 		directory = zend_string_init(ZEND_STRL("/"), 0);
@@ -325,7 +355,11 @@ PHP_METHOD(azalea_bootstrap, init)
 		baseUri = zend_string_init(ZEND_STRL("/"), 0);
 	}
 	AZALEA_G(baseUri) = baseUri;
-	if (!uri) {
+	if (uri) {
+		zend_string *t = uri;
+		uri = php_trim(uri, ZEND_STRL("/"), 3);
+		zend_string_release(t);
+	} else {
 		uri = zend_string_init(ZEND_STRL(""), 0);
 	}
 	AZALEA_G(uri) = uri;
