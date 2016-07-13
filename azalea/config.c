@@ -345,3 +345,40 @@ PHP_METHOD(azalea_config, set)
 	add_assoc_zval_ex(&AZALEA_G(config), ZSTR_VAL(key), ZSTR_LEN(key), val);
 }
 /* }}} */
+
+/** {{{ proto azaleaDeepCopy(zval *dst, zval *src)
+ */
+static inline void azaleaDeepCopy(zval *dst, zval *src) {
+	zval *pzval, *dstpzval, value;
+	HashTable *ht;
+	ulong idx;
+	zend_string *key;
+
+	ht = Z_ARRVAL_P(src);
+	ZEND_HASH_FOREACH_KEY_VAL(ht, idx, key, pzval) {
+		if (key) {
+			if (Z_TYPE_P(pzval) == IS_ARRAY
+					&& (dstpzval = zend_hash_find(Z_ARRVAL_P(dst), key)) != NULL
+					&& Z_TYPE_P(dstpzval) == IS_ARRAY) {
+				array_init(&value);
+				azaleaDeepCopy(&value, dstpzval);
+				azaleaDeepCopy(&value, pzval);
+			} else {
+				ZVAL_DUP(&value, pzval);
+			}
+			zend_hash_update(Z_ARRVAL_P(dst), key, &value);
+		} else {
+			if (Z_TYPE_P(pzval) == IS_ARRAY
+					&& (dstpzval = zend_hash_index_find(Z_ARRVAL_P(dst), idx)) != NULL
+					&& Z_TYPE_P(dstpzval) == IS_ARRAY) {
+				array_init(&value);
+				azaleaDeepCopy(&value, dstpzval);
+				azaleaDeepCopy(&value, pzval);
+			} else {
+				ZVAL_DUP(&value, pzval);
+			}
+			zend_hash_index_update(Z_ARRVAL_P(dst), idx, &value);
+		}
+	} ZEND_HASH_FOREACH_END();
+}
+/* }}} */

@@ -18,5 +18,6 @@ PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, set);
 
 extern zend_class_entry *azalea_config_ce;
+static inline void azaleaDeepCopy(zval *dst, zval *src);
 
 #endif /* AZALEA_CONFIG_H_ */
