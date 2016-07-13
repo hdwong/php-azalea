@@ -27,10 +27,10 @@ zend_class_entry *azalea_bootstrap_ce;
 /* {{{ class Azalea\Bootstrap methods
  */
 static zend_function_entry azalea_bootstrap_methods[] = {
-    PHP_ME(azalea_bootstrap, getRoute, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-    PHP_ME(azalea_bootstrap, init, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-    PHP_ME(azalea_bootstrap, run, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	PHP_ME(azalea_bootstrap, getRoute, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_bootstrap, init, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_bootstrap, run, NULL, ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}
 };
 /* }}} */
 
@@ -77,7 +77,7 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 {
 	zend_string *name, *controllerClass, *actionMethod, *tstr;
 	zend_class_entry *ce;
-	azalea_controller_t *instance;
+	azalea_controller_t *instance = NULL, rv = {{0}};
 
 	// controller name
 	if (folderName) {
@@ -150,7 +150,6 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 		zend_string_release(controllerClass);
 
 		// init controller instance
-		azalea_controller_t rv = {{0}};
 		instance = &rv;
 		object_init_ex(instance, ce);
 		if (!instance) {
@@ -545,31 +544,31 @@ PHP_METHOD(azalea_bootstrap, run)
 		zval_ptr_dtor(&exception);
 		zend_bailout();
 	}
-    RETURN_ZVAL(&ret, 1, 0);
+	RETURN_ZVAL(&ret, 1, 0);
 }
 /* }}} */
 
 /* {{{ proto string getRoute(void) */
 PHP_METHOD(azalea_bootstrap, getRoute)
 {
-    array_init(return_value);
-    if (AZALEA_G(folderName)) {
-    	add_assoc_str(return_value, "folder", zend_string_copy(AZALEA_G(folderName)));
-    } else {
-    	add_assoc_null(return_value, "folder");
-    }
-    if (AZALEA_G(controllerName)) {
-    	add_assoc_str(return_value, "controller", zend_string_copy(AZALEA_G(controllerName)));
-    } else {
-    	add_assoc_null(return_value, "controller");
-    }
-    if (AZALEA_G(actionName)) {
-    	add_assoc_str(return_value, "action", zend_string_copy(AZALEA_G(actionName)));
-    } else {
-    	add_assoc_null(return_value, "action");
-    }
-    add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
-    zval_add_ref(&AZALEA_G(pathArgs));
+	array_init(return_value);
+	if (AZALEA_G(folderName)) {
+		add_assoc_str(return_value, "folder", zend_string_copy(AZALEA_G(folderName)));
+	} else {
+		add_assoc_null(return_value, "folder");
+	}
+	if (AZALEA_G(controllerName)) {
+		add_assoc_str(return_value, "controller", zend_string_copy(AZALEA_G(controllerName)));
+	} else {
+		add_assoc_null(return_value, "controller");
+	}
+	if (AZALEA_G(actionName)) {
+		add_assoc_str(return_value, "action", zend_string_copy(AZALEA_G(actionName)));
+	} else {
+		add_assoc_null(return_value, "action");
+	}
+	add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
+	zval_add_ref(&AZALEA_G(pathArgs));
 }
 /* }}} */
 
