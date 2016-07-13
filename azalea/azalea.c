@@ -144,11 +144,11 @@ PHP_FUNCTION(azalea_url)
 
 double azaleaGetMicrotime()
 {
-    struct timeval tp = {0};
-    if (gettimeofday(&tp, NULL)) {
-        return 0;
-    }
-    return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+	struct timeval tp = {0};
+	if (gettimeofday(&tp, NULL)) {
+		return 0;
+	}
+	return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 }
 
 /* {{{ azalea_timer
@@ -263,8 +263,8 @@ PHPAPI int azaleaRequire(char *path, size_t len)
 	op_array = zend_compile_file(&file_handle, ZEND_REQUIRE);
 
 	if (op_array && file_handle.handle.stream.handle) {
-	    zval dummy;
-	    ZVAL_NULL(&dummy);
+		zval dummy;
+		ZVAL_NULL(&dummy);
 		if (!file_handle.opened_path) {
 			file_handle.opened_path = zend_string_init(path, len, 0);
 		}
@@ -274,14 +274,14 @@ PHPAPI int azaleaRequire(char *path, size_t len)
 
 	if (op_array) {
 		zval result;
-        ZVAL_UNDEF(&result);
+		ZVAL_UNDEF(&result);
 		zend_execute(op_array, &result);
 		destroy_op_array(op_array);
 		efree(op_array);
-        if (!EG(exception)) {
-            zval_ptr_dtor(&result);
-        }
-	    return 1;
+		if (!EG(exception)) {
+			zval_ptr_dtor(&result);
+		}
+		return 1;
 	}
 	return 0;
 }

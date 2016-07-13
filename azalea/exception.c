@@ -21,14 +21,14 @@ zend_class_entry *azalea_exception500_ce;
 static zend_function_entry azalea_exception_methods[] = {
 	PHP_ME(azalea_exception, getUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_exception, getRoute, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 
 /* {{{ class Azalea\Exception methods
  */
 static zend_function_entry azalea_e404exception_methods[] = {
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 
@@ -36,7 +36,7 @@ static zend_function_entry azalea_e404exception_methods[] = {
  */
 static zend_function_entry azalea_e500exception_methods[] = {
 	PHP_ME(azalea_exception500, getServiceInfo, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

@@ -29,7 +29,7 @@ static zend_function_entry azalea_controller_methods[] = {
 	PHP_ME(azalea_controller, getModel, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, getView, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, throw404, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

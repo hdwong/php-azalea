@@ -23,7 +23,7 @@ static zend_function_entry azalea_response_methods[] = {
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setCookie, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

@@ -25,7 +25,7 @@ static zend_function_entry azalea_request_methods[] = {
 	PHP_ME(azalea_request, getQuery, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getPost, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getCookie, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

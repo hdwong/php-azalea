@@ -20,7 +20,7 @@ static zend_function_entry azalea_session_methods[] = {
 	PHP_ME(azalea_session, get, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_session, set, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_session, clean, NULL, ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

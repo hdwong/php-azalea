@@ -17,10 +17,10 @@ zend_class_entry *azalea_config_ce;
 /* {{{ class Azalea\Config methods
  */
 static zend_function_entry azalea_config_methods[] = {
-    PHP_ME(azalea_config, all, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-    PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-    PHP_ME(azalea_config, set, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-    {NULL, NULL, NULL}
+	PHP_ME(azalea_config, all, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_config, set, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	{NULL, NULL, NULL}
 };
 /* }}} */
 

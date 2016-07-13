@@ -23,7 +23,7 @@ static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, plain, NULL, ZEND_ACC_PROTECTED)
 	ZEND_FENTRY(url, ZEND_FN(azalea_url), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\url
-    {NULL, NULL, NULL}
+	{NULL, NULL, NULL}
 };
 /* }}} */
 
