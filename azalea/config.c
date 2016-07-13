@@ -116,11 +116,11 @@ void azaleaLoadConfig(zval *val)
 			char *ini_file = Z_STRVAL_P(val);
 			if (VCWD_STAT(ini_file, &sb) != 0) {
 				php_error_docref(NULL, E_ERROR, "Unable to find config file `%s`", ini_file);
-				return NULL;
+				return;
 			}
 			if (!(fh.handle.fp = VCWD_FOPEN(ini_file, "r"))) {
 				php_error_docref(NULL, E_ERROR, "`%s` is not an valid ini file", ini_file);
-				return NULL;
+				return;
 			}
 			fh.filename = ini_file;
 			fh.type = ZEND_HANDLE_FP;
@@ -130,7 +130,7 @@ void azaleaLoadConfig(zval *val)
 			if (zend_parse_ini_file(&fh, 0, 0, (zend_ini_parser_cb_t) php_ini_parser_cb_with_sections, config) == FAILURE ||
 					Z_TYPE_P(config) != IS_ARRAY) {
 				php_error_docref(NULL, E_ERROR, "Parsing ini file `%s` faild", ini_file);
-				return NULL;
+				return;
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
@@ -282,7 +282,6 @@ void azaleaLoadConfig(zval *val)
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
-	return config;
 }
 /* }}} */
 
