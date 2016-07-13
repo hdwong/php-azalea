@@ -305,8 +305,7 @@ PHPAPI void azaleaDeepCopy(zval *dst, zval *src) {
 				azaleaDeepCopy(&value, dstpzval);
 				azaleaDeepCopy(&value, pzval);
 			} else {
-				ZVAL_COPY_VALUE(&value, pzval);
-				Z_TRY_ADDREF(value);
+				ZVAL_DUP(&value, pzval);
 			}
 			zend_hash_update(Z_ARRVAL_P(dst), key, &value);
 		} else {
@@ -317,8 +316,7 @@ PHPAPI void azaleaDeepCopy(zval *dst, zval *src) {
 				azaleaDeepCopy(&value, dstpzval);
 				azaleaDeepCopy(&value, pzval);
 			} else {
-				ZVAL_COPY_VALUE(&value, pzval);
-				Z_TRY_ADDREF(value);
+				ZVAL_DUP(&value, pzval);
 			}
 			zend_hash_index_update(Z_ARRVAL_P(dst), idx, &value);
 		}

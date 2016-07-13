@@ -7,7 +7,7 @@
 #ifndef AZALEA_CONFIG_H_
 #define AZALEA_CONFIG_H_
 
-zval * azaleaLoadConfig(zval *);
+void azaleaLoadConfig(zval *);
 #define azaleaGetConfig(key) azaleaGetSubConfig(key, NULL)
 zval * azaleaGetSubConfig(const char *key, const char *subKey);
 

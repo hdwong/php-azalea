@@ -7,6 +7,7 @@
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/azalea.h"
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
@@ -103,8 +104,8 @@ static void php_ini_parser_cb_with_sections(zval *arg1, zval *arg2, zval *arg3, 
 }
 /* }}} */
 
-/* {{{ proto array loadConfig(mixed $config) */
-zval * azaleaLoadConfig(zval *val)
+/* {{{ proto void loadConfig(mixed $config) */
+void azaleaLoadConfig(zval *val)
 {
 	zval *config = &AZALEA_G(config);
 	if (val) {
@@ -133,8 +134,7 @@ zval * azaleaLoadConfig(zval *val)
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
-			zval_ptr_dtor(config);
-			ZVAL_COPY(config, val);
+			azaleaDeepCopy(config, val);	// fix ZVAL_COPY for opcache
 		}
 	}
 	// DEFAULTS
@@ -282,7 +282,6 @@ zval * azaleaLoadConfig(zval *val)
 		zval_ptr_dtor(found);
 		array_init(found);
 	}
-
 	return config;
 }
 /* }}} */
