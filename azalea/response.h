@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(response);
 
+PHP_METHOD(azalea_response, __construct);
 PHP_METHOD(azalea_response, gotoUrl);
 PHP_METHOD(azalea_response, gotoRoute);
 PHP_METHOD(azalea_response, getBody);

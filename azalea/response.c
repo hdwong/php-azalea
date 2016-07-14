@@ -8,16 +8,20 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
+#include "azalea/bootstrap.h"
+#include "azalea/config.h"
 #include "azalea/controller.h"
 #include "azalea/response.h"
 
 #include "ext/standard/head.h"  // for php_setcookie
+#include "ext/standard/php_var.h"  // for php_var_dump
 
 zend_class_entry *azalea_response_ce;
 
 /* {{{ class Azalea\Response methods
  */
 static zend_function_entry azalea_response_methods[] = {
+	PHP_ME(azalea_response, __construct, NULL, ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_response, gotoUrl, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, gotoRoute, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)
@@ -35,9 +39,14 @@ AZALEA_STARTUP_FUNCTION(response)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Response), azalea_response_methods);
 	azalea_response_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_response_ce->ce_flags |= ZEND_ACC_FINAL;
+	zend_declare_property_null(azalea_response_ce, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }
+/* }}} */
+
+/* {{{ proto __construct */
+PHP_METHOD(azalea_response, __construct) {}
 /* }}} */
 
 /* {{{ proto void gotoUrl(string url, int httpCode) */
@@ -71,15 +80,63 @@ PHP_METHOD(azalea_response, gotoUrl)
 /* {{{ proto mixed gotoRoute(array route) */
 PHP_METHOD(azalea_response, gotoRoute)
 {
-	zend_array *route;
+	zval *array, *field, pathArgs;
+	azalea_response_t *instance;
+	azalea_controller_t *controller;
+	zend_string *folderName = NULL, *controllerName = NULL, *actionName = NULL;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "a", &route) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "a", &array) == FAILURE) {
 		return;
 	}
 
-	// TODO getRoute
+	instance = getThis();
+	controller = zend_read_property(azalea_response_ce, instance, ZEND_STRL("_instance"), 0, NULL);
+	if (!controller) {
+		// TODO controller not set
+	}
+	// folder
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("folder"))) && Z_TYPE_P(field) == IS_STRING) {
+		folderName = zend_string_copy(Z_STR_P(field));
+	} else if ((field = zend_read_property(azalea_controller_ce, controller, ZEND_STRL("_folderName"), 0, NULL))
+			&& Z_TYPE_P(field) == IS_STRING) {
+		// from controller property
+		folderName = zend_string_copy(Z_STR_P(field));
+	}
+	// controller
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("controller"))) && Z_TYPE_P(field) == IS_STRING) {
+		controllerName = zend_string_copy(Z_STR_P(field));
+	} else if ((field = zend_read_property(azalea_controller_ce, controller, ZEND_STRL("_controllerName"), 0, NULL))
+			&& Z_TYPE_P(field) == IS_STRING) {
+		// from controller property
+		controllerName = zend_string_copy(Z_STR_P(field));
+	} else if ((field = azaleaGetSubConfig("dispatch", "default_controller"))) {
+		// default controller
+		controllerName = zend_string_copy(Z_STR_P(field));
+	}
+	// action
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
+		actionName = zend_string_copy(Z_STR_P(field));
+	} else if ((field = azaleaGetSubConfig("dispatch", "default_action"))) {
+		// default action
+		actionName = zend_string_copy(Z_STR_P(field));
+	}
+	// arguments
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
+		ZVAL_COPY(&pathArgs, field);
+	} else {
+		array_init(&pathArgs);
+	}
 
-	RETURN_TRUE;
+	// try to dispatch new route
+	RETVAL_NULL();
+	dispatch(folderName, controllerName, actionName, &pathArgs, return_value);
+
+	if (folderName) {
+		zend_string_release(folderName);
+	}
+	zend_string_release(controllerName);
+	zend_string_release(actionName);
+	zval_ptr_dtor(&pathArgs);
 }
 /* }}} */
 

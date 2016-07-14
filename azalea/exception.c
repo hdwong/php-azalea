@@ -69,7 +69,7 @@ PHP_METHOD(azalea_exception404, getUri)
 {
 	zval *uri;
 
-	uri = zend_read_property(azalea_exception_ce, getThis(), ZEND_STRL("_uri"), 0, NULL);
+	uri = zend_read_property(azalea_exception404_ce, getThis(), ZEND_STRL("_uri"), 0, NULL);
 	if (!uri) {
 		RETURN_NULL();
 	}
@@ -82,7 +82,7 @@ PHP_METHOD(azalea_exception404, getRoute)
 {
 	zval *route;
 
-	route = zend_read_property(azalea_exception_ce, getThis(), ZEND_STRL("_route"), 0, NULL);
+	route = zend_read_property(azalea_exception404_ce, getThis(), ZEND_STRL("_route"), 0, NULL);
 	if (!route) {
 		RETURN_NULL();
 	}
@@ -108,7 +108,7 @@ PHPAPI void throw404Str(const char *message, size_t len)
 	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message ? message : "", message ? len : 0);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 404);
 	// uri
-	zend_update_property_str(azalea_exception_ce, exception, ZEND_STRL("_uri"), zend_string_copy(AZALEA_G(uri)));
+	zend_update_property_str(azalea_exception404_ce, exception, ZEND_STRL("_uri"), zend_string_copy(AZALEA_G(uri)));
 	// route
 	array_init(&route);
 	if (AZALEA_G(folderName)) {
@@ -120,7 +120,7 @@ PHPAPI void throw404Str(const char *message, size_t len)
 	add_assoc_str(&route, "action", zend_string_copy(AZALEA_G(actionName)));
 	add_assoc_zval(&route, "arguments", &AZALEA_G(pathArgs));
 	zval_add_ref(&AZALEA_G(pathArgs));
-	zend_update_property(azalea_exception_ce, exception, ZEND_STRL("_route"), &route);
+	zend_update_property(azalea_exception404_ce, exception, ZEND_STRL("_route"), &route);
 
 	// check environ
 	if (0 == strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {

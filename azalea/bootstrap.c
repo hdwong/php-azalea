@@ -28,6 +28,7 @@ zend_class_entry *azalea_bootstrap_ce;
 /* {{{ class Azalea\Bootstrap methods
  */
 static zend_function_entry azalea_bootstrap_methods[] = {
+	PHP_ME(azalea_bootstrap, __construct, NULL, ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_bootstrap, getRoute, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, init, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, run, NULL, ZEND_ACC_PUBLIC)
@@ -64,17 +65,17 @@ void processContent(zval *result)
 		}
 	}
 	// ob_end_flush
-	if (!OG(active)) {
-		php_error_docref("ref.outcontrol", E_ERROR, "failed to delete and flush buffer. No buffer to delete or flush");
+	if (OG(active)) {
+		php_output_flush();
+		php_output_clean();
 	}
-	php_output_end();
 	zval_ptr_dtor(result);
 	ZVAL_TRUE(result);
 }
 /* }}} */
 
 /* {{{ proto dispatch */
-zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
 	zend_string *name, *controllerClass, *actionMethod, *tstr;
 	zend_class_entry *ce;
@@ -95,7 +96,7 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 	controllerClass = tstr;
 
 	name = zend_string_tolower(controllerClass);
-	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerInsts)), name);
+//	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerInsts)), name);
 	if (!instance) {
 		// check controller class
 		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
@@ -160,7 +161,11 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 		}
 
 		// controller construct
-		zend_update_property_string(azalea_controller_ce, instance, ZEND_STRL("_folderName"), folderName ? ZSTR_VAL(folderName) : "");
+		if (folderName) {
+			zend_update_property_string(azalea_controller_ce, instance, ZEND_STRL("_folderName"), ZSTR_VAL(folderName));
+		} else {
+			zend_update_property_null(azalea_controller_ce, instance, ZEND_STRL("_folderName"));
+		}
 		zend_update_property_str(azalea_controller_ce, instance, ZEND_STRL("_controllerName"), controllerName);
 
 		// call __init method
@@ -221,6 +226,10 @@ zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_st
 
 	return 1;
 }
+/* }}} */
+
+/* {{{ proto __construct */
+PHP_METHOD(azalea_bootstrap, __construct) {}
 /* }}} */
 
 /* {{{ proto Bootstrap init(mixed $config, string $environ = AZALEA_G(environ)) */
@@ -578,6 +587,13 @@ PHP_METHOD(azalea_bootstrap, run)
 		zval_ptr_dtor(&exception);
 		zend_bailout();
 	}
+
+	// try to close output buffer
+	if (!OG(active) || php_output_end() == FAILURE) {
+		php_error_docref(NULL, E_ERROR, "Failed to close output buffer");
+		RETURN_FALSE;
+	}
+
 	RETURN_ZVAL(&ret, 1, 0);
 }
 /* }}} */
