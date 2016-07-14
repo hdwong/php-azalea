@@ -9,7 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(session);
 
-PHP_METHOD(azalea_session, __construct) {};
+PHP_METHOD(azalea_session, __construct);
 PHP_METHOD(azalea_session, get);
 PHP_METHOD(azalea_session, set);
 PHP_METHOD(azalea_session, clean);
