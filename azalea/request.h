@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(request);
 
+PHP_METHOD(azalea_request, __construct);
 PHP_METHOD(azalea_request, getUri);
 PHP_METHOD(azalea_request, getRequestUri);
 PHP_METHOD(azalea_request, getBaseUri);

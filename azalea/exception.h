@@ -9,8 +9,8 @@
 
 AZALEA_STARTUP_FUNCTION(exception);
 
-PHP_METHOD(azalea_exception, getUri);
-PHP_METHOD(azalea_exception, getRoute);
+PHP_METHOD(azalea_exception404, getUri);
+PHP_METHOD(azalea_exception404, getRoute);
 PHP_METHOD(azalea_exception500, getServiceInfo);
 
 PHPAPI void throw404Str(const char *message, size_t len);

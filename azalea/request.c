@@ -17,6 +17,7 @@ zend_class_entry *azalea_request_ce;
 /* {{{ class Azalea\Request methods
  */
 static zend_function_entry azalea_request_methods[] = {
+	PHP_ME(azalea_request, __construct, NULL, ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_request, getBaseUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getRequestUri, NULL, ZEND_ACC_PUBLIC)
@@ -37,6 +38,7 @@ AZALEA_STARTUP_FUNCTION(request)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Request), azalea_request_methods);
 	azalea_request_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_request_ce->ce_flags |= ZEND_ACC_FINAL;
+	zend_declare_property_null(azalea_request_ce, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }
@@ -69,6 +71,10 @@ PHPAPI zend_string * azaleaGetRequestUri(void)
 	field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REQUEST_URI"));
 	return field ? zend_string_copy(Z_STR_P(field)) : NULL;
 }
+/* }}} */
+
+/* {{{ proto __construct */
+PHP_METHOD(azalea_request, __construct) {}
 /* }}} */
 
 /* {{{ proto string getBaseuri(void) */

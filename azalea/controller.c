@@ -52,6 +52,7 @@ AZALEA_STARTUP_FUNCTION(controller)
 PHP_METHOD(azalea_controller, getRequest)
 {
 	object_init_ex(return_value, azalea_request_ce);
+	zend_update_property(azalea_request_ce, return_value, ZEND_STRL("_instance"), getThis());
 }
 /* }}} */
 
@@ -59,6 +60,7 @@ PHP_METHOD(azalea_controller, getRequest)
 PHP_METHOD(azalea_controller, getResponse)
 {
 	object_init_ex(return_value, azalea_response_ce);
+	zend_update_property(azalea_response_ce, return_value, ZEND_STRL("_instance"), getThis());
 }
 /* }}} */
 

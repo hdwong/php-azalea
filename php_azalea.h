@@ -73,9 +73,6 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 
 	zval controllerInsts;
 	zval modelInsts;
-	azalea_request_t *requestInst;
-	azalea_response_t *responseInst;
-	azalea_session_t *sessionInst;
 
 	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)

@@ -19,6 +19,7 @@ zend_class_entry *azalea_view_ce;
 /* {{{ class Azalea\View methods
  */
 static zend_function_entry azalea_view_methods[] = {
+	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, plain, NULL, ZEND_ACC_PROTECTED)
@@ -98,6 +99,10 @@ static int checkValidVarName(char *varName, int len) /* {{{ */
 	}
 	return 1;
 }
+/* }}} */
+
+/* {{{ proto __construct */
+PHP_METHOD(azalea_view, __construct) {}
 /* }}} */
 
 /* {{{ proto string render(string $tplname, array $data = null) */

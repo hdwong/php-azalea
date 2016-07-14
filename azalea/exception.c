@@ -19,8 +19,6 @@ zend_class_entry *azalea_exception500_ce;
 /* {{{ class Azalea\Exception methods
  */
 static zend_function_entry azalea_exception_methods[] = {
-	PHP_ME(azalea_exception, getUri, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(azalea_exception, getRoute, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -28,6 +26,8 @@ static zend_function_entry azalea_exception_methods[] = {
 /* {{{ class Azalea\Exception methods
  */
 static zend_function_entry azalea_e404exception_methods[] = {
+	PHP_ME(azalea_exception404, getUri, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_exception404, getRoute, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -51,11 +51,11 @@ AZALEA_STARTUP_FUNCTION(exception)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Exception), azalea_exception_methods);
 	azalea_exception_ce = zend_register_internal_class_ex(&ce, zend_ce_exception);
 	azalea_exception_ce->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
-	zend_declare_property_null(azalea_exception_ce, ZEND_STRL("_uri"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(azalea_exception_ce, ZEND_STRL("_route"), ZEND_ACC_PRIVATE);
 
 	INIT_CLASS_ENTRY(e404_ce, AZALEA_NS_NAME(E404Exception), azalea_e404exception_methods);
 	azalea_exception404_ce = zend_register_internal_class_ex(&e404_ce, azalea_exception_ce);
+	zend_declare_property_null(azalea_exception404_ce, ZEND_STRL("_uri"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(azalea_exception404_ce, ZEND_STRL("_route"), ZEND_ACC_PRIVATE);
 
 	INIT_CLASS_ENTRY(e500_ce, AZALEA_NS_NAME(E500Exception), azalea_e500exception_methods);
 	azalea_exception500_ce = zend_register_internal_class_ex(&e500_ce, azalea_exception_ce);
@@ -65,7 +65,7 @@ AZALEA_STARTUP_FUNCTION(exception)
 /* }}} */
 
 /* {{{ proto string getUri(void) */
-PHP_METHOD(azalea_exception, getUri)
+PHP_METHOD(azalea_exception404, getUri)
 {
 	zval *uri;
 
@@ -78,7 +78,7 @@ PHP_METHOD(azalea_exception, getUri)
 /* }}} */
 
 /* {{{ proto string getRoute(void) */
-PHP_METHOD(azalea_exception, getRoute)
+PHP_METHOD(azalea_exception404, getRoute)
 {
 	zval *route;
 

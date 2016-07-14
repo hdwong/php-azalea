@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(view);
 
+PHP_METHOD(azalea_view, __construct);
 PHP_METHOD(azalea_view, render);
 PHP_METHOD(azalea_view, assign);
 PHP_METHOD(azalea_view, plain);

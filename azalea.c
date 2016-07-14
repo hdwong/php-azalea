@@ -99,9 +99,6 @@ PHP_RINIT_FUNCTION(azalea)
 
 	array_init(&AZALEA_G(controllerInsts));
 	array_init(&AZALEA_G(modelInsts));
-	AZALEA_G(requestInst) = NULL;
-	AZALEA_G(responseInst) = NULL;
-	AZALEA_G(sessionInst) = NULL;
 
 	array_init(&AZALEA_G(config));
 
@@ -163,15 +160,6 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 
 	zval_ptr_dtor(&AZALEA_G(controllerInsts));
 	zval_ptr_dtor(&AZALEA_G(modelInsts));
-	if (AZALEA_G(requestInst)) {
-		zval_ptr_dtor(AZALEA_G(requestInst));
-	}
-	if (AZALEA_G(responseInst)) {
-		zval_ptr_dtor(AZALEA_G(responseInst));
-	}
-	if (AZALEA_G(sessionInst)) {
-		zval_ptr_dtor(AZALEA_G(sessionInst));
-	}
 
 	zval_ptr_dtor(&AZALEA_G(config));
 
