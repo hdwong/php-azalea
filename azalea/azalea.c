@@ -293,11 +293,18 @@ PHPAPI int azaleaRequire(char *path, size_t len)
 }
 /* }}} */
 
+/* {{{ proto curlExec */
+static int curlExec()
+{
+	return 1;
+}
+/* }}} */
+
 /** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance)
 */
 PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
-	zend_string *modelName, *name, *modelClass, *tstr;
+	zend_string *modelName, *lcName, *name, *modelClass, *tstr;
 	zend_class_entry *ce;
 	azalea_model_t *instance = NULL, rv = {{0}};
 
@@ -305,7 +312,8 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		return;
 	}
 
-	name = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
+	lcName = zend_string_tolower(modelName);
+	name = zend_string_init(ZSTR_VAL(lcName), ZSTR_LEN(lcName), 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
 	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));
 	zend_string_release(name);
@@ -319,7 +327,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		zval modelPath, exists;
 		ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
 		tstr = Z_STR(modelPath);
-		Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", Z_STRVAL(modelPath), DEFAULT_SLASH, ZSTR_VAL(modelName));
+		Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
 		zend_string_release(tstr);
 		// check file exists
 		php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
@@ -361,7 +369,28 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 
 		// service model construct
 		if (instanceof_function(ce, azalea_service_ce)) {
-			zend_update_property_str(azalea_model_ce, instance, ZEND_STRL("service"), modelName);
+			zval *field;
+			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 1, NULL)) &&
+					Z_TYPE_P(field) == IS_STRING) {
+				zend_string_release(lcName);
+				lcName = zend_string_copy(Z_STR_P(field));
+			}
+			if (!(field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 1, NULL)) ||
+					Z_TYPE_P(field) != IS_STRING) {
+				// get serviceUrl from config
+				if (!(field = azaleaGetSubConfig("service", "url")) || Z_TYPE_P(field) != IS_STRING) {
+					throw404Str(ZEND_STRL("Service url not set."));
+					RETURN_FALSE;
+				}
+				zend_string *serviceUrl, *t;
+				t = zend_string_dup(Z_STR_P(field), 0);
+				tstr = php_trim(t, ZEND_STRL("/"), 2);
+				zend_string_release(t);
+				serviceUrl = strpprintf(0, "%s/%s", ZSTR_VAL(tstr), ZSTR_VAL(lcName));
+				zend_update_property_str(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), serviceUrl);
+				zend_string_release(tstr);
+				zend_string_release(serviceUrl);
+			}
 		}
 
 		// call __init method
@@ -372,6 +401,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		// cache instance
 		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(name), ZSTR_LEN(name), instance);
 	}
+	zend_string_release(lcName);
 	zend_string_release(modelClass);
 	zend_string_release(name);
 

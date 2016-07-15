@@ -9,7 +9,10 @@
 
 AZALEA_STARTUP_FUNCTION(service);
 
-PHP_METHOD(azalea_service, getModel);
+PHP_METHOD(azalea_service, get);
+PHP_METHOD(azalea_service, post);
+PHP_METHOD(azalea_service, put);
+PHP_METHOD(azalea_service, delete);
 
 extern zend_class_entry *azalea_service_ce;
 

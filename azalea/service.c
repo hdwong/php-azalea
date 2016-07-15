@@ -16,6 +16,10 @@ zend_class_entry *azalea_service_ce;
 /* {{{ class Azalea\ServiceModel methods
  */
 static zend_function_entry azalea_service_methods[] = {
+	PHP_ME(azalea_service, get, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_service, post, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_service, put, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_service, delete, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -28,8 +32,36 @@ AZALEA_STARTUP_FUNCTION(service)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(ServiceModel), azalea_service_methods);
 	azalea_service_ce = zend_register_internal_class_ex(&ce, azalea_model_ce);
 	azalea_service_ce->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
-	zend_declare_property_null(azalea_service_ce, ZEND_STRL("service"), ZEND_ACC_PROTECTED);
+	zend_declare_property_null(azalea_service_ce, ZEND_STRL("serviceUrl"), ZEND_ACC_PROTECTED);
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto get */
+PHP_METHOD(azalea_service, get)
+{
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto post */
+PHP_METHOD(azalea_service, post)
+{
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto put */
+PHP_METHOD(azalea_service, put)
+{
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto delete */
+PHP_METHOD(azalea_service, delete)
+{
+	RETURN_TRUE;
 }
 /* }}} */
