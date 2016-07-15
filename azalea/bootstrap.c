@@ -96,8 +96,10 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 	controllerClass = tstr;
 
 	name = zend_string_tolower(controllerClass);
-//	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(controllerInsts)), name);
-	if (!instance) {
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), name);
+	if (instance) {
+		ce = zend_hash_find_ptr(EG(class_table), name);
+	} else {
 		// check controller class
 		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
 			// class not exists, load controller file
@@ -149,7 +151,6 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 			zend_string_release(superClass);
 			zval_ptr_dtor(&controllerPath);
 		}
-		zend_string_release(controllerClass);
 
 		// init controller instance
 		instance = &rv;
@@ -174,8 +175,9 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 		}
 
 		// cache instance
-		add_assoc_zval_ex(&AZALEA_G(controllerInsts), ZSTR_VAL(name), ZSTR_LEN(name), instance);
+		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(name), ZSTR_LEN(name), instance);
 	}
+	zend_string_release(controllerClass);
 	zend_string_release(name);
 
 	// dynamic router
@@ -220,9 +222,6 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 	if (callArgs) {
 		efree(callArgs);
 	}
-
-	// process and output result content
-	processContent(ret);
 
 	return 1;
 }
@@ -564,6 +563,10 @@ PHP_METHOD(azalea_bootstrap, run)
 	zval ret;
 	dispatch(AZALEA_G(folderName), AZALEA_G(controllerName), AZALEA_G(actionName),
 			&AZALEA_G(pathArgs), &ret);
+
+	// process and output result content
+	processContent(&ret);
+
 	// try ... catch \Exception
 	if (EG(exception) && instanceof_function(EG(exception)->ce, zend_ce_exception)) {
 		zval exception, errorArgs, *errorController, *errorAction;

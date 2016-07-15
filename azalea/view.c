@@ -13,6 +13,8 @@
 
 #include "ext/standard/php_var.h"  // for php_var_dump
 #include "ext/standard/php_filestat.h"  // for php_stat
+#include "ext/standard/html.h"  // for php_escape_html_entities
+#include "main/SAPI.h"  // for SG
 
 zend_class_entry *azalea_view_ce;
 
@@ -183,9 +185,26 @@ PHP_METHOD(azalea_view, assign)
 }
 /* }}} */
 
+/* {{{ get_default_charset
+ */
+static char *get_default_charset(void) {
+	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
+		return PG(internal_encoding);
+	} else if (SG(default_charset) && SG(default_charset)[0] ) {
+		return SG(default_charset);
+	}
+	return NULL;
+}
+/* }}} */
+
 /* {{{ proto string plain(string $string) */
 PHP_METHOD(azalea_view, plain)
 {
-	RETURN_TRUE;
+	zend_string *text;
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
+		return;
+	}
+	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
+	RETURN_STR(text);
 }
 /* }}} */

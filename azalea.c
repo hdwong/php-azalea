@@ -97,8 +97,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
 
-	array_init(&AZALEA_G(controllerInsts));
-	array_init(&AZALEA_G(modelInsts));
+	array_init(&AZALEA_G(instances));
 
 	array_init(&AZALEA_G(config));
 
@@ -158,8 +157,7 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
 
-	zval_ptr_dtor(&AZALEA_G(controllerInsts));
-	zval_ptr_dtor(&AZALEA_G(modelInsts));
+	zval_ptr_dtor(&AZALEA_G(instances));
 
 	zval_ptr_dtor(&AZALEA_G(config));
 
