@@ -81,7 +81,6 @@ PHP_METHOD(azalea_response, gotoUrl)
 PHP_METHOD(azalea_response, gotoRoute)
 {
 	zval *array, *field, pathArgs;
-	azalea_response_t *instance;
 	azalea_controller_t *controller;
 	zend_string *folderName = NULL, *controllerName = NULL, *actionName = NULL;
 
@@ -89,8 +88,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 		return;
 	}
 
-	instance = getThis();
-	controller = zend_read_property(azalea_response_ce, instance, ZEND_STRL("_instance"), 0, NULL);
+	controller = zend_read_property(azalea_response_ce, getThis(), ZEND_STRL("_instance"), 0, NULL);
 	if (!controller) {
 		// TODO controller not set
 	}

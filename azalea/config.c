@@ -105,7 +105,7 @@ static void php_ini_parser_cb_with_sections(zval *arg1, zval *arg2, zval *arg3, 
 /* }}} */
 
 /* {{{ proto void loadConfig(mixed $config) */
-void azaleaLoadConfig(zval *val)
+PHPAPI void azaleaLoadConfig(zval *val)
 {
 	zval *config = &AZALEA_G(config);
 	if (val) {
@@ -286,7 +286,7 @@ void azaleaLoadConfig(zval *val)
 /* }}} */
 
 /* {{{ proto mixed azaleaGetSubConfig(string $key) */
-zval * azaleaGetSubConfig(const char *key, const char *subKey)
+PHPAPI zval * azaleaGetSubConfig(const char *key, const char *subKey)
 {
 	zval *found = zend_hash_str_find(Z_ARRVAL(AZALEA_G(config)), key, strlen(key));
 	if (!found) {

@@ -74,7 +74,7 @@ PHP_METHOD(azalea_controller, getSession)
 /* {{{ proto getModel */
 PHP_METHOD(azalea_controller, getModel)
 {
-//	object_init_ex(return_value, azalea_session_ce);
+	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
 }
 /* }}} */
 

@@ -83,12 +83,12 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 
 	// controller name
 	if (folderName) {
-		controllerClass = zend_string_dup(folderName, 0);
+		controllerClass = zend_string_init(ZSTR_VAL(folderName), ZSTR_LEN(folderName), 0);
 		ZSTR_VAL(controllerClass)[0] = toupper(ZSTR_VAL(controllerClass)[0]);	// ucfirst
 	} else {
 		controllerClass = zend_string_init(ZEND_STRL(""), 0);
 	}
-	name = zend_string_dup(controllerName, 0);
+	name = zend_string_init(ZSTR_VAL(controllerName), ZSTR_LEN(controllerName), 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
 	tstr = strpprintf(0, "%s%sController", ZSTR_VAL(controllerClass), ZSTR_VAL(name));
 	zend_string_release(name);
@@ -98,7 +98,7 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 	name = zend_string_tolower(controllerClass);
 	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), name);
 	if (instance) {
-		ce = zend_hash_find_ptr(EG(class_table), name);
+		ce = Z_OBJCE_P(instance);
 	} else {
 		// check controller class
 		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
@@ -140,15 +140,12 @@ PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, 
 				return 0;
 			}
 			// check super class name
-			zend_string *superClass = zend_string_init(ZEND_STRL(AZALEA_NS_NAME(Controller)), 0);
-			zend_class_entry *superCe = zend_lookup_class_ex(superClass, NULL, 0);
-			if (!instanceof_function(ce, superCe)) {
+			if (!instanceof_function(ce, azalea_controller_ce)) {
 				throw404Str(ZEND_STRL("Controller class must be an instance of "
 						AZALEA_NS_NAME(Controller) "."));
 				ZVAL_FALSE(ret);
 				return 0;
 			}
-			zend_string_release(superClass);
 			zval_ptr_dtor(&controllerPath);
 		}
 

@@ -8,7 +8,13 @@
 #include "azalea.h"
 #include "php_azalea.h"
 
+#include "azalea/namespace.h"
 #include "azalea/config.h"
+#include "azalea/model.h"
+#include "azalea/service.h"
+#include "azalea/exception.h"
+
+#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 
 #include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
@@ -284,5 +290,91 @@ PHPAPI int azaleaRequire(char *path, size_t len)
 		return 1;
 	}
 	return 0;
+}
+/* }}} */
+
+/** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance)
+*/
+PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
+{
+	zend_string *modelName, *name, *modelClass, *tstr;
+	zend_class_entry *ce;
+	azalea_model_t *instance = NULL, rv = {{0}};
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &modelName) == FAILURE) {
+		return;
+	}
+
+	name = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
+	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
+	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));
+	zend_string_release(name);
+
+	name = zend_string_tolower(modelClass);
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), name);
+	if (instance) {
+		ce = Z_OBJCE_P(instance);
+	} else {
+		// load model file
+		zval modelPath, exists;
+		ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
+		tstr = Z_STR(modelPath);
+		Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", Z_STRVAL(modelPath), DEFAULT_SLASH, ZSTR_VAL(modelName));
+		zend_string_release(tstr);
+		// check file exists
+		php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
+		if (Z_TYPE(exists) == IS_FALSE) {
+			tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
+			throw404(tstr);
+			zend_string_release(tstr);
+			RETURN_FALSE;
+		}
+		// require model file
+		int status = azaleaRequire(Z_STRVAL(modelPath), Z_STRLEN(modelPath));
+		if (!status) {
+			tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
+			throw404(tstr);
+			zend_string_release(tstr);
+			RETURN_FALSE;
+		}
+		// check model class exists
+		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
+			tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
+			throw404(tstr);
+			zend_string_release(tstr);
+			RETURN_FALSE;
+		}
+		// check super class name
+		if (!instanceof_function(ce, azalea_model_ce)) {
+			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
+			RETURN_FALSE;
+		}
+		zval_ptr_dtor(&modelPath);
+
+		// init controller instance
+		instance = &rv;
+		object_init_ex(instance, ce);
+		if (!instance) {
+			throw404Str(ZEND_STRL("Model initialization is failed."));
+			RETURN_FALSE;
+		}
+
+		// service model construct
+		if (instanceof_function(ce, azalea_service_ce)) {
+			zend_update_property_str(azalea_model_ce, instance, ZEND_STRL("service"), modelName);
+		}
+
+		// call __init method
+		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
+			zend_call_method_with_0_params(instance, ce, NULL, "__init", NULL);
+		}
+
+		// cache instance
+		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(name), ZSTR_LEN(name), instance);
+	}
+	zend_string_release(modelClass);
+	zend_string_release(name);
+
+	RETURN_ZVAL(instance, 1, 0);
 }
 /* }}} */

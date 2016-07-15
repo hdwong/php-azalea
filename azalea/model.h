@@ -9,6 +9,8 @@
 
 AZALEA_STARTUP_FUNCTION(model);
 
+PHP_METHOD(azalea_model, getModel);
+
 extern zend_class_entry *azalea_model_ce;
 
 #endif /* AZALEA_MODEL_H_ */
