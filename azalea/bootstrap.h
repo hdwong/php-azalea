@@ -14,6 +14,6 @@ PHP_METHOD(azalea_bootstrap, init);
 PHP_METHOD(azalea_bootstrap, run);
 PHP_METHOD(azalea_bootstrap, getRoute);
 
-PHPAPI zend_bool dispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret);
+PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret);
 
 #endif /* AZALEA_BOOTSTRAP_H_ */

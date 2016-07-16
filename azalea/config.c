@@ -17,8 +17,9 @@ zend_class_entry *azalea_config_ce;
 /* {{{ class Azalea\Config methods
  */
 static zend_function_entry azalea_config_methods[] = {
-	PHP_ME(azalea_config, all, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_config, getSub, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_config, getAll, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, set, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
 };
@@ -105,7 +106,7 @@ static void php_ini_parser_cb_with_sections(zval *arg1, zval *arg2, zval *arg3, 
 /* }}} */
 
 /* {{{ proto void loadConfig(mixed $config) */
-PHPAPI void azaleaLoadConfig(zval *val)
+void azaleaLoadConfig(zval *val)
 {
 	zval *config = &AZALEA_G(config);
 	if (val) {
@@ -285,8 +286,8 @@ PHPAPI void azaleaLoadConfig(zval *val)
 }
 /* }}} */
 
-/* {{{ proto mixed azaleaGetSubConfig(string $key) */
-PHPAPI zval * azaleaGetSubConfig(const char *key, const char *subKey)
+/* {{{ proto mixed azaleaConfigSubFind(string $key, string $subKey) */
+PHPAPI zval * azaleaConfigSubFind(const char *key, const char *subKey)
 {
 	zval *found = zend_hash_str_find(Z_ARRVAL(AZALEA_G(config)), key, strlen(key));
 	if (!found) {
@@ -304,24 +305,17 @@ PHPAPI zval * azaleaGetSubConfig(const char *key, const char *subKey)
 /* }}} */
 
 /* {{{ proto mixed get(string $key = null, mixed $default = null) */
-PHP_METHOD(azalea_config, all)
-{
-	RETURN_ZVAL(&AZALEA_G(config), 1, 0);
-}
-/* }}} */
-
-/* {{{ proto mixed get(string $key = null, mixed $default = null) */
 PHP_METHOD(azalea_config, get)
 {
-	zend_string *key = NULL;
+	zend_string *key;
 	zval *def = NULL;
-	zval *found, *val;
+	zval *val;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &key, &def) == FAILURE) {
 		return;
 	}
 
-	val = azaleaGetConfig(ZSTR_VAL(key));
+	val = azaleaConfigFind(ZSTR_VAL(key));
 	if (val) {
 		RETURN_ZVAL(val, 1, 0);
 	}
@@ -329,6 +323,35 @@ PHP_METHOD(azalea_config, get)
 		RETURN_ZVAL(def, 1, 0);
 	}
 	RETURN_NULL();
+}
+/* }}} */
+
+/* {{{ proto mixed getSub(string $key, string $subKey, mixed $default = null) */
+PHP_METHOD(azalea_config, getSub)
+{
+	zend_string *key, *subKey;
+	zval *def = NULL;
+	zval *val;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|z", &key, &def) == FAILURE) {
+		return;
+	}
+
+	val = azaleaConfigSubFind(ZSTR_VAL(key), ZSTR_VAL(subKey));
+	if (val) {
+		RETURN_ZVAL(val, 1, 0);
+	}
+	if (def) {
+		RETURN_ZVAL(def, 1, 0);
+	}
+	RETURN_NULL();
+}
+/* }}} */
+
+/* {{{ proto mixed getAll(void) */
+PHP_METHOD(azalea_config, getAll)
+{
+	RETURN_ZVAL(&AZALEA_G(config), 1, 0);
 }
 /* }}} */
 

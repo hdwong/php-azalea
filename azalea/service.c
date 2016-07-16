@@ -41,27 +41,54 @@ AZALEA_STARTUP_FUNCTION(service)
 /* {{{ proto get */
 PHP_METHOD(azalea_service, get)
 {
-	RETURN_TRUE;
+	azaleaServiceRequest(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_GET);
 }
 /* }}} */
 
 /* {{{ proto post */
 PHP_METHOD(azalea_service, post)
 {
-	RETURN_TRUE;
+	azaleaServiceRequest(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_POST);
 }
 /* }}} */
 
 /* {{{ proto put */
 PHP_METHOD(azalea_service, put)
 {
-	RETURN_TRUE;
+	azaleaServiceRequest(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_PUT);
 }
 /* }}} */
 
 /* {{{ proto delete */
 PHP_METHOD(azalea_service, delete)
 {
+	azaleaServiceRequest(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_DELETE);
+}
+/* }}} */
+
+static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, zend_long method)
+/* {{{ proto azaleaServiceRequest */
+{
+	zend_string *serviceUrl;
+	zval *arguments;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|a", &serviceUrl, &arguments) == FAILURE) {
+		return;
+	}
+
+	if (strncasecmp(ZSTR_VAL(serviceUrl), ZEND_STRL("http://")) &&
+			strncasecmp(ZSTR_VAL(serviceUrl), ZEND_STRL("https://"))) {
+		// add serviceUrl prefix
+		zval *purl;
+		purl = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 0, NULL);
+		serviceUrl = strpprintf(0, "%s/%s", Z_STRVAL_P(purl), ZSTR_VAL(serviceUrl));
+	} else {
+		serviceUrl = zend_string_init(ZSTR_VAL(serviceUrl), ZSTR_LEN(serviceUrl), 0);
+	}
+
+	// TODO curl exec
+
+	zend_string_release(serviceUrl);
 	RETURN_TRUE;
 }
 /* }}} */

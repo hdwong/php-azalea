@@ -107,14 +107,14 @@ PHP_METHOD(azalea_response, gotoRoute)
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		controllerName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaGetSubConfig("dispatch", "default_controller"))) {
+	} else if ((field = azaleaConfigSubFind("dispatch", "default_controller"))) {
 		// default controller
 		controllerName = zend_string_copy(Z_STR_P(field));
 	}
 	// action
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
 		actionName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaGetSubConfig("dispatch", "default_action"))) {
+	} else if ((field = azaleaConfigSubFind("dispatch", "default_action"))) {
 		// default action
 		actionName = zend_string_copy(Z_STR_P(field));
 	}
@@ -127,7 +127,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 
 	// try to dispatch new route
 	RETVAL_NULL();
-	dispatch(folderName, controllerName, actionName, &pathArgs, return_value);
+	azaleaDispatch(folderName, controllerName, actionName, &pathArgs, return_value);
 
 	if (folderName) {
 		zend_string_release(folderName);

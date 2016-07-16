@@ -7,17 +7,20 @@
 #ifndef AZALEA_CONFIG_H_
 #define AZALEA_CONFIG_H_
 
+static inline void azaleaDeepCopy(zval *dst, zval *src);
+
 AZALEA_STARTUP_FUNCTION(config);
 
-PHP_METHOD(azalea_config, all);
 PHP_METHOD(azalea_config, get);
+PHP_METHOD(azalea_config, getSub);
+PHP_METHOD(azalea_config, getAll);
 PHP_METHOD(azalea_config, set);
 
-extern zend_class_entry *azalea_config_ce;
+void azaleaLoadConfig(zval *);
 
-PHPAPI void azaleaLoadConfig(zval *);
-#define azaleaGetConfig(key) azaleaGetSubConfig(key, NULL)
-PHPAPI zval * azaleaGetSubConfig(const char *key, const char *subKey);
-static inline void azaleaDeepCopy(zval *dst, zval *src);
+#define azaleaConfigFind(key) azaleaConfigSubFind(key, NULL)
+PHPAPI zval * azaleaConfigSubFind(const char *key, const char *subKey);
+
+extern zend_class_entry *azalea_config_ce;
 
 #endif /* AZALEA_CONFIG_H_ */

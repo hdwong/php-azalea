@@ -115,7 +115,7 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 		field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
 		if (!field) {
 			// host not found, try to get from config
-			field = azaleaGetConfig("hostname");
+			field = azaleaConfigFind("hostname");
 			if (!field) {
 				tstr = strpprintf(0, "%slocalhost", ZSTR_VAL(hostname));
 			} else {
@@ -133,6 +133,16 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 }
 /* }}} */
 
+/* {{{ azalea_timer
+ */
+PHP_FUNCTION(azalea_timer)
+{
+	double now = azaleaGetMicrotime();
+	RETVAL_DOUBLE(now - AZALEA_G(request_time));
+	AZALEA_G(request_time) = now;
+}
+/* }}} */
+
 /* {{{ azalea_url
  */
 PHP_FUNCTION(azalea_url)
@@ -145,25 +155,6 @@ PHP_FUNCTION(azalea_url)
 	}
 
 	RETURN_STR(azaleaUrl(url, includeHost));
-}
-/* }}} */
-
-double azaleaGetMicrotime()
-{
-	struct timeval tp = {0};
-	if (gettimeofday(&tp, NULL)) {
-		return 0;
-	}
-	return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
-}
-
-/* {{{ azalea_timer
- */
-PHP_FUNCTION(azalea_timer)
-{
-	double now = azaleaGetMicrotime();
-	RETVAL_DOUBLE(now - AZALEA_G(request_time));
-	AZALEA_G(request_time) = now;
 }
 /* }}} */
 
@@ -293,10 +284,14 @@ PHPAPI int azaleaRequire(char *path, size_t len)
 }
 /* }}} */
 
-/* {{{ proto curlExec */
-static int curlExec()
+/* {{{ proto azaleaGetMicrotime */
+PHPAPI double azaleaGetMicrotime()
 {
-	return 1;
+	struct timeval tp = {0};
+	if (gettimeofday(&tp, NULL)) {
+		return 0;
+	}
+	return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
 }
 /* }}} */
 
@@ -378,7 +373,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			if (!(field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 1, NULL)) ||
 					Z_TYPE_P(field) != IS_STRING) {
 				// get serviceUrl from config
-				if (!(field = azaleaGetSubConfig("service", "url")) || Z_TYPE_P(field) != IS_STRING) {
+				if (!(field = azaleaConfigSubFind("service", "url")) || Z_TYPE_P(field) != IS_STRING) {
 					throw404Str(ZEND_STRL("Service url not set."));
 					RETURN_FALSE;
 				}
