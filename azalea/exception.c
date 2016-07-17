@@ -59,6 +59,9 @@ AZALEA_STARTUP_FUNCTION(exception)
 
 	INIT_CLASS_ENTRY(e500_ce, AZALEA_NS_NAME(E500Exception), azalea_e500exception_methods);
 	azalea_exception500_ce = zend_register_internal_class_ex(&e500_ce, azalea_exception_ce);
+	zend_declare_property_null(azalea_exception500_ce, ZEND_STRL("_method"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(azalea_exception500_ce, ZEND_STRL("_url"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(azalea_exception500_ce, ZEND_STRL("_arguments"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }
@@ -93,11 +96,21 @@ PHP_METHOD(azalea_exception404, getRoute)
 /* {{{ proto string getServiceUri(void) */
 PHP_METHOD(azalea_exception500, getServiceInfo)
 {
+	zval *method, *url, *arguments;
+	azalea_exception_t *instance = getThis();
 
+	method = zend_read_property(azalea_exception500_ce, instance, ZEND_STRL("_method"), 0, NULL);
+	url = zend_read_property(azalea_exception500_ce, instance, ZEND_STRL("_url"), 0, NULL);
+	arguments = zend_read_property(azalea_exception500_ce, instance, ZEND_STRL("_arguments"), 0, NULL);
+
+	array_init(return_value);
+	add_assoc_zval_ex(return_value, ZEND_STRL("method"), method);
+	add_assoc_zval_ex(return_value, ZEND_STRL("url"), url);
+	add_assoc_zval_ex(return_value, ZEND_STRL("arguments"), arguments);
 }
 /* }}} */
 
-/* {{{ proto throw404 */
+/* {{{ proto throw404Str */
 PHPAPI void throw404Str(const char *message, size_t len)
 {
 	zval route;
@@ -121,12 +134,38 @@ PHPAPI void throw404Str(const char *message, size_t len)
 	add_assoc_zval(&route, "arguments", &AZALEA_G(pathArgs));
 	zval_add_ref(&AZALEA_G(pathArgs));
 	zend_update_property(azalea_exception404_ce, exception, ZEND_STRL("_route"), &route);
-
 	// check environ
 	if (0 == strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
 		// WEB
 		azaleaSetHeaderStr(ZEND_STRL("HTTP/1.1 404 Not Found"), 404);
 	}
-	zend_throw_exception_object(&rv);
+	zend_throw_exception_object(exception);
+}
+/* }}} */
+
+/* {{{ proto throw500Str */
+PHPAPI void throw500Str(const char *message, size_t len, const char *method, const char *serviceUrl, zval *arguments)
+{
+	azalea_exception_t rv = {{0}}, *exception = &rv;
+
+	object_init_ex(exception, azalea_exception500_ce);
+	// message
+	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message ? message : "", message ? len : 0);
+	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 500);
+	// serviceMethod
+	zend_update_property_string(azalea_exception500_ce, exception, ZEND_STRL("_method"), method);
+	// serviceUrl
+	zend_update_property_string(azalea_exception500_ce, exception, ZEND_STRL("_url"), serviceUrl);
+	// serviceArguments
+	if (arguments) {
+		zend_update_property(azalea_exception500_ce, exception, ZEND_STRL("_arguments"), arguments);
+	}
+
+	// check environ
+	if (0 == strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+		// WEB
+		azaleaSetHeaderStr(ZEND_STRL("HTTP/1.1 500 Internal Server Error"), 500);
+	}
+	zend_throw_exception_object(exception);
 }
 /* }}} */

@@ -12,7 +12,7 @@
 #define AZALEA_SERVICE_METHOD_PUT    3
 #define AZALEA_SERVICE_METHOD_DELETE 4
 
-static void azaleaServiceRequest();
+static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, zend_long method);
 
 AZALEA_STARTUP_FUNCTION(service);
 

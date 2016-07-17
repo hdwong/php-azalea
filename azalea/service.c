@@ -10,6 +10,8 @@
 #include "azalea/azalea.h"
 #include "azalea/model.h"
 #include "azalea/service.h"
+#include "azalea/exception.h"
+#include "azalea/transport_curl.h"
 
 zend_class_entry *azalea_service_ce;
 
@@ -70,7 +72,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 /* {{{ proto azaleaServiceRequest */
 {
 	zend_string *serviceUrl;
-	zval *arguments;
+	zval *arguments = NULL, serviceArgs;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|a", &serviceUrl, &arguments) == FAILURE) {
 		return;
@@ -85,10 +87,63 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	} else {
 		serviceUrl = zend_string_init(ZSTR_VAL(serviceUrl), ZSTR_LEN(serviceUrl), 0);
 	}
+	if (arguments) {
+		ZVAL_DUP(&serviceArgs, arguments);
+		arguments = &serviceArgs;
+	}
 
 	// TODO curl exec
+	void *cp = azaleaCurlOpen();
+	if (!cp) {
+		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
+		return;
+	}
+	long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
+	azaleaCurlClose(cp);
 
+	char *pServiceMethod;
+	switch (method) {
+		case AZALEA_SERVICE_METHOD_GET:
+			pServiceMethod = "GET";
+			break;
+		case AZALEA_SERVICE_METHOD_POST:
+			pServiceMethod = "POST";
+			break;
+		case AZALEA_SERVICE_METHOD_PUT:
+			pServiceMethod = "PUT";
+			break;
+		case AZALEA_SERVICE_METHOD_DELETE:
+			pServiceMethod = "DELETE";
+			break;
+		default:
+			pServiceMethod = "Unknown method";
+	}
+	if (statusCode == 0) {
+		throw500Str(ZEND_STRL("Service response is invalid."), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+		return;
+	}
+	if (statusCode != 200) {
+		if (Z_TYPE_P(return_value) == IS_ARRAY) {
+			// array
+			zval *message = zend_hash_str_find(Z_ARRVAL_P(return_value), ZEND_STRL("message"));
+			throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+		} else {
+			// string
+			throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+		}
+		return;
+	}
+	if (arguments) {
+		zval_ptr_dtor(arguments);
+	}
 	zend_string_release(serviceUrl);
-	RETURN_TRUE;
+	if (Z_TYPE_P(return_value) == IS_ARRAY) {
+		zval *result = zend_hash_str_find(Z_ARRVAL_P(return_value), ZEND_STRL("result"));
+		if (result) {
+			zval_add_ref(result);
+			zval_ptr_dtor(return_value);
+			RETURN_ZVAL(result, 0, 0);
+		}
+	}
 }
 /* }}} */
