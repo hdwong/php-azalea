@@ -64,11 +64,6 @@ void processContent(zval *result)
 			PHPWRITE(Z_STRVAL_P(result), Z_STRLEN_P(result));
 		}
 	}
-	// ob_end_flush
-	if (OG(active)) {
-		php_output_flush();
-		php_output_clean();
-	}
 	zval_ptr_dtor(result);
 	ZVAL_TRUE(result);
 }

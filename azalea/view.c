@@ -8,6 +8,7 @@
 #include "php_azalea.h"
 #include "azalea/azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
 
@@ -26,6 +27,8 @@ static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, plain, NULL, ZEND_ACC_PROTECTED)
 	ZEND_FENTRY(url, ZEND_FN(azalea_url), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\url
+	ZEND_FENTRY(getConfig, ZEND_MN(azalea_config_get), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\Config::get
+	ZEND_FENTRY(getConfigSub, ZEND_MN(azalea_config_getSub), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\Config::getSub
 	{NULL, NULL, NULL}
 };
 /* }}} */
