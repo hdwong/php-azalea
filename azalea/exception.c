@@ -118,7 +118,7 @@ PHPAPI void throw404Str(const char *message, size_t len)
 
 	object_init_ex(exception, azalea_exception404_ce);
 	// message
-	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message ? message : "", message ? len : 0);
+	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message, len);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 404);
 	// uri
 	zend_update_property_str(azalea_exception404_ce, exception, ZEND_STRL("_uri"), zend_string_copy(AZALEA_G(uri)));
@@ -150,7 +150,7 @@ PHPAPI void throw500Str(const char *message, size_t len, const char *method, con
 
 	object_init_ex(exception, azalea_exception500_ce);
 	// message
-	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message ? message : "", message ? len : 0);
+	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message, len);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 500);
 	// serviceMethod
 	zend_update_property_string(azalea_exception500_ce, exception, ZEND_STRL("_method"), method);
