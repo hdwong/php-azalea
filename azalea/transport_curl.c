@@ -106,7 +106,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	} else if (method == AZALEA_SERVICE_METHOD_POST) {
 		curl_easy_setopt(cp, CURLOPT_POST, 1);
 	} else if (method == AZALEA_SERVICE_METHOD_PUT) {
-		curl_easy_setopt(cp, CURLOPT_PUT, 1);
+		curl_easy_setopt(cp, CURLOPT_CUSTOMREQUEST, "PUT");
 	} else if (method == AZALEA_SERVICE_METHOD_DELETE) {
 		curl_easy_setopt(cp, CURLOPT_CUSTOMREQUEST, "DELETE");
 	}

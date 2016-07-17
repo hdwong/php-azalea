@@ -106,8 +106,7 @@ PHP_METHOD(azalea_controller, getView)
 		tpldir = tstr;
 	}
 	add_assoc_str_ex(&data, ZEND_STRL("tpldir"), tpldir);
-	// environ.debug
-	add_assoc_bool_ex(&data, ZEND_STRL("debug"), Z_LVAL_P(azaleaConfigFind("debug")));
+	// upate environ
 	zend_update_property(azalea_view_ce, instance, ZEND_STRL("_environ"), &data);
 	zval_ptr_dtor(&data);
 }

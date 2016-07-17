@@ -561,11 +561,11 @@ PHP_METHOD(azalea_bootstrap, run)
 
 	// try ... catch \Exception
 	if (EG(exception) && instanceof_function(EG(exception)->ce, zend_ce_exception)) {
+		php_output_clean();
+
 		zval exception, errorArgs, *errorController, *errorAction;
 		ZVAL_OBJ(&exception, EG(exception));
 		EG(exception) = NULL;
-
-		php_output_clean();
 		array_init(&errorArgs);
 		add_next_index_zval(&errorArgs, &exception);
 
@@ -574,12 +574,21 @@ PHP_METHOD(azalea_bootstrap, run)
 		azaleaDispatch(NULL, Z_STR_P(errorController), Z_STR_P(errorAction), &errorArgs, &ret);
 
 		if (EG(exception)) {
-			// new exception from error controller action, ignore it
-			zend_string *message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 0, NULL));
+			php_output_clean();
+
+			// catch new exception from error controller action or view, ignore it
+			zend_string *message;
+			if (Z_TYPE_P(azaleaConfigFind("debug")) == IS_TRUE) {
+				zval newException;
+				ZVAL_OBJ(&newException, EG(exception));
+				message = zval_get_string(zend_read_property(zend_ce_exception, &newException, ZEND_STRL("message"), 0, NULL));
+//				zval_ptr_dtor(&newException);
+			} else {
+				message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 0, NULL));
+			}
 			PHPWRITE(ZSTR_VAL(message), ZSTR_LEN(message));
-			zend_clear_exception();
 		}
-		zval_ptr_dtor(&exception);
+		zend_clear_exception();
 		zend_bailout();
 	}
 
