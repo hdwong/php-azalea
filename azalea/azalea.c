@@ -80,20 +80,19 @@ PHP_FUNCTION(azalea_randomstring)
 		}
 	}
 
-	char *result = emalloc(len + 1);
+	char result[len];
+	long i;
 	php_uint32 number;
-	result[len] = '\0';
 	l -= 1; // for RAND_RANGE
 	if (!BG(mt_rand_is_seeded)) {
 		php_mt_srand(GENERATE_SEED());
 	}
-	while (len--) {
+	for (i = 0; i < len; ++i) {
 		number = php_mt_rand() >> 1;
 		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-		result[len] = *(p + number);
+		result[i] = *(p + number);
 	}
-	RETVAL_STRING(result);
-	efree(result);
+	RETURN_STRINGL(result, len);
 }
 /* }}} */
 
