@@ -59,10 +59,10 @@ void assignToData(azalea_view_t *instance, zend_string *name, zval *value)
 /* }}} */
 
 /* {{{ proto assignToDataHt */
-zval * assignToDataHt(azalea_view_t *instance, zend_array *ht)
+void assignToDataHt(azalea_view_t *instance, zend_array *ht)
 {
 	zval *data;
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) && ht) {
+	if (ht && (data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
 		zend_array *pData = Z_ARRVAL_P(data);
 		zend_string *key;
 		zval *pVal;
@@ -73,7 +73,6 @@ zval * assignToDataHt(azalea_view_t *instance, zend_array *ht)
 			}
 		} ZEND_HASH_FOREACH_END();
 	}
-	return data;
 }
 /* }}} */
 
@@ -135,8 +134,8 @@ PHP_METHOD(azalea_view, render)
 	zend_string *key;
 	zval *pVal;
 	// extract environ vars
-	zval *environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL);
-	if (environVars) {
+	zval *environVars, *data;
+	if ((environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL))) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(environVars), key, pVal) {
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
@@ -145,9 +144,11 @@ PHP_METHOD(azalea_view, render)
 		} ZEND_HASH_FOREACH_END();
 	}
 	// extract vars
-	vars = assignToDataHt(instance, vars && Z_TYPE_P(vars) == IS_ARRAY ? Z_ARRVAL_P(vars) : NULL);
 	if (vars) {
-		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(vars), key, pVal) {
+		assignToDataHt(instance, Z_ARRVAL_P(vars));
+	}
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(data), key, pVal) {
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
 				Z_TRY_ADDREF_P(pVal);
@@ -155,6 +156,7 @@ PHP_METHOD(azalea_view, render)
 		} ZEND_HASH_FOREACH_END();
 	}
 
+	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
 	if (!azaleaRequire(ZSTR_VAL(tplPath), ZSTR_LEN(tplPath))) {
 		zend_string *message = strpprintf(0, "Failed to open template file `%s.phtml`.", ZSTR_VAL(tplname));
 		throw404(message);
@@ -162,6 +164,8 @@ PHP_METHOD(azalea_view, render)
 		zend_string_release(tplPath);
 		RETURN_FALSE;
 	}
+	php_output_get_contents(return_value);
+	php_output_discard();
 	zend_string_release(tplPath);
 }
 /* }}} */
