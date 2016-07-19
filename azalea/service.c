@@ -92,7 +92,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		arguments = &serviceArgs;
 	}
 
-	// TODO curl exec
+	// curl exec
 	void *cp = azaleaCurlOpen();
 	if (!cp) {
 		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);

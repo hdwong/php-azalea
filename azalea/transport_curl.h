@@ -8,6 +8,7 @@
 #define AZALEA_TRANSPORT_CURL_H_
 
 static size_t azaleaBufferWriter(char *, size_t, size_t, void *);
+static int php_zlib_decode(const char *in_buf, size_t in_len, char **out_buf, size_t *out_len, int encoding, size_t max_len);
 
 void * azaleaCurlOpen();
 int azaleaCurlClose(void *cp);

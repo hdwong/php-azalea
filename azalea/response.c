@@ -90,7 +90,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 
 	controller = zend_read_property(azalea_response_ce, getThis(), ZEND_STRL("_instance"), 0, NULL);
 	if (!controller) {
-		// TODO controller not set
+		RETURN_FALSE;
 	}
 	// folder
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("folder"))) && Z_TYPE_P(field) == IS_STRING) {
