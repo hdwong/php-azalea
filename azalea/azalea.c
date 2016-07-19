@@ -52,34 +52,33 @@ PHP_FUNCTION(azalea_randomstring)
 	size_t l = 62;
 
 	if (mode) {
-		if (strcmp(ZSTR_VAL(mode), "10") == 0 || ZSTR_VAL(mode)[0] == 'n') {
+		if (strncmp(ZSTR_VAL(mode), ZEND_STRL("10")) == 0 || strncasecmp(ZSTR_VAL(mode), ZEND_STRL("n")) == 0) {
 			// [0-9]
 			l = 10;
-		} else if (strcmp(ZSTR_VAL(mode), "16") == 0) {
+		} else if (strncmp(ZSTR_VAL(mode), ZEND_STRL("16")) == 0) {
 			// [0-9a-f]
 			l = 16;
-		} else if (ZSTR_VAL(mode)[0] == 'c') {
+		} else if (strncasecmp(ZSTR_VAL(mode), ZEND_STRL("c")) == 0) {
 			// [a-zA-Z]
 			p += 10;
 			l = 52;
-		} else if (strcmp(ZSTR_VAL(mode), "ln") == 0) {
+		} else if (strncasecmp(ZSTR_VAL(mode), ZEND_STRL("ln")) == 0) {
 			// [0-9a-z]
 			l = 36;
-		} else if (strcmp(ZSTR_VAL(mode), "un") == 0) {
+		} else if (strncasecmp(ZSTR_VAL(mode), ZEND_STRL("un")) == 0) {
 			// [0-9A-Z]
 			p += 36;
 			l = 36;
-		} else if (ZSTR_VAL(mode)[0] == 'l') {
+		} else if (strncasecmp(ZSTR_VAL(mode), ZEND_STRL("l")) == 0) {
 			// [a-z]
 			p += 10;
 			l = 26;
-		} else if (ZSTR_VAL(mode)[0] == 'u') {
+		} else if (strncasecmp(ZSTR_VAL(mode), ZEND_STRL("u")) == 0) {
 			// [A-Z]
 			p += 36;
 			l = 26;
 		}
 	}
-
 	char result[len];
 	long i;
 	zend_long number;

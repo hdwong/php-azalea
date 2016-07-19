@@ -20,7 +20,6 @@ static zend_function_entry azalea_config_methods[] = {
 	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, getSub, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, getAll, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	PHP_ME(azalea_config, set, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -389,19 +388,5 @@ PHP_METHOD(azalea_config, getSub)
 PHP_METHOD(azalea_config, getAll)
 {
 	RETURN_ZVAL(&AZALEA_G(config), 1, 0);
-}
-/* }}} */
-
-/* {{{ proto mixed set(string $key, mixed $value) */
-PHP_METHOD(azalea_config, set)
-{
-	zend_string *key = NULL;
-	zval *val = NULL;
-
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &key, &val) == FAILURE) {
-		return;
-	}
-
-	add_assoc_zval_ex(&AZALEA_G(config), ZSTR_VAL(key), ZSTR_LEN(key), val);
 }
 /* }}} */

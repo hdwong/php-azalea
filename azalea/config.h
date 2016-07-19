@@ -14,7 +14,6 @@ AZALEA_STARTUP_FUNCTION(config);
 PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getSub);
 PHP_METHOD(azalea_config, getAll);
-PHP_METHOD(azalea_config, set);
 
 void azaleaLoadConfig(zval *);
 
