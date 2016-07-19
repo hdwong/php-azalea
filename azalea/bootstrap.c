@@ -172,8 +172,30 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	zend_string_release(controllerClass);
 	zend_string_release(name);
 
-	// dynamic router
-	// TODO
+	// dynamic router, call __router method
+	if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__router"))) {
+		zval newRouter, arg, *field;
+		array_init(&arg);
+		add_next_index_str(&arg, zend_string_copy(actionName));
+		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pathArgs), field) {
+			add_next_index_zval(&arg, field);
+			Z_ADDREF_P(field);
+		} ZEND_HASH_FOREACH_END();
+		ZVAL_NULL(&newRouter);
+		zend_call_method_with_1_params(instance, ce, NULL, "__router", &newRouter, &arg);
+		zval_ptr_dtor(&arg);
+		if (Z_TYPE(newRouter) == IS_ARRAY) {
+			// only process action and arguments
+			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("action")))) {
+				actionName = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
+			}
+			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("arguments")))) {
+				zval_ptr_dtor(pathArgs);
+				ZVAL_DUP(pathArgs, field);
+			}
+		}
+		zval_ptr_dtor(&newRouter);
+	}
 
 	// action method name
 	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
@@ -183,6 +205,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 		// WEB
 		actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(actionName));
 	}
+	zend_string_release(actionName);
 
 	// check action method
 	zend_string *lc = zend_string_tolower(actionMethod);
