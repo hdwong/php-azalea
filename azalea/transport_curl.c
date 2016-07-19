@@ -6,6 +6,7 @@
 
 #include "php.h"
 #include "php_azalea.h"
+#include "azalea/config.h"
 #include "azalea/service.h"
 #include "azalea/transport_curl.h"
 
@@ -48,11 +49,24 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	struct curl_slist *headers = NULL;
 	long statusCode = 0;
 	char *contentType = NULL;
+	zval *token;
 
 	// init headers
 	//	headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
 	headers = curl_slist_append(headers, "Connection: Keep-Alive");
 	headers = curl_slist_append(headers, "Keep-Alive: 300");
+	// token
+	if ((token = azaleaConfigSubFind("service", "token")) && Z_TYPE_P(token) == IS_STRING && Z_STRLEN_P(token)) {
+		// check url is equal with config.service.url
+		zval *serviceUrl = azaleaConfigSubFind("service", "url");
+		if (serviceUrl && Z_TYPE_P(serviceUrl) == IS_STRING && Z_STRLEN_P(serviceUrl) &&
+				(0 == strncasecmp(ZSTR_VAL(*url), Z_STRVAL_P(serviceUrl), Z_STRLEN_P(serviceUrl)))) {
+			zend_string *tstr;
+			tstr = strpprintf(0, "token: %s", Z_STRVAL_P(token));
+			headers = curl_slist_append(headers, ZSTR_VAL(tstr));
+			zend_string_release(tstr);
+		}
+	}
 	curl_easy_setopt(cp, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(cp, CURLOPT_NETRC, 0);
 	curl_easy_setopt(cp, CURLOPT_HEADER, 0);

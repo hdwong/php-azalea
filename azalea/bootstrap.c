@@ -595,6 +595,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		errorController = azaleaConfigSubFind("dispatch", "error_controller");
 		errorAction = azaleaConfigSubFind("dispatch", "error_action");
 		azaleaDispatch(NULL, Z_STR_P(errorController), Z_STR_P(errorAction), &errorArgs, &ret);
+		processContent(&ret);
 
 		if (EG(exception)) {
 			php_output_clean();
