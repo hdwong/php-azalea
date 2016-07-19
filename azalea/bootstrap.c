@@ -280,6 +280,7 @@ PHP_METHOD(azalea_bootstrap, init)
 
 	// set environ
 	if (environ && ZSTR_LEN(environ)) {
+		zend_string_release(AZALEA_G(environ));
 		AZALEA_G(environ) = zend_string_copy(environ);
 	}
 
@@ -365,6 +366,13 @@ PHP_METHOD(azalea_bootstrap, init)
 			}
 			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("ORIG_PATH_INFO"))) &&
 					Z_TYPE_P(field) == IS_STRING) {
+				uri = zend_string_copy(Z_STR_P(field));
+				break;
+			}
+			// for CLI mode
+			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("argv"))) &&
+					Z_TYPE_P(field) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(field)) >= 2) {
+				field = zend_hash_index_find(Z_ARRVAL_P(field), 1);
 				uri = zend_string_copy(Z_STR_P(field));
 				break;
 			}
