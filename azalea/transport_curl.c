@@ -48,10 +48,10 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 {
 	CURLcode ret;
 	struct curl_slist *headers = NULL;
-	long statusCode = 0;
+	long statusCode = 0, timeout = 15, connectTimeout = 2;
 	char *contentType = NULL;
 	double downloadLength = 0;
-	zval *token;
+	zval *token, *zTimeout;
 
 	// init headers
 	headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
@@ -69,6 +69,13 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 			zend_string_release(tstr);
 		}
 	}
+	// timeout and connectTimeout
+	if ((zTimeout = azaleaConfigSubFind("service", "timeout")) && Z_TYPE_P(zTimeout) == IS_LONG && Z_LVAL_P(zTimeout) > 0) {
+		timeout = Z_LVAL_P(zTimeout);
+	}
+	if ((zTimeout = azaleaConfigSubFind("service", "connecttimeout")) && Z_TYPE_P(zTimeout) == IS_LONG && Z_LVAL_P(zTimeout) > 0) {
+		connectTimeout = Z_LVAL_P(zTimeout);
+	}
 	curl_easy_setopt(cp, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(cp, CURLOPT_NETRC, 0);
 	curl_easy_setopt(cp, CURLOPT_HEADER, 0);
@@ -80,8 +87,8 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	curl_easy_setopt(cp, CURLOPT_DNS_USE_GLOBAL_CACHE, 1);
 	curl_easy_setopt(cp, CURLOPT_DNS_CACHE_TIMEOUT, 300);
 	curl_easy_setopt(cp, CURLOPT_TCP_NODELAY, 0);
-	curl_easy_setopt(cp, CURLOPT_CONNECTTIMEOUT, 1);
-	curl_easy_setopt(cp, CURLOPT_TIMEOUT, 10);
+	curl_easy_setopt(cp, CURLOPT_CONNECTTIMEOUT, connectTimeout);
+	curl_easy_setopt(cp, CURLOPT_TIMEOUT, timeout);
 	// method and query
 	if (*arguments && Z_TYPE_P(*arguments) == IS_ARRAY) {
 		smart_str formstr = {0};
@@ -131,9 +138,18 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	curl_easy_setopt(cp, CURLOPT_WRITEFUNCTION, azaleaBufferWriter);
 	curl_easy_setopt(cp, CURLOPT_WRITEDATA, &data);
 
+	// exec
 	smart_str_alloc(&data, 4096, 0);
 	ret = curl_easy_perform(cp);
 	smart_str_0(&data);
+	curl_slist_free_all(headers);
+
+	if (ret != CURLE_OK) {
+		// request is fail
+		// TODO log?
+		smart_str_free(&data);
+		return 0;
+	}
 
 	curl_easy_getinfo(cp, CURLINFO_HTTP_CODE, &statusCode);
 	curl_easy_getinfo(cp, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &downloadLength);
@@ -145,7 +161,6 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 		size_t bufLen;
 		if (SUCCESS != php_zlib_decode(ZSTR_VAL(data.s), ZSTR_LEN(data.s), &buf, &bufLen, PHP_ZLIB_ENCODING_GZIP, 0)) {
 			smart_str_free(&data);
-			curl_slist_free_all(headers);
 			return -1;
 		}
 		zend_string_release(data.s);
@@ -160,7 +175,6 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	}
 
 	smart_str_free(&data);
-	curl_slist_free_all(headers);
 
 	return statusCode;
 }
