@@ -51,30 +51,30 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	long statusCode = 0, timeout = 15, connectTimeout = 2;
 	char *contentType = NULL;
 	double downloadLength = 0;
-	zval *token, *zTimeout;
+	zval *conf;
 
 	// init headers
 	headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
 	headers = curl_slist_append(headers, "Connection: Keep-Alive");
 	headers = curl_slist_append(headers, "Keep-Alive: 300");
 	// token
-	if ((token = azaleaConfigSubFind("service", "token")) && Z_TYPE_P(token) == IS_STRING && Z_STRLEN_P(token)) {
+	if ((conf = azaleaConfigSubFind("service", "token")) && Z_TYPE_P(conf) == IS_STRING && Z_STRLEN_P(conf)) {
 		// check url is equal with config.service.url
 		zval *serviceUrl = azaleaConfigSubFind("service", "url");
 		if (serviceUrl && Z_TYPE_P(serviceUrl) == IS_STRING && Z_STRLEN_P(serviceUrl) &&
 				(0 == strncasecmp(ZSTR_VAL(*url), Z_STRVAL_P(serviceUrl), Z_STRLEN_P(serviceUrl)))) {
 			zend_string *tstr;
-			tstr = strpprintf(0, "token: %s", Z_STRVAL_P(token));
+			tstr = strpprintf(0, "token: %s", Z_STRVAL_P(conf));
 			headers = curl_slist_append(headers, ZSTR_VAL(tstr));
 			zend_string_release(tstr);
 		}
 	}
 	// timeout and connectTimeout
-	if ((zTimeout = azaleaConfigSubFind("service", "timeout")) && Z_TYPE_P(zTimeout) == IS_LONG && Z_LVAL_P(zTimeout) > 0) {
-		timeout = Z_LVAL_P(zTimeout);
+	if ((conf = azaleaConfigSubFind("service", "timeout")) && Z_TYPE_P(conf) == IS_LONG && Z_LVAL_P(conf) > 0) {
+		timeout = Z_LVAL_P(conf);
 	}
-	if ((zTimeout = azaleaConfigSubFind("service", "connecttimeout")) && Z_TYPE_P(zTimeout) == IS_LONG && Z_LVAL_P(zTimeout) > 0) {
-		connectTimeout = Z_LVAL_P(zTimeout);
+	if ((conf = azaleaConfigSubFind("service", "connecttimeout")) && Z_TYPE_P(conf) == IS_LONG && Z_LVAL_P(conf) > 0) {
+		connectTimeout = Z_LVAL_P(conf);
 	}
 	curl_easy_setopt(cp, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(cp, CURLOPT_NETRC, 0);
