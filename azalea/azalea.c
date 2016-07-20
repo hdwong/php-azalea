@@ -407,29 +407,27 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
  */
 PHPAPI void azaleaDeepCopy(zval *dst, zval *src) {
 	zval *pzval, *dstpzval, value;
-	HashTable *ht;
 	ulong idx;
 	zend_string *key;
 
-	ht = Z_ARRVAL_P(src);
-	ZEND_HASH_FOREACH_KEY_VAL(ht, idx, key, pzval) {
+	ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(src), idx, key, pzval) {
 		if (key) {
-			if (Z_TYPE_P(pzval) == IS_ARRAY
-					&& (dstpzval = zend_hash_find(Z_ARRVAL_P(dst), key)) != NULL
-					&& Z_TYPE_P(dstpzval) == IS_ARRAY) {
+			if (Z_TYPE_P(pzval) == IS_ARRAY) {
 				array_init(&value);
-				azaleaDeepCopy(&value, dstpzval);
+				if ((dstpzval = zend_hash_find(Z_ARRVAL_P(dst), key)) && Z_TYPE_P(dstpzval) == IS_ARRAY) {
+					azaleaDeepCopy(&value, dstpzval);
+				}
 				azaleaDeepCopy(&value, pzval);
 			} else {
 				ZVAL_DUP(&value, pzval);
 			}
 			zend_hash_update(Z_ARRVAL_P(dst), key, &value);
 		} else {
-			if (Z_TYPE_P(pzval) == IS_ARRAY
-					&& (dstpzval = zend_hash_index_find(Z_ARRVAL_P(dst), idx)) != NULL
-					&& Z_TYPE_P(dstpzval) == IS_ARRAY) {
+			if (Z_TYPE_P(pzval) == IS_ARRAY) {
 				array_init(&value);
-				azaleaDeepCopy(&value, dstpzval);
+				if ((dstpzval = zend_hash_index_find(Z_ARRVAL_P(dst), idx)) && Z_TYPE_P(dstpzval) == IS_ARRAY) {
+					azaleaDeepCopy(&value, dstpzval);
+				}
 				azaleaDeepCopy(&value, pzval);
 			} else {
 				ZVAL_DUP(&value, pzval);
