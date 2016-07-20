@@ -88,7 +88,8 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		serviceUrl = zend_string_init(ZSTR_VAL(serviceUrl), ZSTR_LEN(serviceUrl), 0);
 	}
 	if (arguments) {
-		ZVAL_DUP(&serviceArgs, arguments);
+		array_init(&serviceArgs);
+		azaleaDeepCopy(&serviceArgs, arguments);
 		arguments = &serviceArgs;
 	}
 

@@ -112,7 +112,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 				zend_string_release(*url);
 				*url = newUrl;
 				zval_ptr_dtor(*arguments);
-				array_init(*arguments);
+				*arguments = NULL;
 			} else if (method == AZALEA_SERVICE_METHOD_POST || method == AZALEA_SERVICE_METHOD_PUT ||
 					method == AZALEA_SERVICE_METHOD_DELETE) {
 				// copy from ext/standard/interface.c line 2619
