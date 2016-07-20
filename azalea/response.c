@@ -21,7 +21,7 @@ zend_class_entry *azalea_response_ce;
 /* {{{ class Azalea\Response methods
  */
 static zend_function_entry azalea_response_methods[] = {
-	PHP_ME(azalea_response, __construct, NULL, ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_response, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_response, gotoUrl, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, gotoRoute, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)

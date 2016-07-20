@@ -28,7 +28,7 @@ zend_class_entry *azalea_bootstrap_ce;
 /* {{{ class Azalea\Bootstrap methods
  */
 static zend_function_entry azalea_bootstrap_methods[] = {
-	PHP_ME(azalea_bootstrap, __construct, NULL, ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_bootstrap, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_bootstrap, getRoute, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, init, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, run, NULL, ZEND_ACC_PUBLIC)
@@ -179,7 +179,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 		add_next_index_str(&arg, zend_string_copy(actionName));
 		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pathArgs), field) {
 			add_next_index_zval(&arg, field);
-			Z_ADDREF_P(field);
+			zval_add_ref(field);
 		} ZEND_HASH_FOREACH_END();
 		ZVAL_NULL(&newRouter);
 		zend_call_method_with_1_params(instance, ce, NULL, "__router", &newRouter, &arg);

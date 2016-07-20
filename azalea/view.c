@@ -22,7 +22,7 @@ zend_class_entry *azalea_view_ce;
 /* {{{ class Azalea\View methods
  */
 static zend_function_entry azalea_view_methods[] = {
-	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, plain, NULL, ZEND_ACC_PROTECTED)
@@ -135,7 +135,8 @@ PHP_METHOD(azalea_view, render)
 	zval *pVal;
 	// extract environ vars
 	zval *environVars, *data;
-	if ((environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL))) {
+	if ((environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL)) &&
+			Z_TYPE_P(environVars) == IS_ARRAY) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(environVars), key, pVal) {
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
@@ -147,7 +148,8 @@ PHP_METHOD(azalea_view, render)
 	if (vars) {
 		assignToDataHt(instance, Z_ARRVAL_P(vars));
 	}
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(data) == IS_ARRAY) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(data), key, pVal) {
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {

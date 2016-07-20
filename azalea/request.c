@@ -17,7 +17,7 @@ zend_class_entry *azalea_request_ce;
 /* {{{ class Azalea\Request methods
  */
 static zend_function_entry azalea_request_methods[] = {
-	PHP_ME(azalea_request, __construct, NULL, ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_request, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_request, getBaseUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getRequestUri, NULL, ZEND_ACC_PUBLIC)
