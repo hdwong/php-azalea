@@ -7,8 +7,6 @@
 #ifndef AZALEA_CONFIG_H_
 #define AZALEA_CONFIG_H_
 
-static inline void azaleaDeepCopy(zval *dst, zval *src);
-
 AZALEA_STARTUP_FUNCTION(config);
 
 PHP_METHOD(azalea_config, get);
