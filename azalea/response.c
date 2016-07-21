@@ -120,7 +120,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 	}
 	// arguments
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
-		ZVAL_COPY(&pathArgs, field);
+		ZVAL_DUP(&pathArgs, field);
 	} else {
 		array_init(&pathArgs);
 	}
