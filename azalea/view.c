@@ -14,8 +14,6 @@
 
 #include "ext/standard/php_var.h"  // for php_var_dump
 #include "ext/standard/php_filestat.h"  // for php_stat
-#include "ext/standard/html.h"  // for php_escape_html_entities
-#include "main/SAPI.h"  // for SG
 
 zend_class_entry *azalea_view_ce;
 
@@ -25,10 +23,6 @@ static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(azalea_view, plain, NULL, ZEND_ACC_PROTECTED)
-	ZEND_FENTRY(url, ZEND_FN(azalea_url), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\url
-	ZEND_FENTRY(getConfig, ZEND_MN(azalea_config_get), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\Config::get
-	ZEND_FENTRY(getConfigSub, ZEND_MN(azalea_config_getSub), NULL, ZEND_ACC_PROTECTED)  // alias for Azalea\Config::getSub
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -191,29 +185,5 @@ PHP_METHOD(azalea_view, assign)
 		php_error_docref(NULL, E_WARNING, "The second argument must be a valid value if the name is a string");
 	}
 	RETURN_ZVAL(instance, 1, 0);
-}
-/* }}} */
-
-/* {{{ get_default_charset
- */
-static char *get_default_charset(void) {
-	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
-		return PG(internal_encoding);
-	} else if (SG(default_charset) && SG(default_charset)[0] ) {
-		return SG(default_charset);
-	}
-	return NULL;
-}
-/* }}} */
-
-/* {{{ proto string plain(string $string) */
-PHP_METHOD(azalea_view, plain)
-{
-	zend_string *text;
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
-		return;
-	}
-	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
-	RETURN_STR(text);
 }
 /* }}} */

@@ -15,6 +15,7 @@
 #include "azalea/exception.h"
 
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+#include "ext/standard/html.h"  // for php_escape_html_entities
 
 #include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
@@ -195,6 +196,31 @@ PHP_FUNCTION(azalea_ip)
 }
 /* }}} */
 
+
+/* {{{ get_default_charset
+ */
+static char *get_default_charset(void) {
+	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
+		return PG(internal_encoding);
+	} else if (SG(default_charset) && SG(default_charset)[0] ) {
+		return SG(default_charset);
+	}
+	return NULL;
+}
+/* }}} */
+
+/* {{{ proto string plain(string $string) */
+PHP_FUNCTION(azalea_plain)
+{
+	zend_string *text;
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
+		return;
+	}
+	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
+	RETURN_STR(text);
+}
+/* }}} */
+
 /* {{{ proto azaleaRequestFind */
 PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name)
 {
@@ -363,12 +389,12 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		// service model construct
 		if (instanceof_function(ce, azalea_service_ce)) {
 			zval *field;
-			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 1, NULL)) &&
+			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 0, NULL)) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				zend_string_release(lcName);
 				lcName = zend_string_copy(Z_STR_P(field));
 			}
-			if (!(field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 1, NULL)) ||
+			if (!(field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 0, NULL)) ||
 					Z_TYPE_P(field) != IS_STRING) {
 				// get serviceUrl from config
 				if (!(field = azaleaConfigSubFind("service", "url")) || Z_TYPE_P(field) != IS_STRING) {
@@ -437,4 +463,3 @@ PHPAPI void azaleaDeepCopy(zval *dst, zval *src) {
 	} ZEND_HASH_FOREACH_END();
 }
 /* }}} */
-

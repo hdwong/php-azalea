@@ -12,6 +12,7 @@ PHP_FUNCTION(azalea_timer);
 PHP_FUNCTION(azalea_url);
 PHP_FUNCTION(azalea_env);
 PHP_FUNCTION(azalea_ip);
+PHP_FUNCTION(azalea_plain);
 
 PHPAPI double azaleaGetMicrotime();
 PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);

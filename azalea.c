@@ -39,7 +39,7 @@
 #include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
-#include "main/SAPI.h"  // for sapi_header_op
+#include "main/SAPI.h"  // for sapi_header_op & SG
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -185,6 +185,7 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, plain, ZEND_FN(azalea_plain), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
