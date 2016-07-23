@@ -332,7 +332,7 @@ PHP_METHOD(azalea_config, getSub)
 	zval *def = NULL;
 	zval *val;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|z", &key, &def) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|z", &key, &subKey, &def) == FAILURE) {
 		return;
 	}
 
