@@ -10,6 +10,7 @@
 #include "azalea/namespace.h"
 #include "azalea/config.h"
 #include "azalea/view.h"
+#include "azalea/template.h"
 #include "azalea/exception.h"
 
 #include "ext/standard/php_var.h"  // for php_var_dump
@@ -151,15 +152,19 @@ PHP_METHOD(azalea_view, render)
 			}
 		} ZEND_HASH_FOREACH_END();
 	}
-
+	// extract tpl functions
 	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
+	azaleaRegisterTemplateFunctions();
 	if (!azaleaRequire(ZSTR_VAL(tplPath), ZSTR_LEN(tplPath))) {
+		azaleaUnregisterTemplateFunctions();
 		zend_string *message = strpprintf(0, "Failed to open template file `%s.phtml`.", ZSTR_VAL(tplname));
 		throw404(message);
 		zend_string_release(message);
 		zend_string_release(tplPath);
 		RETURN_FALSE;
 	}
+	azaleaUnregisterTemplateFunctions();
+
 	php_output_get_contents(return_value);
 	php_output_discard();
 	zend_string_release(tplPath);

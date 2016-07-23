@@ -14,9 +14,6 @@
 #include "azalea/service.h"
 #include "azalea/exception.h"
 
-#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
-#include "ext/standard/html.h"  // for php_escape_html_entities
-
 #include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
 #ifdef PHP_WIN32
@@ -29,6 +26,7 @@
 #endif
 #define MICRO_IN_SEC 1000000.00
 
+#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 #include "ext/standard/php_var.h"	// for php_var_dump function
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "main/SAPI.h"  // for sapi_header_op
@@ -137,8 +135,8 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 PHP_FUNCTION(azalea_timer)
 {
 	double now = azaleaGetMicrotime();
-	RETVAL_DOUBLE(now - AZALEA_G(request_time));
-	AZALEA_G(request_time) = now;
+	RETVAL_DOUBLE(now - AZALEA_G(requestTime));
+	AZALEA_G(requestTime) = now;
 }
 /* }}} */
 
@@ -193,31 +191,6 @@ PHP_FUNCTION(azalea_ip)
 		}
 	}
 	RETURN_STR(zend_string_copy(AZALEA_G(ip)));
-}
-/* }}} */
-
-
-/* {{{ get_default_charset
- */
-static char *get_default_charset(void) {
-	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
-		return PG(internal_encoding);
-	} else if (SG(default_charset) && SG(default_charset)[0] ) {
-		return SG(default_charset);
-	}
-	return NULL;
-}
-/* }}} */
-
-/* {{{ proto string plain(string $string) */
-PHP_FUNCTION(azalea_plain)
-{
-	zend_string *text;
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
-		return;
-	}
-	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
-	RETURN_STR(text);
 }
 /* }}} */
 

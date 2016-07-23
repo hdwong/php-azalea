@@ -39,7 +39,7 @@
 #include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
-#include "main/SAPI.h"  // for sapi_header_op & SG
+#include "main/SAPI.h"  // for sapi_header_op
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -80,7 +80,8 @@ PHP_RINIT_FUNCTION(azalea)
 	zval *server;
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
-	AZALEA_G(request_time) = now;
+	AZALEA_G(requestTime) = now;
+	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	AZALEA_G(bootstrap) = 0;
 	AZALEA_G(directory) = NULL;
@@ -185,7 +186,6 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, plain, ZEND_FN(azalea_plain), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */

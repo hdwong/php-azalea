@@ -270,7 +270,7 @@ PHP_METHOD(azalea_bootstrap, init)
 
 	// set timer
 	now = azaleaGetMicrotime();
-	AZALEA_G(request_time) = now;
+	AZALEA_G(requestTime) = now;
 
 	// create output buffer
 	if (php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS) == FAILURE) {
