@@ -51,6 +51,7 @@ PHP_FUNCTION(azalea_template_printf)
 	PHPWRITE(ZSTR_VAL(text), ZSTR_LEN(text));
 	zend_string_release(text);
 }
+/* }}} */
 
 /* {{{ proto string t( string $format [, mixed $args [, mixed $... ]] ) */
 PHP_FUNCTION(azalea_template_sprintf)
@@ -63,6 +64,7 @@ PHP_FUNCTION(azalea_template_sprintf)
 	zend_string_release(result);
 	RETVAL_STR(text);
 }
+/* }}} */
 
 /* {{{ proto registerTemplateFunctions */
 PHPAPI void azaleaRegisterTemplateFunctions()
