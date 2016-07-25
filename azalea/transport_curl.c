@@ -15,7 +15,7 @@
 #include "ext/standard/url.h"  // for php_url_encode_hash_ex
 #include "ext/json/php_json.h"  // for php_json_decode
 #include "ext/pcre/php_pcre.h"  // for php_pcre_replace
-#include "ext/zlib/php_zlib.h"  // for php_zlib_decode
+#include "azalea/php_zlib.h"  // for php_zlib_decode
 
 #include <curl/curl.h>
 #include <curl/easy.h>
