@@ -169,7 +169,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	}
 
 	if (contentType && (0 == strncasecmp(contentType, ZEND_STRL("application/json")))) {
-		php_json_decode(result, ZSTR_VAL(data.s), ZSTR_LEN(data.s), 1, 0);
+		php_json_decode(result, ZSTR_VAL(data.s), ZSTR_LEN(data.s), 0, 0);
 	} else {
 		ZVAL_STR(result, data.s);
 	}
