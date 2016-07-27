@@ -78,8 +78,8 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		return;
 	}
 
-	if (strncasecmp(ZSTR_VAL(serviceUrl), ZEND_STRL("http://")) &&
-			strncasecmp(ZSTR_VAL(serviceUrl), ZEND_STRL("https://"))) {
+	if (strncasecmp(ZSTR_VAL(serviceUrl), "http://", sizeof("http://") - 1) &&
+			strncasecmp(ZSTR_VAL(serviceUrl), "https://", sizeof("https://") - 1)) {
 		// add serviceUrl prefix
 		zval *purl;
 		purl = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 0, NULL);

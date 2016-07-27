@@ -63,8 +63,8 @@ PHP_METHOD(azalea_response, gotoUrl)
 		// not WEB
 		return;
 	}
-	if (strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) &&
-			strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
+	if (strncasecmp(ZSTR_VAL(url), "http://", sizeof("http://") - 1) &&
+			strncasecmp(ZSTR_VAL(url), "https://", sizeof("https://") - 1)) {
 		// add url prefix
 		url = azaleaUrl(url, 0);
 	}

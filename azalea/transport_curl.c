@@ -168,7 +168,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 		efree(buf);
 	}
 
-	if (contentType && (0 == strncasecmp(contentType, ZEND_STRL("application/json")))) {
+	if (contentType && (0 == strncasecmp(contentType, "application/json", sizeof("application/json") - 1))) {
 		php_json_decode(result, ZSTR_VAL(data.s), ZSTR_LEN(data.s), 0, 0);
 	} else {
 		ZVAL_STR(result, data.s);

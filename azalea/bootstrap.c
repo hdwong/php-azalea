@@ -345,8 +345,8 @@ PHP_METHOD(azalea_bootstrap, init)
 			}
 			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REQUEST_URI"))) &&
 								Z_TYPE_P(field) == IS_STRING) {
-				if (strncasecmp(Z_STRVAL_P(field), ZEND_STRL("http://")) &&
-						strncasecmp(Z_STRVAL_P(field), ZEND_STRL("https://"))) {
+				if (strncasecmp(Z_STRVAL_P(field), "http://", sizeof("http://") - 1) &&
+						strncasecmp(Z_STRVAL_P(field), "https://", sizeof("https://") - 1)) {
 					// not http url
 					char *pos = strstr(Z_STRVAL_P(field), "?");
 					if (pos) {
