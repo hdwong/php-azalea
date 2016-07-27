@@ -124,9 +124,9 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		return;
 	}
 	if (statusCode != 200) {
-		if (Z_TYPE_P(return_value) == IS_ARRAY) {
+		if (Z_TYPE_P(return_value) == IS_OBJECT) {
 			// array
-			zval *message = zend_hash_str_find(Z_ARRVAL_P(return_value), ZEND_STRL("message"));
+			zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
 			throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
 		} else {
 			// string
@@ -138,8 +138,8 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		zval_ptr_dtor(arguments);
 	}
 	zend_string_release(serviceUrl);
-	if (Z_TYPE_P(return_value) == IS_ARRAY) {
-		zval *result = zend_hash_str_find(Z_ARRVAL_P(return_value), ZEND_STRL("result"));
+	if (Z_TYPE_P(return_value) == IS_OBJECT) {
+		zval *result = zend_read_property(NULL, return_value, ZEND_STRL("result"), 1, NULL);
 		if (result) {
 			zval_add_ref(result);
 			zval_ptr_dtor(return_value);

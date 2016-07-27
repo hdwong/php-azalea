@@ -362,7 +362,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		// service model construct
 		if (instanceof_function(ce, azalea_service_ce)) {
 			zval *field;
-			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 0, NULL)) &&
+			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 1, NULL)) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				zend_string_release(lcName);
 				lcName = zend_string_copy(Z_STR_P(field));
