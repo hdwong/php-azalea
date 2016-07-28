@@ -24,6 +24,7 @@ static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_view, append, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -44,33 +45,66 @@ AZALEA_STARTUP_FUNCTION(view)
 /* }}} */
 
 /* {{{ proto assignToData */
-void assignToData(azalea_view_t *instance, zend_string *name, zval *value)
+static void assignToData(azalea_view_t *instance, zend_string *name, zval *value)
 {
 	zval *data;
 	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
-		zend_hash_update(Z_ARRVAL_P(data), name, value);
+		if (zend_hash_update(Z_ARRVAL_P(data), name, value) != NULL) {
+			Z_TRY_ADDREF_P(value);
+		}
 	}
 }
 /* }}} */
 
 /* {{{ proto assignToDataHt */
-void assignToDataHt(azalea_view_t *instance, zend_array *ht)
+static void assignToDataHt(azalea_view_t *instance, zend_array *ht)
 {
 	zval *data;
-	if (ht && (data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
-		zend_array *pData = Z_ARRVAL_P(data);
-		zend_string *key;
-		zval *pVal;
-		ZEND_HASH_FOREACH_STR_KEY_VAL(ht, key, pVal) {
-			if (key) {
-				zend_hash_update(pData, key, pVal);
-				zval_add_ref(pVal);
-			}
-		} ZEND_HASH_FOREACH_END();
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+		zend_hash_copy(Z_ARRVAL_P(data), ht, (copy_ctor_func_t) zval_add_ref);
 	}
 }
 /* }}} */
 
+/* {{{ proto appendToDateHt */
+static void appendToData(azalea_view_t *instance, zend_string *name, zval *value)
+{
+	zval *data;
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+		zend_array *htData = Z_ARRVAL_P(data);
+		zval dummy, *field = zend_hash_find(htData, name);
+		if (field) {
+			// found
+			if (Z_TYPE_P(field) != IS_ARRAY) {
+				return;
+			}
+			array_init(&dummy);
+			// fix for opcache?
+			zend_hash_copy(Z_ARRVAL(dummy), Z_ARRVAL_P(field), (copy_ctor_func_t) zval_add_ref);
+			field = zend_hash_update(htData, name, &dummy);
+		} else {
+			// not found & init to array
+			array_init(&dummy);
+			field = zend_hash_add(htData, name, &dummy);
+		}
+		htData = Z_ARRVAL_P(field);
+		if (Z_TYPE_P(value) == IS_ARRAY) {
+			// array
+			zval *pVal;
+			ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(value), pVal) {
+				zend_hash_next_index_insert(htData, pVal);
+				zval_add_ref(pVal);
+			} ZEND_HASH_FOREACH_END();
+		} else {
+			// string
+			zend_hash_next_index_insert(htData, value);
+			zval_add_ref(value);
+		}
+	}
+}
+/* }}} */
+
+/* {{{ proto checkValidVarName */
 static int checkValidVarName(char *varName, int len) /* {{{ */
 {
 	int i, ch;
@@ -187,6 +221,26 @@ PHP_METHOD(azalea_view, assign)
 	} else {
 		// ERROR
 		php_error_docref(NULL, E_WARNING, "The second argument must be a valid value if the name is a string");
+	}
+	RETURN_ZVAL(instance, 1, 0);
+}
+/* }}} */
+
+/* {{{ proto mixed append(string name, mixed $value = null) */
+PHP_METHOD(azalea_view, append)
+{
+	zend_string *name;
+	zval *value;
+	azalea_view_t *instance = getThis();
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &name, &value) == FAILURE) {
+		return;
+	}
+
+	if (Z_TYPE_P(value) == IS_ARRAY || Z_TYPE_P(value) == IS_STRING) {
+		appendToData(instance, name, value);
+	} else {
+		// ERROR
+		php_error_docref(NULL, E_WARNING, "The second argument must be a stirng or an array");
 	}
 	RETURN_ZVAL(instance, 1, 0);
 }
