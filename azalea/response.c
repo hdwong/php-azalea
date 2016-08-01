@@ -23,6 +23,7 @@ zend_class_entry *azalea_response_ce;
 static zend_function_entry azalea_response_methods[] = {
 	PHP_ME(azalea_response, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_response, gotoUrl, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_response, reload, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, gotoRoute, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setBody, NULL, ZEND_ACC_PUBLIC)
@@ -71,6 +72,26 @@ PHP_METHOD(azalea_response, gotoUrl)
 	zend_string *ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
 	zend_string_release(url);
 	azaleaSetHeader(ctrLine, httpCode);
+	zend_string_release(ctrLine);
+	// exit()
+	zend_bailout();
+}
+/* }}} */
+
+/* {{{ proto void reload(void) */
+PHP_METHOD(azalea_response, reload)
+{
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+		// not WEB
+		return;
+	}
+	zval *field;
+	field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REQUEST_URI"));
+	if (!field) {
+		return;
+	}
+	zend_string *ctrLine = strpprintf(0, "Location: %s", Z_STRVAL_P(field));
+	azaleaSetHeader(ctrLine, 302);
 	zend_string_release(ctrLine);
 	// exit()
 	zend_bailout();
