@@ -31,9 +31,8 @@
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "main/SAPI.h"  // for sapi_header_op
 
-/* {{{ azalea_randomstring
- */
-PHP_FUNCTION(azalea_randomstring)
+/* {{{ proto azalea_randomString */
+PHP_FUNCTION(azalea_randomString)
 {
 	long len;
 	zend_string *mode = NULL;
@@ -91,6 +90,28 @@ PHP_FUNCTION(azalea_randomstring)
 		result[i] = *(p + number);
 	}
 	RETURN_STRINGL(result, len);
+}
+/* }}} */
+
+/* {{{ proto azalea_maskString */
+PHP_FUNCTION(azalea_maskString)
+{
+	zend_string *string;
+	zend_bool isEmail = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &string, &isEmail) == FAILURE) {
+		return;
+	}
+	// copy for change
+	string = zend_string_init(ZSTR_VAL(string), ZSTR_LEN(string), 0);
+	if (ZSTR_LEN(string) > 1) {
+		if (!isEmail) {
+			// normal string
+		} else {
+			// email
+		}
+	}
+	RETURN_STR(string);
 }
 /* }}} */
 

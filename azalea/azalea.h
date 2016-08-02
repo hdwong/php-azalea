@@ -7,11 +7,12 @@
 #ifndef AZALEA_AZALEA_H
 #define AZALEA_AZALEA_H
 
-PHP_FUNCTION(azalea_randomstring);
 PHP_FUNCTION(azalea_timer);
 PHP_FUNCTION(azalea_url);
 PHP_FUNCTION(azalea_env);
 PHP_FUNCTION(azalea_ip);
+PHP_FUNCTION(azalea_randomString);
+PHP_FUNCTION(azalea_maskString);
 
 PHPAPI double azaleaGetMicrotime();
 PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);

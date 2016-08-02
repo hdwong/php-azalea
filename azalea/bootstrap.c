@@ -208,7 +208,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	zend_string_release(actionName);
 
 	// check action method
-	zend_string *lc = zend_string_tolower(actionMethod);
+	zend_string *lc = zend_string_tolower(zend_string_init(ZSTR_VAL(actionMethod), ZSTR_LEN(actionMethod), 0));
 	if (!(zend_hash_exists(&(ce->function_table), lc))) {
 		tstr = strpprintf(0, "Action method `%s` not found.", ZSTR_VAL(actionMethod));
 		throw404(tstr);
@@ -576,8 +576,6 @@ PHP_METHOD(azalea_bootstrap, run)
 		AZALEA_G(actionName) = Z_STR_P(field);
 		zval_add_ref(field);
 	}
-//	php_printf("ControllersPath: %s <br> ModelsPath: %s <br> ViewsPath: %s<br>", ZSTR_VAL(controllersPath), ZSTR_VAL(modelsPath), ZSTR_VAL(viewsPath));
-//	php_printf("Folder: %s <br> Controller: %s <br> Action: %s", AZALEA_G(folderName) ? ZSTR_VAL(AZALEA_G(folderName)) : "--", ZSTR_VAL(AZALEA_G(controllerName)), ZSTR_VAL(AZALEA_G(actionName)));
 
 	// session start
 	php_session_start();
@@ -586,9 +584,6 @@ PHP_METHOD(azalea_bootstrap, run)
 	zval ret;
 	azaleaDispatch(AZALEA_G(folderName), AZALEA_G(controllerName), AZALEA_G(actionName),
 			&AZALEA_G(pathArgs), &ret);
-
-	// process and output result content
-	processContent(&ret);
 
 	// try ... catch \Exception
 	if (EG(exception) && instanceof_function(EG(exception)->ce, zend_ce_exception)) {
@@ -614,7 +609,6 @@ PHP_METHOD(azalea_bootstrap, run)
 				zval newException;
 				ZVAL_OBJ(&newException, EG(exception));
 				message = zval_get_string(zend_read_property(zend_ce_exception, &newException, ZEND_STRL("message"), 0, NULL));
-//				zval_ptr_dtor(&newException);
 			} else {
 				message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 0, NULL));
 			}
@@ -622,6 +616,9 @@ PHP_METHOD(azalea_bootstrap, run)
 		}
 		zend_clear_exception();
 		zend_bailout();
+	} else {
+		// process and output result content
+		processContent(&ret);
 	}
 
 	// try to close output buffer
