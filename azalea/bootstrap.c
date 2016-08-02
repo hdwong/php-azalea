@@ -208,11 +208,13 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	zend_string_release(actionName);
 
 	// check action method
-	zend_string *lc = zend_string_tolower(zend_string_init(ZSTR_VAL(actionMethod), ZSTR_LEN(actionMethod), 0));
+	AZALEA_G(actionMethod) = zend_string_tolower(actionMethod);
+	zend_string *lc = AZALEA_G(actionMethod);
 	if (!(zend_hash_exists(&(ce->function_table), lc))) {
 		tstr = strpprintf(0, "Action method `%s` not found.", ZSTR_VAL(actionMethod));
 		throw404(tstr);
 		zend_string_release(tstr);
+		zend_string_release(actionMethod);
 		ZVAL_FALSE(ret);
 		return 0;
 	}
@@ -233,7 +235,6 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	ZVAL_STR(&functionName, lc);
 	ZVAL_NULL(ret);
 	call_user_function(&(ce->function_table), instance, &functionName, ret, callArgsCount, callArgs);
-	zend_string_release(lc);
 	if (callArgs) {
 		efree(callArgs);
 	}
