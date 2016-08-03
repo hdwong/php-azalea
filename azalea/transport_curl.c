@@ -93,6 +93,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	if (*arguments && Z_TYPE_P(*arguments) == IS_ARRAY) {
 		smart_str formstr = {0};
 		if (php_url_encode_hash_ex(Z_ARRVAL_P(*arguments), &formstr, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738) != FAILURE) {
+			smart_str_0(&formstr);
 			// preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($params)
 			zend_string *regex = zend_string_init(ZEND_STRL("/%5B[0-9]+%5D/simU"), 0);
 			zval rep;
