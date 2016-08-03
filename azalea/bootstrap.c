@@ -98,33 +98,36 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 		// check controller class
 		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
 			// class not exists, load controller file
-			zval controllerPath, exists;
-			ZVAL_STR(&controllerPath, zend_string_dup(AZALEA_G(controllersPath), 0));
+			zval exists;
+			zend_string *controllerPath;
+			controllerPath = zend_string_dup(AZALEA_G(controllersPath), 0);
 			if (folderName) {
-				tstr = Z_STR(controllerPath);
-				Z_STR(controllerPath) = strpprintf(0, "%s%c%s", Z_STRVAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(folderName));
+				tstr = controllerPath;
+				controllerPath = strpprintf(0, "%s%c%s", ZSTR_VAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(folderName));
 				zend_string_release(tstr);
 			}
-			tstr = Z_STR(controllerPath);
-			Z_STR(controllerPath) = strpprintf(0, "%s%c%s.php", Z_STRVAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(controllerName));
+			tstr = controllerPath;
+			controllerPath = strpprintf(0, "%s%c%s.php", ZSTR_VAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(controllerName));
 			zend_string_release(tstr);
 			// check file exists
-			php_stat(Z_STRVAL(controllerPath), (php_stat_len) Z_STRLEN(controllerPath), FS_IS_R, &exists);
+			php_stat(ZSTR_VAL(controllerPath), (php_stat_len) ZSTR_LEN(controllerPath), FS_IS_R, &exists);
 			if (Z_TYPE(exists) == IS_FALSE) {
-				tstr = strpprintf(0, "Controller file `%s` not found.", Z_STRVAL(controllerPath));
+				tstr = strpprintf(0, "Controller file `%s` not found.", ZSTR_VAL(controllerPath));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerPath);
 				zend_string_release(controllerClass);
 				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
 			// require controller file
-			int status = azaleaRequire(Z_STRVAL(controllerPath), Z_STRLEN(controllerPath));
+			int status = azaleaRequire(ZSTR_VAL(controllerPath), ZSTR_LEN(controllerPath));
 			if (!status) {
-				tstr = strpprintf(0, "Controller file `%s` compile error.", Z_STRVAL(controllerPath));
+				tstr = strpprintf(0, "Controller file `%s` compile error.", ZSTR_VAL(controllerPath));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerPath);
 				zend_string_release(controllerClass);
 				zend_string_release(name);
 				ZVAL_FALSE(ret);
@@ -135,6 +138,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 				tstr = strpprintf(0, "Controller class `%s` not found.", ZSTR_VAL(controllerClass));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerPath);
 				zend_string_release(controllerClass);
 				zend_string_release(name);
 				ZVAL_FALSE(ret);
@@ -144,12 +148,13 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 			if (!instanceof_function(ce, azalea_controller_ce)) {
 				throw404Str(ZEND_STRL("Controller class must be an instance of "
 						AZALEA_NS_NAME(Controller) "."));
+				zend_string_release(controllerPath);
 				zend_string_release(controllerClass);
 				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
-			zval_ptr_dtor(&controllerPath);
+			zend_string_release(controllerPath);
 		}
 
 		// init controller instance
