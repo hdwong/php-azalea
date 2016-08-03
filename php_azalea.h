@@ -72,7 +72,6 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *controllerName;
 	zend_string *actionName;
 	zval pathArgs;
-	zend_string *actionMethod;
 
 	zval instances;
 	zval config;

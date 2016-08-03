@@ -114,6 +114,8 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 				tstr = strpprintf(0, "Controller file `%s` not found.", Z_STRVAL(controllerPath));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerClass);
+				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
@@ -123,6 +125,8 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 				tstr = strpprintf(0, "Controller file `%s` compile error.", Z_STRVAL(controllerPath));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerClass);
+				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
@@ -131,6 +135,8 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 				tstr = strpprintf(0, "Controller class `%s` not found.", ZSTR_VAL(controllerClass));
 				throw404(tstr);
 				zend_string_release(tstr);
+				zend_string_release(controllerClass);
+				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
@@ -138,6 +144,8 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 			if (!instanceof_function(ce, azalea_controller_ce)) {
 				throw404Str(ZEND_STRL("Controller class must be an instance of "
 						AZALEA_NS_NAME(Controller) "."));
+				zend_string_release(controllerClass);
+				zend_string_release(name);
 				ZVAL_FALSE(ret);
 				return 0;
 			}
@@ -208,8 +216,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	zend_string_release(actionName);
 
 	// check action method
-	AZALEA_G(actionMethod) = zend_string_tolower(actionMethod);
-	zend_string *lc = AZALEA_G(actionMethod);
+	zend_string *lc = zend_string_tolower(actionMethod);
 	if (!(zend_hash_exists(&(ce->function_table), lc))) {
 		tstr = strpprintf(0, "Action method `%s` not found.", ZSTR_VAL(actionMethod));
 		throw404(tstr);
@@ -238,6 +245,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	if (callArgs) {
 		efree(callArgs);
 	}
+	zval_ptr_dtor(&functionName);
 
 	return 1;
 }
@@ -564,7 +572,7 @@ PHP_METHOD(azalea_bootstrap, run)
 	zend_string_release(controllersPath);
 	zend_string_release(modelsPath);
 	zend_string_release(viewsPath);
-	zval_ptr_dtor(&paths);
+//	zval_ptr_dtor(&paths);
 	if (!AZALEA_G(controllerName)) {
 		// default controller
 		field = azaleaConfigSubFind("dispatch", "default_controller");

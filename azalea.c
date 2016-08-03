@@ -97,7 +97,6 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(controllerName) = NULL;
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
-	AZALEA_G(actionMethod) = NULL;
 
 	array_init(&AZALEA_G(instances));
 
@@ -158,9 +157,6 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(actionName));
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
-	if (AZALEA_G(actionMethod)) {
-		zend_string_release(AZALEA_G(actionMethod));
-	}
 
 	zval_ptr_dtor(&AZALEA_G(instances));
 

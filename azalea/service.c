@@ -96,6 +96,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	// curl exec
 	void *cp = azaleaCurlOpen();
 	if (!cp) {
+		zend_string_release(serviceUrl);
 		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
 		return;
 	}
@@ -121,6 +122,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	}
 	if (statusCode == 0) {
 		throw500Str(ZEND_STRL("Service response is invalid."), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+		zend_string_release(serviceUrl);
 		return;
 	}
 	if (statusCode != 200) {
@@ -132,6 +134,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 			// string
 			throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
 		}
+		zend_string_release(serviceUrl);
 		return;
 	}
 	if (arguments) {
