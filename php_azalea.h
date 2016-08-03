@@ -68,6 +68,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *modelsPath;
 	zend_string *viewsPath;
 
+	zval paths;
 	zend_string *folderName;
 	zend_string *controllerName;
 	zend_string *actionName;

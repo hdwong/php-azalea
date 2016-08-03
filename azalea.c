@@ -93,6 +93,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(modelsPath) = NULL;
 	AZALEA_G(viewsPath) = NULL;
 
+	array_init(&AZALEA_G(paths));
 	AZALEA_G(folderName) = NULL;
 	AZALEA_G(controllerName) = NULL;
 	AZALEA_G(actionName) = NULL;
@@ -147,6 +148,7 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(viewsPath));
 	}
 
+	zval_ptr_dtor(&AZALEA_G(paths));
 	if (AZALEA_G(folderName)) {
 		zend_string_release(AZALEA_G(folderName));
 	}

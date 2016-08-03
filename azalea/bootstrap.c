@@ -458,7 +458,7 @@ PHP_METHOD(azalea_bootstrap, init)
 PHP_METHOD(azalea_bootstrap, run)
 {
 	zend_string *uri, *controllersPath, *modelsPath, *viewsPath, *basePath, *tstr;
-	zval *field, paths;
+	zval *field, *paths;
 	zend_ulong pathsOffset = 0;
 
 	// request uri
@@ -473,10 +473,10 @@ PHP_METHOD(azalea_bootstrap, run)
 	}
 
 	// get paths
-	array_init(&paths);
+	paths = &AZALEA_G(paths);
 	if (ZSTR_LEN(uri)) {
 		zend_string *delim = zend_string_init(ZEND_STRL("/"), 0);
-		php_explode(delim, uri, &paths, ZEND_LONG_MAX);
+		php_explode(delim, uri, paths, ZEND_LONG_MAX);
 		zend_string_release(delim);
 	}
 	field = azaleaConfigSubFind("path", "controllers");
@@ -523,7 +523,7 @@ PHP_METHOD(azalea_bootstrap, run)
 	AZALEA_G(viewsPath) = zend_string_dup(viewsPath, 0);
 
 	// get folder / controller / action / arguments
-	field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
+	field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
 	if (field) {
 		zend_string *lc, *folderPath;
 		lc = zend_string_tolower(Z_STR_P(field));
@@ -538,7 +538,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		zend_string_release(lc);
 
 		// controller
-		field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
+		field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
 		if (field) {
 			++pathsOffset;
 			if (AZALEA_G(controllerName)) {
@@ -547,7 +547,7 @@ PHP_METHOD(azalea_bootstrap, run)
 			AZALEA_G(controllerName) = zend_string_tolower(Z_STR_P(field));
 
 			// action
-			field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset);
+			field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
 			if (field) {
 				++pathsOffset;
 				if (AZALEA_G(actionName)) {
@@ -556,12 +556,12 @@ PHP_METHOD(azalea_bootstrap, run)
 				AZALEA_G(actionName) = zend_string_tolower(Z_STR_P(field));
 
 				// arguments
-				uint32_t num = zend_hash_num_elements(Z_ARRVAL(paths));
+				uint32_t num = zend_hash_num_elements(Z_ARRVAL_P(paths));
 				if (num > pathsOffset) {
 					zval *args = &AZALEA_G(pathArgs);
 					zval_ptr_dtor(args);
 					array_init_size(args, num - pathsOffset);
-					while ((field = zend_hash_index_find(Z_ARRVAL(paths), pathsOffset++))) {
+					while ((field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset++))) {
 						field = zend_hash_next_index_insert_new(Z_ARRVAL_P(args), field);
 						zval_add_ref(field);
 					}
@@ -572,7 +572,6 @@ PHP_METHOD(azalea_bootstrap, run)
 	zend_string_release(controllersPath);
 	zend_string_release(modelsPath);
 	zend_string_release(viewsPath);
-//	zval_ptr_dtor(&paths);
 	if (!AZALEA_G(controllerName)) {
 		// default controller
 		field = azaleaConfigSubFind("dispatch", "default_controller");
