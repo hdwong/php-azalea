@@ -10,7 +10,6 @@
 #include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
-#include "azalea/formatted_print.h"
 
 #include "ext/standard/html.h"  // for php_escape_html_entities
 #include "main/SAPI.h"  // for SG
@@ -39,29 +38,27 @@ static zend_function_entry azalea_template_functions[] = {
 };
 /* }}} */
 
-/* {{{ proto void p( string $format [, mixed $args [, mixed $... ]] ) */
+/* {{{ proto void p( string $string ) */
 PHP_FUNCTION(azalea_template_printf)
 {
-	zend_string *result, *text;
-	if ((result = azaleaSprintf(execute_data)) == NULL) {
-		RETURN_FALSE;
+	zend_string *text;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
+		return;
 	}
-	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(result), ZSTR_LEN(result), 0, ENT_QUOTES, get_default_charset(), 1);
-	zend_string_release(result);
+	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
 	PHPWRITE(ZSTR_VAL(text), ZSTR_LEN(text));
 	zend_string_release(text);
 }
 /* }}} */
 
-/* {{{ proto string t( string $format [, mixed $args [, mixed $... ]] ) */
+/* {{{ proto string t( string $string ) */
 PHP_FUNCTION(azalea_template_sprintf)
 {
-	zend_string *result, *text;
-	if ((result = azaleaSprintf(execute_data)) == NULL) {
-		RETURN_FALSE;
+	zend_string *text;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
+		return;
 	}
-	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(result), ZSTR_LEN(result), 0, ENT_QUOTES, get_default_charset(), 1);
-	zend_string_release(result);
+	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
 	RETVAL_STR(text);
 }
 /* }}} */

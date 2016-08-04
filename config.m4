@@ -20,6 +20,5 @@ if test "$PHP_AZALEA" != "no"; then
     azalea/template.c \
     azalea/exception.c \
     azalea/transport_curl.c \
-    azalea/formatted_print.c \
   , $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi
