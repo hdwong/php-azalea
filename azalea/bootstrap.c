@@ -514,7 +514,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 			tstr = controllerPath;
 			controllerPath = strpprintf(0, "%s%c%s.php", ZSTR_VAL(controllerPath), DEFAULT_SLASH, ZSTR_VAL(controllerName));
 			zend_string_release(tstr);
-			bool error = 1;
+			zend_bool error = 1;
 			do {
 				// check file exists
 				php_stat(ZSTR_VAL(controllerPath), (php_stat_len) ZSTR_LEN(controllerPath), FS_IS_R, &exists);
