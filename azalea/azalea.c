@@ -34,7 +34,7 @@
 /* {{{ proto azalea_randomString */
 PHP_FUNCTION(azalea_randomString)
 {
-	long len;
+	zend_long len;
 	zend_string *mode = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|S", &len, &mode) == FAILURE) {
@@ -78,8 +78,7 @@ PHP_FUNCTION(azalea_randomString)
 		}
 	}
 	char result[len];
-	long i;
-	zend_long number;
+	zend_long i, number;
 	l -= 1; // for RAND_RANGE
 	if (!BG(mt_rand_is_seeded)) {
 		php_mt_srand(GENERATE_SEED());
@@ -427,7 +426,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
  */
 PHPAPI void azaleaDeepCopy(zval *dst, zval *src) {
 	zval *pzval, *dstpzval, value;
-	ulong idx;
+	zend_ulong idx;
 	zend_string *key;
 
 	ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(src), idx, key, pzval) {

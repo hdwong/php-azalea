@@ -44,11 +44,11 @@ int azaleaCurlClose(void *cp)
 }
 
 
-long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, zval *result)
+zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **arguments, zval *result)
 {
 	CURLcode ret;
 	struct curl_slist *headers = NULL;
-	long statusCode = 0, timeout = 15, connectTimeout = 2;
+	zend_long statusCode = 0, timeout = 15, connectTimeout = 2;
 	char *contentType = NULL;
 	double downloadLength = 0;
 	zval *conf;
@@ -156,7 +156,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	curl_easy_getinfo(cp, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &downloadLength);
 	curl_easy_getinfo(cp, CURLINFO_CONTENT_TYPE, &contentType);
 	//  gzdecode if gzip response
-	if ((long) downloadLength == -1) {
+	if ((zend_long) downloadLength == -1) {
 		// gzip
 		char *buf;
 		size_t bufLen;

@@ -8,6 +8,7 @@
 #define AZALEA_CONFIG_H_
 
 AZALEA_STARTUP_FUNCTION(config);
+AZALEA_SHUTDOWN_FUNCTION(config);
 
 PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getSub);

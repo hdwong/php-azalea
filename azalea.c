@@ -67,6 +67,8 @@ PHP_MINIT_FUNCTION(azalea)
  */
 PHP_MSHUTDOWN_FUNCTION(azalea)
 {
+	AZALEA_SHUTDOWN(config);
+
 	return SUCCESS;
 }
 /* }}} */
@@ -78,7 +80,7 @@ PHP_RINIT_FUNCTION(azalea)
 	double now = azaleaGetMicrotime();
 	zval *server;
 
-	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
+	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (zend_long) now, CONST_CS);
 	AZALEA_G(timer) = now;
 	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);

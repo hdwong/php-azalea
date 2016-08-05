@@ -100,7 +100,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
 		return;
 	}
-	long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
+	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
 	azaleaCurlClose(cp);
 
 	char *pServiceMethod;
