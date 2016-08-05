@@ -605,7 +605,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
 				zval_ptr_dtor(pathArgs);
 				array_init(pathArgs);
-				zend_hash_copy(Z_ARRVAL_P(pathArgs), Z_ARRVAL_P(field), (copy_ctor_func_t)zval_add_ref);
+				zend_hash_copy(Z_ARRVAL_P(pathArgs), Z_ARRVAL_P(field), (copy_ctor_func_t) zval_add_ref);
 			}
 		}
 		zval_ptr_dtor(&newRouter);
