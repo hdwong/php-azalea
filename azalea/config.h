@@ -13,8 +13,7 @@ PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getSub);
 PHP_METHOD(azalea_config, getAll);
 
-void azaleaLoadConfig(zval *);
-
+PHPAPI void azaleaLoadConfig(zval *);
 #define azaleaConfigFind(key) azaleaConfigSubFind(key, NULL)
 PHPAPI zval * azaleaConfigSubFind(const char *key, const char *subKey);
 

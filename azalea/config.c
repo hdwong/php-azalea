@@ -105,7 +105,7 @@ static void php_ini_parser_cb_with_sections(zval *arg1, zval *arg2, zval *arg3, 
 /* }}} */
 
 /* {{{ proto void loadConfig(mixed $config) */
-void azaleaLoadConfig(zval *val)
+PHPAPI void azaleaLoadConfig(zval *val)
 {
 	zval *config = &AZALEA_G(config);
 	if (val) {
@@ -113,27 +113,28 @@ void azaleaLoadConfig(zval *val)
 			// load config from file
 			zend_stat_t sb;
 			zend_file_handle fh;
-			char *ini_file = Z_STRVAL_P(val);
-			if (VCWD_STAT(ini_file, &sb) != 0) {
-				php_error_docref(NULL, E_ERROR, "Unable to find config file `%s`", ini_file);
+			char *iniFile = Z_STRVAL_P(val);
+			if (VCWD_STAT(iniFile, &sb) != 0) {
+				php_error_docref(NULL, E_ERROR, "Unable to find config file `%s`", iniFile);
 				return;
 			}
-			if (!(fh.handle.fp = VCWD_FOPEN(ini_file, "r"))) {
-				php_error_docref(NULL, E_ERROR, "`%s` is not an valid ini file", ini_file);
+			if (!(fh.handle.fp = VCWD_FOPEN(iniFile, "r"))) {
+				php_error_docref(NULL, E_ERROR, "`%s` is not an valid ini file", iniFile);
 				return;
 			}
-			fh.filename = ini_file;
+			fh.filename = iniFile;
 			fh.type = ZEND_HANDLE_FP;
 			fh.free_filename = 0;
 			fh.opened_path = NULL;
 			ZVAL_UNDEF(&BG(active_ini_file_section));
 			if (zend_parse_ini_file(&fh, 0, 0, (zend_ini_parser_cb_t) php_ini_parser_cb_with_sections, config) == FAILURE ||
 					Z_TYPE_P(config) != IS_ARRAY) {
-				php_error_docref(NULL, E_ERROR, "Parsing ini file `%s` faild", ini_file);
+				php_error_docref(NULL, E_ERROR, "Parsing ini file `%s` faild", iniFile);
 				return;
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
+//			zend_hash_copy(Z_ARRVAL_P(config), Z_ARRVAL_P(val), (copy_ctor_func_t) zval_add_ref);
 			azaleaDeepCopy(config, val);	// fix ZVAL_COPY for opcache
 		}
 	}

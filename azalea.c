@@ -39,7 +39,6 @@
 #include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
-#include "main/SAPI.h"  // for sapi_header_op
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -80,7 +79,7 @@ PHP_RINIT_FUNCTION(azalea)
 	zval *server;
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (long) now, CONST_CS);
-	AZALEA_G(requestTime) = now;
+	AZALEA_G(timer) = now;
 	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	AZALEA_G(bootstrap) = 0;
@@ -102,12 +101,6 @@ PHP_RINIT_FUNCTION(azalea)
 	array_init(&AZALEA_G(instances));
 
 	array_init(&AZALEA_G(config));
-
-	// print copyright
-	sapi_header_line ctr = {0};
-	ctr.line = PHP_AZALEA_COPYRIGHT_OUTPUT;
-	ctr.line_len = sizeof(PHP_AZALEA_COPYRIGHT_OUTPUT) - 1;
-	sapi_header_op(SAPI_HEADER_REPLACE, &ctr);
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();

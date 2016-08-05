@@ -140,7 +140,7 @@ long azaleaCurlExec(void *cp, long method, zend_string **url, zval **arguments, 
 	curl_easy_setopt(cp, CURLOPT_WRITEDATA, &data);
 
 	// exec
-	smart_str_alloc(&data, 4096, 0);
+	smart_str_alloc(&data, 1048576 /* 1M */, 0);
 	ret = curl_easy_perform(cp);
 	smart_str_0(&data);
 	curl_slist_free_all(headers);

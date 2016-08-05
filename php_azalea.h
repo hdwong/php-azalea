@@ -55,7 +55,7 @@ extern zend_module_entry azalea_module_entry;
 #define azalea_exception_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
-	double requestTime;
+	double timer;
 	ulong renderLevel;
 	zend_bool bootstrap;
 	zend_string *environ;

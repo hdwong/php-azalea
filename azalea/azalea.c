@@ -156,8 +156,8 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 PHP_FUNCTION(azalea_timer)
 {
 	double now = azaleaGetMicrotime();
-	RETVAL_DOUBLE(now - AZALEA_G(requestTime));
-	AZALEA_G(requestTime) = now;
+	RETVAL_DOUBLE(now - AZALEA_G(timer));
+	AZALEA_G(timer) = now;
 }
 /* }}} */
 
