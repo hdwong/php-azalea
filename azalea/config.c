@@ -134,7 +134,7 @@ PHPAPI void azaleaLoadConfig(zval *val)
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
-			zend_hash_copy(Z_ARRVAL_P(config), Z_ARRVAL_P(val), (copy_ctor_func_t) zval_add_ref);
+			azaleaDeepCopy(config, val);
 		}
 	}
 	// DEFAULTS
