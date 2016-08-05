@@ -134,8 +134,7 @@ PHPAPI void azaleaLoadConfig(zval *val)
 			}
 		} else if (Z_TYPE_P(val) == IS_ARRAY) {
 			// copy
-//			zend_hash_copy(Z_ARRVAL_P(config), Z_ARRVAL_P(val), (copy_ctor_func_t) zval_add_ref);
-			azaleaDeepCopy(config, val);	// fix ZVAL_COPY for opcache
+			zend_hash_copy(Z_ARRVAL_P(config), Z_ARRVAL_P(val), (copy_ctor_func_t) zval_add_ref);
 		}
 	}
 	// DEFAULTS
@@ -149,14 +148,16 @@ PHPAPI void azaleaLoadConfig(zval *val)
 	// config.timezone
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("timezone")))) {
 		add_assoc_stringl_ex(config, ZEND_STRL("timezone"), ZEND_STRL("Asia/Shanghai"));
-	} else {
-		convert_to_string_ex(found);
+	} else if (Z_TYPE_P(found) != IS_STRING) {
+		php_error_docref(NULL, E_ERROR, "Timezone must be a string");
+		return;
 	}
 	// config.theme
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("theme")))) {
 		add_assoc_null_ex(config, ZEND_STRL("theme"));
-	} else {
-		convert_to_string_ex(found);
+	} else if (Z_TYPE_P(found) != IS_STRING) {
+		php_error_docref(NULL, E_ERROR, "Theme name must be a string");
+		return;
 	}
 	// config.session
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("session"))) {
@@ -177,11 +178,6 @@ PHPAPI void azaleaLoadConfig(zval *val)
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("dispatch"))) {
 		array_init(&el);
 		add_assoc_zval_ex(config, ZEND_STRL("dispatch"), &el);
-	}
-	// config.router
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("router"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("router"), &el);
 	}
 	// ---------- sub of config.session ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("session"));
@@ -276,12 +272,6 @@ PHPAPI void azaleaLoadConfig(zval *val)
 	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("error_action"));
 	if (!field || Z_TYPE_P(field) != IS_STRING || !Z_STRLEN_P(field)) {
 		add_assoc_stringl_ex(found, ZEND_STRL("error_action"), ZEND_STRL("error"));
-	}
-	// ---------- sub of config.router ----------
-	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("router"));
-	if (Z_TYPE_P(found) != IS_ARRAY) {
-		zval_ptr_dtor(found);
-		array_init(found);
 	}
 }
 /* }}} */

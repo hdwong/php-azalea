@@ -82,7 +82,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(timer) = now;
 	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
-	AZALEA_G(bootstrap) = 0;
+	ZVAL_UNDEF(&AZALEA_G(bootstrap));
 	AZALEA_G(directory) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;
@@ -115,6 +115,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 {
 	if (AZALEA_G(environ)) {
 		zend_string_release(AZALEA_G(environ));
+	}
+	if (Z_TYPE(AZALEA_G(bootstrap)) != IS_UNDEF) {
+		zval_ptr_dtor(&AZALEA_G(bootstrap));
 	}
 	if (AZALEA_G(directory)) {
 		zend_string_release(AZALEA_G(directory));

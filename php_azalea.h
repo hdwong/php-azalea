@@ -57,7 +57,7 @@ extern zend_module_entry azalea_module_entry;
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	double timer;
 	ulong renderLevel;
-	zend_bool bootstrap;
+	azalea_bootstrap_t bootstrap;
 	zend_string *environ;
 	zend_string *directory;
 	zend_string *uri;
