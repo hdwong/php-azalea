@@ -97,7 +97,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	// load config
 	azaleaLoadConfig(config);
 
-	zval *server, *field, iniValue;
+	zval *server, *field, *conf, iniValue;
 	zend_string *iniName;
 
 	// load SERVER global variable
@@ -109,16 +109,16 @@ PHP_METHOD(azalea_bootstrap, init)
 	server = &PG(http_globals)[TRACK_VARS_SERVER];
 
 	// set timezone
-	field = azaleaConfigFind("timezone");
-	if (Z_STRLEN_P(field)) {
+	conf = azaleaConfigFind("timezone");
+	if (Z_STRLEN_P(conf)) {
 		iniName = zend_string_init(ZEND_STRL("date.timezone"), 0);
-		zend_alter_ini_entry(iniName, Z_STR_P(field), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_alter_ini_entry(iniName, Z_STR_P(conf), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 		zend_string_release(iniName);
 	}
 
 	// set error reporting while debug is true
-	field = azaleaConfigFind("debug");
-	if (Z_TYPE_P(field) == IS_TRUE) {
+	conf = azaleaConfigFind("debug");
+	if (Z_TYPE_P(conf) == IS_TRUE) {
 		EG(error_reporting) = E_ALL;
 		iniName = zend_string_init(ZEND_STRL("display_errors"), 0);
 		zend_alter_ini_entry_chars(iniName, ZEND_STRL("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
@@ -144,7 +144,7 @@ PHP_METHOD(azalea_bootstrap, init)
 				// add '/'
 				zend_string *t = zend_string_alloc(len + 1, 0);
 				memcpy(ZSTR_VAL(t), ZSTR_VAL(baseUri), len);
-				ZSTR_VAL(t)[len] = '/';
+				ZSTR_VAL(t)[len] = DEFAULT_SLASH;
 				ZSTR_VAL(t)[len + 1] = '\0';
 				zend_string_release(baseUri);
 				baseUri = t;
@@ -215,17 +215,17 @@ PHP_METHOD(azalea_bootstrap, init)
 			PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 	zend_string_release(iniName);
 	// session.cookie_lifetime
-	field = azaleaConfigSubFind("session", "lifetime");
-	ZVAL_COPY(&iniValue, field);
-	convert_to_string_ex(&iniValue);
+	conf = azaleaConfigSubFind("session", "lifetime");
+	ZVAL_COPY(&iniValue, conf);
+	convert_to_string(&iniValue);
 	iniName = zend_string_init(ZEND_STRL("session.cookie_lifetime"), 0);
 	zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 	zend_string_release(iniName);
 	zval_ptr_dtor(&iniValue);
 	// session.cookie_path
-	field = azaleaConfigSubFind("session", "path");
-	ZVAL_COPY(&iniValue, field);
-	convert_to_string_ex(&iniValue);
+	conf = azaleaConfigSubFind("session", "path");
+	ZVAL_COPY(&iniValue, conf);
+	convert_to_string(&iniValue);
 	if (!Z_STRLEN(iniValue)) {
 		// use baseUri for default path
 		zval_ptr_dtor(&iniValue);
@@ -236,9 +236,9 @@ PHP_METHOD(azalea_bootstrap, init)
 	zend_string_release(iniName);
 	zval_ptr_dtor(&iniValue);
 	// session.cooke_domain
-	field = azaleaConfigSubFind("session", "domain");
-	ZVAL_COPY(&iniValue, field);
-	convert_to_string_ex(&iniValue);
+	conf = azaleaConfigSubFind("session", "domain");
+	ZVAL_COPY(&iniValue, conf);
+	convert_to_string(&iniValue);
 	if (Z_STRLEN(iniValue)) {
 		iniName = zend_string_init(ZEND_STRL("session.cookie_domain"), 0);
 		zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
@@ -259,62 +259,52 @@ PHP_METHOD(azalea_bootstrap, init)
 PHP_METHOD(azalea_bootstrap, run)
 {
 	zend_string *uri, *controllersPath, *modelsPath, *viewsPath, *basePath, *tstr;
-	zval *field, *paths;
+	zval *conf, *field, *paths;
 	zend_ulong pathsOffset = 0;
 
-	// request uri
+	// request uri & get paths
 	uri = AZALEA_G(uri);
-	// static router
-	field = azaleaConfigFind("router");
-	if (field) {
-		// TODO check static router
-		zval staticRouter;
-		ZVAL_COPY(&staticRouter, field);
-		zval_ptr_dtor(&staticRouter);
-	}
-
-	// get paths
 	paths = &AZALEA_G(paths);
 	if (ZSTR_LEN(uri)) {
 		zend_string *delim = zend_string_init(ZEND_STRL("/"), 0);
 		php_explode(delim, uri, paths, ZEND_LONG_MAX);
 		zend_string_release(delim);
 	}
-	field = azaleaConfigSubFind("path", "controllers");
-	controllersPath = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
-	field = azaleaConfigSubFind("path", "models");
-	modelsPath = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
-	field = azaleaConfigSubFind("path", "views");
-	viewsPath = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
-	field = azaleaConfigSubFind("path", "basepath");
-	basePath = zend_string_copy(field && Z_TYPE_P(field) == IS_STRING ? Z_STR_P(field) : AZALEA_G(directory));
-	if (ZSTR_VAL(basePath)[ZSTR_LEN(basePath) - 1] != '/') {
+	conf = azaleaConfigSubFind("path", "controllers");
+	controllersPath = zend_string_init(Z_STRVAL_P(conf), Z_STRLEN_P(conf), 0);
+	conf = azaleaConfigSubFind("path", "models");
+	modelsPath = zend_string_init(Z_STRVAL_P(conf), Z_STRLEN_P(conf), 0);
+	conf = azaleaConfigSubFind("path", "views");
+	viewsPath = zend_string_init(Z_STRVAL_P(conf), Z_STRLEN_P(conf), 0);
+	conf = azaleaConfigSubFind("path", "basepath");
+	basePath = zend_string_copy(conf && Z_TYPE_P(conf) == IS_STRING ? Z_STR_P(conf) : AZALEA_G(directory));
+	if (ZSTR_VAL(basePath)[ZSTR_LEN(basePath) - 1] != DEFAULT_SLASH) {
 		tstr = strpprintf(0, "%s%c", ZSTR_VAL(basePath), DEFAULT_SLASH);
 		zend_string_release(basePath);
 		basePath = tstr;
 	}
-	if (ZSTR_VAL(controllersPath)[0] != '/') {
+	if (ZSTR_VAL(controllersPath)[0] != DEFAULT_SLASH) {
 		// relative path
 		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(controllersPath));
 		zend_string_release(controllersPath);
 		controllersPath = tstr;
 	}
-	if (ZSTR_VAL(modelsPath)[0] != '/') {
+	if (ZSTR_VAL(modelsPath)[0] != DEFAULT_SLASH) {
 		// relative path
 		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(modelsPath));
 		zend_string_release(modelsPath);
 		modelsPath = tstr;
 	}
-	if (ZSTR_VAL(viewsPath)[0] != '/') {
+	if (ZSTR_VAL(viewsPath)[0] != DEFAULT_SLASH) {
 		// relative path
 		tstr = strpprintf(0, "%s%s", ZSTR_VAL(basePath), ZSTR_VAL(viewsPath));
 		zend_string_release(viewsPath);
 		viewsPath = tstr;
 	}
-	field = azaleaConfigFind("theme");
-	if (field && Z_TYPE_P(field) == IS_STRING && Z_STRLEN_P(field)) {
+	conf = azaleaConfigFind("theme");
+	if (conf && Z_TYPE_P(conf) == IS_STRING && Z_STRLEN_P(conf)) {
 		// add views subpath
-		tstr = strpprintf(0, "%s%c%s", ZSTR_VAL(viewsPath), DEFAULT_SLASH, Z_STRVAL_P(field));
+		tstr = strpprintf(0, "%s%c%s", ZSTR_VAL(viewsPath), DEFAULT_SLASH, Z_STRVAL_P(conf));
 		zend_string_release(viewsPath);
 		viewsPath = tstr;
 	}
@@ -327,14 +317,14 @@ PHP_METHOD(azalea_bootstrap, run)
 	field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
 	if (field) {
 		zend_string *lc, *folderPath;
+		zval exists;
 		lc = zend_string_tolower(Z_STR_P(field));
 		folderPath = strpprintf(0, "%s%c%s", ZSTR_VAL(controllersPath), DEFAULT_SLASH, ZSTR_VAL(lc));
-		zval exists;
 		php_stat(ZSTR_VAL(folderPath), (php_stat_len) ZSTR_LEN(folderPath), FS_IS_DIR, &exists);
 		zend_string_release(folderPath);
 		if (Z_TYPE(exists) == IS_TRUE) {
 			++pathsOffset;
-			AZALEA_G(folderName) = zend_string_copy(lc);
+			AZALEA_G(folderName) = zend_string_dup(lc, 0);
 		}
 		zend_string_release(lc);
 
@@ -358,7 +348,7 @@ PHP_METHOD(azalea_bootstrap, run)
 
 				// arguments
 				uint32_t num = zend_hash_num_elements(Z_ARRVAL_P(paths));
-				if (num > pathsOffset) {
+				if (num - pathsOffset > 0) {  // has arguments
 					zval *args = &AZALEA_G(pathArgs);
 					zval_ptr_dtor(args);
 					array_init_size(args, num - pathsOffset);
@@ -375,15 +365,15 @@ PHP_METHOD(azalea_bootstrap, run)
 	zend_string_release(viewsPath);
 	if (!AZALEA_G(controllerName)) {
 		// default controller
-		field = azaleaConfigSubFind("dispatch", "default_controller");
-		AZALEA_G(controllerName) = Z_STR_P(field);
-		zval_add_ref(field);
+		conf = azaleaConfigSubFind("dispatch", "default_controller");
+		AZALEA_G(controllerName) = Z_STR_P(conf);
+		zval_add_ref(conf);
 	}
 	if (!AZALEA_G(actionName)) {
 		// default controller
-		field = azaleaConfigSubFind("dispatch", "default_action");
-		AZALEA_G(actionName) = Z_STR_P(field);
-		zval_add_ref(field);
+		conf = azaleaConfigSubFind("dispatch", "default_action");
+		AZALEA_G(actionName) = Z_STR_P(conf);
+		zval_add_ref(conf);
 	}
 
 	// session start
@@ -408,6 +398,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		errorAction = azaleaConfigSubFind("dispatch", "error_action");
 		azaleaDispatch(NULL, Z_STR_P(errorController), Z_STR_P(errorAction), &errorArgs, &ret);
 		processContent(&ret);
+		zval_ptr_dtor(&errorArgs);
 
 		if (EG(exception)) {
 			php_output_clean();
@@ -475,11 +466,11 @@ static void processContent(zval *result)
 			PHPWRITE(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 			smart_str_free(&buf);
 		} else {
-			convert_to_string_ex(result);
+			convert_to_string(result);
 			PHPWRITE(Z_STRVAL_P(result), Z_STRLEN_P(result));
 		}
+		zval_ptr_dtor(result);
 	}
-	zval_ptr_dtor(result);
 	ZVAL_TRUE(result);
 }
 /* }}} */

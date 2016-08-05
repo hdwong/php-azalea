@@ -216,7 +216,7 @@ PHP_METHOD(azalea_view, assign)
 	if (Z_TYPE_P(name) == IS_ARRAY) {
 		assignToDataHt(instance, Z_ARRVAL_P(name));
 	} else if (value) {
-		convert_to_string_ex(name);
+		convert_to_string(name);
 		assignToData(instance, Z_STR_P(name), value);
 	} else {
 		// ERROR
