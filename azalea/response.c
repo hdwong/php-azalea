@@ -53,7 +53,7 @@ PHP_METHOD(azalea_response, __construct) {}
 /* {{{ proto void gotoUrl(string url, int httpCode) */
 PHP_METHOD(azalea_response, gotoUrl)
 {
-	zend_string *url = NULL;
+	zend_string *url;
 	zend_long httpCode = 302;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|l", &url, &httpCode) == FAILURE) {

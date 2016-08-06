@@ -145,8 +145,12 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 		AZALEA_G(host) = tstr;
 	}
 
-	return strpprintf(0, "%s%s%s", includeHost ? ZSTR_VAL(AZALEA_G(host)) : "",
+	zend_string *returnUrl;
+	url = php_trim(url, ZEND_STRL("/"), 1);
+	returnUrl = strpprintf(0, "%s%s%s", includeHost ? ZSTR_VAL(AZALEA_G(host)) : "",
 			AZALEA_G(baseUri) ? ZSTR_VAL(AZALEA_G(baseUri)) : "/", ZSTR_VAL(url));
+	zend_string_release(url);
+	return returnUrl;
 }
 /* }}} */
 
