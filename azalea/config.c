@@ -37,6 +37,15 @@ AZALEA_STARTUP_FUNCTION(config)
 }
 /* }}} */
 
+/* {{{ AZALEA_SHUTDOWN_FUNCTION
+ */
+AZALEA_SHUTDOWN_FUNCTION(config)
+{
+	return SUCCESS;
+}
+/* }}} */
+
+
 /* {{{ php_simple_ini_parser_cb */
 static void php_simple_ini_parser_cb(zval *arg1, zval *arg2, zval *arg3, int callback_type, zval *arr)
 {
@@ -113,7 +122,7 @@ PHPAPI void azaleaLoadConfig(zval *val)
 			// load config from file
 			zend_stat_t sb;
 			zend_file_handle fh;
-			char *iniFile = Z_STRVAL_P(val);
+			const char *iniFile = Z_STRVAL_P(val);
 			if (VCWD_STAT(iniFile, &sb) != 0) {
 				php_error_docref(NULL, E_ERROR, "Unable to find config file `%s`", iniFile);
 				return;
