@@ -42,8 +42,7 @@
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
-/* {{{ PHP_MINIT_FUNCTION
- */
+/* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
@@ -60,16 +59,6 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(exception);
 
     return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MSHUTDOWN_FUNCTION
- */
-PHP_MSHUTDOWN_FUNCTION(azalea)
-{
-	AZALEA_SHUTDOWN(config);
-
-	return SUCCESS;
 }
 /* }}} */
 
@@ -198,7 +187,7 @@ zend_module_entry azalea_module_entry = {
 	"azalea",
 	azalea_functions,
 	PHP_MINIT(azalea),
-	PHP_MSHUTDOWN(azalea),
+	NULL,
 	PHP_RINIT(azalea),		/* Replace with NULL if there's nothing to do at request start */
 	PHP_RSHUTDOWN(azalea),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(azalea),

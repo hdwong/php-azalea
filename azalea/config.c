@@ -37,15 +37,6 @@ AZALEA_STARTUP_FUNCTION(config)
 }
 /* }}} */
 
-/* {{{ AZALEA_SHUTDOWN_FUNCTION
- */
-AZALEA_SHUTDOWN_FUNCTION(config)
-{
-	return SUCCESS;
-}
-/* }}} */
-
-
 /* {{{ php_simple_ini_parser_cb */
 static void php_simple_ini_parser_cb(zval *arg1, zval *arg2, zval *arg3, int callback_type, zval *arr)
 {
