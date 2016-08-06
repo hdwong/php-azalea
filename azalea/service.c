@@ -81,7 +81,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	// curl open
 	void *cp = azaleaCurlOpen();
 	if (!cp) {
-		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
+		throw500Str(ZEND_STRL("Service request start failed."), NULL, NULL, NULL);
 		return;
 	}
 
@@ -104,37 +104,37 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
 	azaleaCurlClose(cp);
 
-	char *pServiceMethod;
+	zend_string *serviceMethod;
 	switch (method) {
 		case AZALEA_SERVICE_METHOD_GET:
-			pServiceMethod = "GET";
+			serviceMethod = zend_string_init(ZEND_STRL("GET"), 0);
 			break;
 		case AZALEA_SERVICE_METHOD_POST:
-			pServiceMethod = "POST";
+			serviceMethod = zend_string_init(ZEND_STRL("POST"), 0);
 			break;
 		case AZALEA_SERVICE_METHOD_PUT:
-			pServiceMethod = "PUT";
+			serviceMethod = zend_string_init(ZEND_STRL("PUT"), 0);
 			break;
 		case AZALEA_SERVICE_METHOD_DELETE:
-			pServiceMethod = "DELETE";
+			serviceMethod = zend_string_init(ZEND_STRL("DELETE"), 0);
 			break;
 		default:
-			pServiceMethod = "Unknown method";
+			serviceMethod = zend_string_init(ZEND_STRL("Unknown method"), 0);
 	}
 	zend_bool error = 1;
 	do {
 		if (statusCode == 0) {
-			throw500Str(ZEND_STRL("Service response is invalid."), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+			throw500Str(ZEND_STRL("Service response is invalid."), serviceMethod, serviceUrl, arguments);
 			break;
 		}
 		if (statusCode != 200) {
 			if (Z_TYPE_P(return_value) == IS_OBJECT) {
 				// array
 				zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
-				throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+				throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, serviceMethod, serviceUrl, arguments);
 			} else {
 				// string
-				throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+				throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), serviceMethod, serviceUrl, arguments);
 			}
 			break;
 		}
@@ -143,6 +143,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	if (arguments) {
 		zval_ptr_dtor(arguments);
 	}
+	zend_string_release(serviceMethod);
 	zend_string_release(serviceUrl);
 	if (error) {
 		return;

@@ -144,7 +144,7 @@ PHPAPI void throw404Str(const char *message, size_t len)
 /* }}} */
 
 /* {{{ proto throw500Str */
-PHPAPI void throw500Str(const char *message, size_t len, const char *method, const char *serviceUrl, zval *arguments)
+PHPAPI void throw500Str(const char *message, size_t len, zend_string *serverMethod, zend_string *serviceUrl, zval *arguments)
 {
 	azalea_exception_t rv = {{0}}, *exception = &rv;
 
@@ -153,12 +153,21 @@ PHPAPI void throw500Str(const char *message, size_t len, const char *method, con
 	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message, len);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 500);
 	// serviceMethod
-	zend_update_property_string(azalea_exception500_ce, exception, ZEND_STRL("_method"), method);
+	if (serverMethod) {
+		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_method"), zend_string_copy(serverMethod));
+	} else {
+		zend_update_property_null(azalea_exception500_ce, exception, ZEND_STRL("_method"));
+	}
 	// serviceUrl
-	zend_update_property_string(azalea_exception500_ce, exception, ZEND_STRL("_url"), serviceUrl);
+	if (serviceUrl) {
+		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_url"), zend_string_copy(serviceUrl));
+	} else {
+		zend_update_property_null(azalea_exception500_ce, exception, ZEND_STRL("_url"));
+	}
 	// serviceArguments
 	if (arguments) {
 		zend_update_property(azalea_exception500_ce, exception, ZEND_STRL("_arguments"), arguments);
+		zval_add_ref(arguments);
 	}
 
 	// check environ
