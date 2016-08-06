@@ -478,7 +478,7 @@ static void processContent(zval *result)
 /* {{{ proto azaleaDispatch */
 PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
-	zend_string *name, *lcName, *controllerClass, *actionMethod, *tstr;
+	zend_string *name, *lcName, *controllerClass, *actionMethod = NULL, *tstr;
 	zend_class_entry *ce;
 	azalea_controller_t *instance = NULL, rv = {{0}};
 
@@ -597,8 +597,10 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 		zend_call_method_with_1_params(instance, ce, NULL, "__router", &newRouter, &arg);
 		zval_ptr_dtor(&arg);
 		if (Z_TYPE(newRouter) == IS_ARRAY) {
-			// only process action and arguments
-			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("action")))) {
+			// only process callback OR action and arguments
+			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
+				actionMethod = zend_string_copy(Z_STR_P(field));
+			} else if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
 				zend_string_release(name);
 				name = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
 			}
@@ -612,12 +614,14 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 	}
 
 	// action method name
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
-		// not WEB
-		actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(AZALEA_G(environ)));
-	} else {
-		// WEB
-		actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(name));
+	if (!actionMethod) {
+		if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+			// not WEB
+			actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(AZALEA_G(environ)));
+		} else {
+			// WEB
+			actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(name));
+		}
 	}
 	zend_string_release(name);
 
