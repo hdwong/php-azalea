@@ -93,35 +93,40 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 	if (*arguments && Z_TYPE_P(*arguments) == IS_ARRAY) {
 		smart_str formstr = {0};
 		if (php_url_encode_hash_ex(Z_ARRVAL_P(*arguments), &formstr, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738) != FAILURE) {
-			smart_str_0(&formstr);
-			// preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($params)
-			zend_string *regex = zend_string_init(ZEND_STRL("/%5B[0-9]+%5D/simU"), 0);
-			zval rep;
-			ZVAL_EMPTY_STRING(&rep);
-			zend_string *query = php_pcre_replace(regex, formstr.s, ZSTR_VAL(formstr.s), ZSTR_LEN(formstr.s), &rep, 0, -1, NULL);
-			zend_string_release(regex);
+			if (formstr.a > 0) {
+				smart_str_0(&formstr);
+				// preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($params)
+				zend_string *regex = zend_string_init(ZEND_STRL("/%5B[0-9]+%5D/simU"), 0);
+				zval rep;
+				ZVAL_EMPTY_STRING(&rep);
+				zend_string *query = php_pcre_replace(regex, formstr.s, ZSTR_VAL(formstr.s), ZSTR_LEN(formstr.s), &rep, 0, -1, NULL);
+				zend_string_release(regex);
 
-			if (method == AZALEA_SERVICE_METHOD_GET) {
-				// add query
-				zend_string *newUrl;
-				if (strstr(ZSTR_VAL(*url), "?")) {
-					// has query yet
-					newUrl = strpprintf(0, "%s&%s", ZSTR_VAL(*url), ZSTR_VAL(query));
-				} else {
-					newUrl = strpprintf(0, "%s?%s", ZSTR_VAL(*url), ZSTR_VAL(query));
+				if (method == AZALEA_SERVICE_METHOD_GET) {
+					// add query
+					zend_string *newUrl;
+					if (strstr(ZSTR_VAL(*url), "?")) {
+						// has query yet
+						newUrl = strpprintf(0, "%s&%s", ZSTR_VAL(*url), ZSTR_VAL(query));
+					} else {
+						newUrl = strpprintf(0, "%s?%s", ZSTR_VAL(*url), ZSTR_VAL(query));
+					}
+					zend_string_release(*url);
+					*url = newUrl;
+					zval_ptr_dtor(*arguments);
+					*arguments = NULL;
+				} else if (method == AZALEA_SERVICE_METHOD_POST || method == AZALEA_SERVICE_METHOD_PUT ||
+						method == AZALEA_SERVICE_METHOD_DELETE) {
+					// copy from ext/standard/interface.c line 2619
+					/* with curl 7.17.0 and later, we can use COPYPOSTFIELDS, but we have to provide size before */
+					curl_easy_setopt(cp, CURLOPT_POSTFIELDSIZE, ZSTR_LEN(query));
+					curl_easy_setopt(cp, CURLOPT_COPYPOSTFIELDS, ZSTR_VAL(query));
 				}
-				zend_string_release(*url);
-				*url = newUrl;
-				zval_ptr_dtor(*arguments);
-				*arguments = NULL;
+				zend_string_release(query);
 			} else if (method == AZALEA_SERVICE_METHOD_POST || method == AZALEA_SERVICE_METHOD_PUT ||
 					method == AZALEA_SERVICE_METHOD_DELETE) {
-				// copy from ext/standard/interface.c line 2619
-				/* with curl 7.17.0 and later, we can use COPYPOSTFIELDS, but we have to provide size before */
-				curl_easy_setopt(cp, CURLOPT_POSTFIELDSIZE, ZSTR_LEN(query));
-				curl_easy_setopt(cp, CURLOPT_COPYPOSTFIELDS, ZSTR_VAL(query));
+				curl_easy_setopt(cp, CURLOPT_POSTFIELDSIZE, 0);
 			}
-			zend_string_release(query);
 		}
 		smart_str_free(&formstr);
 	}

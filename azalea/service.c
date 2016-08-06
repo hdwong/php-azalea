@@ -18,10 +18,10 @@ zend_class_entry *azalea_service_ce;
 /* {{{ class Azalea\ServiceModel methods
  */
 static zend_function_entry azalea_service_methods[] = {
-	PHP_ME(azalea_service, get, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
-	PHP_ME(azalea_service, post, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
-	PHP_ME(azalea_service, put, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
-	PHP_ME(azalea_service, delete, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_service, get, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(azalea_service, post, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(azalea_service, put, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(azalea_service, delete, NULL, ZEND_ACC_PROTECTED)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -96,7 +96,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	}
 	if (arguments) {
 		array_init(&serviceArgs);
-		azaleaDeepCopy(&serviceArgs, arguments);
+		zend_hash_copy(Z_ARRVAL(serviceArgs), Z_ARRVAL_P(arguments), (copy_ctor_func_t) zval_add_ref);
 		arguments = &serviceArgs;
 	}
 
