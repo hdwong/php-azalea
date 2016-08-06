@@ -78,6 +78,13 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		return;
 	}
 
+	// curl open
+	void *cp = azaleaCurlOpen();
+	if (!cp) {
+		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
+		return;
+	}
+
 	if (strncasecmp(ZSTR_VAL(serviceUrl), "http://", sizeof("http://") - 1) &&
 			strncasecmp(ZSTR_VAL(serviceUrl), "https://", sizeof("https://") - 1)) {
 		// add serviceUrl prefix
@@ -94,12 +101,6 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	}
 
 	// curl exec
-	void *cp = azaleaCurlOpen();
-	if (!cp) {
-		zend_string_release(serviceUrl);
-		throw500Str(ZEND_STRL("Service request start failed."), "", "", NULL);
-		return;
-	}
 	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
 	azaleaCurlClose(cp);
 
@@ -120,27 +121,32 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 		default:
 			pServiceMethod = "Unknown method";
 	}
-	if (statusCode == 0) {
-		throw500Str(ZEND_STRL("Service response is invalid."), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
-		zend_string_release(serviceUrl);
-		return;
-	}
-	if (statusCode != 200) {
-		if (Z_TYPE_P(return_value) == IS_OBJECT) {
-			// array
-			zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
-			throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
-		} else {
-			// string
-			throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+	zend_bool error = 1;
+	do {
+		if (statusCode == 0) {
+			throw500Str(ZEND_STRL("Service response is invalid."), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+			break;
 		}
-		zend_string_release(serviceUrl);
-		return;
-	}
+		if (statusCode != 200) {
+			if (Z_TYPE_P(return_value) == IS_OBJECT) {
+				// array
+				zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
+				throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+			} else {
+				// string
+				throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), pServiceMethod, ZSTR_VAL(serviceUrl), arguments);
+			}
+			break;
+		}
+		error = 0;
+	} while (0);
 	if (arguments) {
 		zval_ptr_dtor(arguments);
 	}
 	zend_string_release(serviceUrl);
+	if (error) {
+		return;
+	}
 	if (Z_TYPE_P(return_value) == IS_OBJECT) {
 		zval *result = zend_read_property(NULL, return_value, ZEND_STRL("result"), 1, NULL);
 		if (result) {
