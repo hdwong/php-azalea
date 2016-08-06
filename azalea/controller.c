@@ -81,11 +81,17 @@ PHP_METHOD(azalea_controller, getModel)
 /* {{{ proto getView */
 PHP_METHOD(azalea_controller, getView)
 {
-	azalea_view_t *instance = return_value;
+	azalea_view_t *instance;
+	if ((instance = zend_hash_str_find(Z_ARRVAL(AZALEA_G(instances)), ZEND_STRL("_view")))) {
+		RETURN_ZVAL(instance, 1, 0);
+	}
+	azalea_view_t rv = {{0}};
 	zval data, *staticPath, *themeName;
 	zend_string *tpldir, *tstr;
 	// new instance
+	instance = &rv;
 	object_init_ex(instance, azalea_view_ce);
+	add_assoc_zval_ex(&AZALEA_G(instances), ZEND_STRL("_view"), instance);
 	// data
 	array_init(&data);
 	zend_update_property(azalea_view_ce, instance, ZEND_STRL("_data"), &data);
@@ -109,6 +115,7 @@ PHP_METHOD(azalea_controller, getView)
 	// upate environ
 	zend_update_property(azalea_view_ce, instance, ZEND_STRL("_environ"), &data);
 	zval_ptr_dtor(&data);
+	RETURN_ZVAL(instance, 1, 0);
 }
 /* }}} */
 
