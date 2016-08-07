@@ -22,6 +22,5 @@ PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);
 #define azaleaSetHeader(string, httpCode) azaleaSetHeaderStr((string)->val, (string)->len, httpCode)
 PHPAPI int azaleaRequire(char *path, size_t len);
 PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from);
-PHPAPI void azaleaDeepCopy(zval *dst, zval *src);
 
 #endif
