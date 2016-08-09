@@ -309,9 +309,9 @@ PHP_METHOD(azalea_bootstrap, run)
 		viewsPath = tstr;
 	}
 	zend_string_release(basePath);
-	AZALEA_G(controllersPath) = zend_string_dup(controllersPath, 0);
-	AZALEA_G(modelsPath) = zend_string_dup(modelsPath, 0);
-	AZALEA_G(viewsPath) = zend_string_dup(viewsPath, 0);
+	AZALEA_G(controllersPath) = controllersPath;
+	AZALEA_G(modelsPath) = modelsPath;
+	AZALEA_G(viewsPath) = viewsPath;
 
 	// get folder / controller / action / arguments
 	field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
@@ -324,7 +324,7 @@ PHP_METHOD(azalea_bootstrap, run)
 		zend_string_release(folderPath);
 		if (Z_TYPE(exists) == IS_TRUE) {
 			++pathsOffset;
-			AZALEA_G(folderName) = zend_string_dup(lc, 0);
+			AZALEA_G(folderName) = zend_string_copy(lc);
 		}
 		zend_string_release(lc);
 
@@ -360,9 +360,7 @@ PHP_METHOD(azalea_bootstrap, run)
 			}
 		}
 	}
-	zend_string_release(controllersPath);
-	zend_string_release(modelsPath);
-	zend_string_release(viewsPath);
+
 	if (!AZALEA_G(controllerName)) {
 		// default controller
 		conf = azaleaConfigSubFind("dispatch", "default_controller");
