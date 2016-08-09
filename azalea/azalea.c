@@ -12,7 +12,6 @@
 #include "azalea/model.h"
 #include "azalea/service.h"
 #include "azalea/exception.h"
-#include "azalea/template.h"
 #if NODE_BEAUTY_MYSQL
 #include "azalea/node-beauty/mysql.h"
 #endif
@@ -63,13 +62,6 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
-
-	ZEND_NAMED_FE(p, ZEND_FN(azalea_template_printf), NULL)  // escape & printf
-	ZEND_NAMED_FE(t, ZEND_FN(azalea_template_sprintf), NULL)  // escape & sprintf
-	ZEND_NAMED_FE(url, ZEND_FN(azalea_url), NULL)  // url(url, includeHost)
-	ZEND_NAMED_FE(conf, ZEND_MN(azalea_config_get), NULL)  // conf(key, default)
-	ZEND_NAMED_FE(conf2, ZEND_MN(azalea_config_getSub), NULL)  // conf2(key, subkey, default)
-
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
