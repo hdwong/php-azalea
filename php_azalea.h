@@ -24,13 +24,33 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.0.1"
+#define PHP_AZALEA_VERSION "1.0.2"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_STARTUP_FUNCTION(module)		ZEND_MINIT_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN_FUNCTION(module)	ZEND_MSHUTDOWN_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN(module)				ZEND_MODULE_SHUTDOWN_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
+#define AZALEA_NODE_BEAUTY_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_node_beauty_##module)(INIT_FUNC_ARGS_PASSTHRU)
+#define AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_node_beauty_##module)
+
+#define NODE_BEAUTY_MYSQL_NAME "mysql"
+#define NODE_BEAUTY_REDIS_NAME "redis"
+#define NODE_BEAUTY_MONGO_NAME "mongo"
+#define NODE_BEAUTY_SOLR_NAME  "solr"
+#define NODE_BEAUTY_EMAIL_NAME "email"
+#define NODE_BEAUTY_SMS_NAME   "sms"
+#define NODE_BEAUTY_UPYUN_NAME "upyun"
+#define NODE_BEAUTY_LOCATION_NAME "location"
+
+#define NODE_BEAUTY_MYSQL 0
+#define NODE_BEAUTY_REDIS 1
+#define NODE_BEAUTY_MONGO 0
+#define NODE_BEAUTY_SOLR  0
+#define NODE_BEAUTY_EMAIL 0
+#define NODE_BEAUTY_SMS   0
+#define NODE_BEAUTY_UPYUN 0
+#define NODE_BEAUTY_LOCATION 0
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)

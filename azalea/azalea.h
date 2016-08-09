@@ -7,6 +7,10 @@
 #ifndef AZALEA_AZALEA_H
 #define AZALEA_AZALEA_H
 
+AZALEA_STARTUP_FUNCTION(azalea);
+
+extern const zend_function_entry azalea_functions[];
+
 PHP_FUNCTION(azalea_timer);
 PHP_FUNCTION(azalea_url);
 PHP_FUNCTION(azalea_env);

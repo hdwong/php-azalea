@@ -5,14 +5,37 @@
  */
 
 #include "php.h"
-#include "azalea.h"
 #include "php_azalea.h"
-
 #include "azalea/namespace.h"
+#include "azalea/azalea.h"
 #include "azalea/config.h"
 #include "azalea/model.h"
 #include "azalea/service.h"
 #include "azalea/exception.h"
+#if NODE_BEAUTY_MYSQL
+#include "azalea/node-beauty/mysql.h"
+#endif
+#if NODE_BEAUTY_REDIS
+#include "azalea/node-beauty/redis.h"
+#endif
+#if NODE_BEAUTY_MONGO
+#include "azalea/node-beauty/mongo.h"
+#endif
+#if NODE_BEAUTY_SOLR
+#include "azalea/node-beauty/solr.h"
+#endif
+#if NODE_BEAUTY_EMAIL
+#include "azalea/node-beauty/email.h"
+#endif
+#if NODE_BEAUTY_SMS
+#include "azalea/node-beauty/sms.h"
+#endif
+#if NODE_BEAUTY_UPYUN
+#include "azalea/node-beauty/upyun.h"
+#endif
+#if NODE_BEAUTY_LOCATION
+#include "azalea/node-beauty/location.h"
+#endif
 
 #include "ext/date/php_date.h"
 #include "ext/standard/php_rand.h"
@@ -30,6 +53,28 @@
 #include "ext/standard/php_var.h"	// for php_var_dump function
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "main/SAPI.h"  // for sapi_header_op
+
+/* {{{ azalea_functions[] */
+const zend_function_entry azalea_functions[] = {
+	ZEND_NS_NAMED_FE(AZALEA_NS, timer, ZEND_FN(azalea_timer), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
+	PHP_FE_END	/* Must be the last line in azalea_functions[] */
+};
+/* }}} */
+
+/* {{{ AZALEA_STARTUP_FUNCTION */
+AZALEA_STARTUP_FUNCTION(azalea)
+{
+#if NODE_BEAUTY_REDIS
+	AZALEA_NODE_BEAUTY_STARTUP(redis);
+#endif
+	return SUCCESS;
+}
+/* }}} */
 
 /* {{{ proto azalea_randomString */
 PHP_FUNCTION(azalea_randomString)
@@ -154,8 +199,7 @@ PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 }
 /* }}} */
 
-/* {{{ azalea_timer
- */
+/* {{{ azalea_timer */
 PHP_FUNCTION(azalea_timer)
 {
 	double now = azaleaGetMicrotime();
@@ -164,8 +208,7 @@ PHP_FUNCTION(azalea_timer)
 }
 /* }}} */
 
-/* {{{ azalea_url
- */
+/* {{{ azalea_url */
 PHP_FUNCTION(azalea_url)
 {
 	zend_string *url;
@@ -179,16 +222,14 @@ PHP_FUNCTION(azalea_url)
 }
 /* }}} */
 
-/* {{{ azalea_env
- */
+/* {{{ azalea_env */
 PHP_FUNCTION(azalea_env)
 {
 	RETURN_STR(zend_string_copy(AZALEA_G(environ)));
 }
 /* }}} */
 
-/* {{{ azalea_getmodel
- */
+/* {{{ azalea_getmodel */
 PHP_FUNCTION(azalea_ip)
 {
 	if (!AZALEA_G(ip)) {
@@ -339,42 +380,103 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
-		// load model file
-		zval modelPath, exists;
-		ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
-		tstr = Z_STR(modelPath);
-		Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
-		zend_string_release(tstr);
-		// check file exists
-		php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
-		if (Z_TYPE(exists) == IS_FALSE) {
-			tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
-			throw404(tstr);
+		// try to load node-beauty models
+		zend_bool isNodeBeautyModel = 0;
+#if NODE_BEAUTY_MYSQL
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_MYSQL_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_mysql_ce;
+		}
+#endif
+#if NODE_BEAUTY_REDIS
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_REDIS_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_redis_ce;
+		}
+#endif
+#if NODE_BEAUTY_MONGO
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_MONGO_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_mongo_ce;
+		}
+#endif
+#if NODE_BEAUTY_SOLR
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_SOLR_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_solr_ce;
+		}
+#endif
+#if NODE_BEAUTY_EMAIL
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_EMAIL_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_email_ce;
+		}
+#endif
+#if NODE_BEAUTY_SMS
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_SMS_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_sms_ce;
+		}
+#endif
+#if NODE_BEAUTY_UPYUN
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_UPYUN_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_upyun_ce;
+		}
+#endif
+#if NODE_BEAUTY_LOCATION
+		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_LOCATION_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
+			isNodeBeautyModel = 1;
+			ce = azalea_node_beauty_location_ce;
+		}
+#endif
+		do {
+			// load from extension
+			if (isNodeBeautyModel) {
+				zval *conf;
+				if ((conf = azaleaConfigSubFind("node-beauty", ZSTR_VAL(lcName)))) {
+					convert_to_boolean(conf);
+					if (Z_TYPE_P(conf) == IS_TRUE) {
+						break;
+					}
+				}
+			}
+			// load model file
+			zval modelPath, exists;
+			ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
+			tstr = Z_STR(modelPath);
+			Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
 			zend_string_release(tstr);
-			RETURN_FALSE;
-		}
-		// require model file
-		int status = azaleaRequire(Z_STRVAL(modelPath), Z_STRLEN(modelPath));
-		if (!status) {
-			tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
-			throw404(tstr);
-			zend_string_release(tstr);
-			RETURN_FALSE;
-		}
-		// check model class exists
-		if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
-			tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
-			throw404(tstr);
-			zend_string_release(tstr);
-			RETURN_FALSE;
-		}
-		// check super class name
-		if (!instanceof_function(ce, azalea_model_ce)) {
-			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
-			RETURN_FALSE;
-		}
-		zval_ptr_dtor(&modelPath);
-
+			// check file exists
+			php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
+			if (Z_TYPE(exists) == IS_FALSE) {
+				tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
+				throw404(tstr);
+				zend_string_release(tstr);
+				RETURN_FALSE;
+			}
+			// require model file
+			int status = azaleaRequire(Z_STRVAL(modelPath), Z_STRLEN(modelPath));
+			if (!status) {
+				tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
+				throw404(tstr);
+				zend_string_release(tstr);
+				RETURN_FALSE;
+			}
+			// check model class exists
+			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
+				tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
+				throw404(tstr);
+				zend_string_release(tstr);
+				RETURN_FALSE;
+			}
+			// check super class name
+			if (!instanceof_function(ce, azalea_model_ce)) {
+				throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
+				RETURN_FALSE;
+			}
+			zval_ptr_dtor(&modelPath);
+		} while (0);
 		// init controller instance
 		instance = &rv;
 		object_init_ex(instance, ce);
@@ -382,7 +484,6 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			throw404Str(ZEND_STRL("Model initialization is failed."));
 			RETURN_FALSE;
 		}
-
 		// service model construct
 		if (instanceof_function(ce, azalea_service_ce)) {
 			zval *field;
@@ -408,12 +509,10 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 				zend_string_release(serviceUrl);
 			}
 		}
-
 		// call __init method
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
 			zend_call_method_with_0_params(instance, ce, NULL, "__init", NULL);
 		}
-
 		// cache instance
 		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(name), ZSTR_LEN(name), instance);
 	}

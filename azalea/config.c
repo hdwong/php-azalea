@@ -215,6 +215,11 @@ PHPAPI void azaleaLoadConfig(zval *val)
 		array_init(&el);
 		add_assoc_zval_ex(config, ZEND_STRL("dispatch"), &el);
 	}
+	// config.node-beauty
+	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("node-beauty"))) {
+		array_init(&el);
+		add_assoc_zval_ex(config, ZEND_STRL("node-beauty"), &el);
+	}
 	// ---------- sub of config.session ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("session"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {

@@ -47,6 +47,7 @@ PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
 
+    AZALEA_STARTUP(azalea);
     AZALEA_STARTUP(bootstrap);
     AZALEA_STARTUP(config);
     AZALEA_STARTUP(controller);
@@ -69,8 +70,7 @@ PHP_MSHUTDOWN_FUNCTION(azalea)
 }
 /* }}} */
 
-/* {{{ PHP_RINIT_FUNCTION
- */
+/* {{{ PHP_RINIT_FUNCTION */
 PHP_RINIT_FUNCTION(azalea)
 {
 	double now = azaleaGetMicrotime();
@@ -107,8 +107,7 @@ PHP_RINIT_FUNCTION(azalea)
 }
 /* }}} */
 
-/* {{{ PHP_RSHUTDOWN_FUNCTION
- */
+/* {{{ PHP_RSHUTDOWN_FUNCTION */
 PHP_RSHUTDOWN_FUNCTION(azalea)
 {
 	if (AZALEA_G(environ)) {
@@ -162,35 +161,29 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 }
 /* }}} */
 
-/* {{{ PHP_MINFO_FUNCTION
- */
+/* {{{ PHP_MINFO_FUNCTION */
 PHP_MINFO_FUNCTION(azalea)
 {
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
+	// node-beauty models
+	php_info_print_table_colspan_header(2, "<a href=\"https://www.npmjs.com/package/node-beauty\" target=\"_blank\" style=\"background:none\">Node-Beauty</a> Model Support");
+	php_info_print_table_row(2, "node-beauty-mysql", NODE_BEAUTY_MYSQL ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-redis", NODE_BEAUTY_REDIS ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-mongo", NODE_BEAUTY_MONGO ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-solr", NODE_BEAUTY_SOLR ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-location", NODE_BEAUTY_LOCATION ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-email", NODE_BEAUTY_EMAIL ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-sms", NODE_BEAUTY_SMS ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-upyun", NODE_BEAUTY_UPYUN ? "yes" : "no");
+
 	php_info_print_table_end();
 
 	DISPLAY_INI_ENTRIES();
 }
 /* }}} */
 
-/* {{{ azalea_functions[]
- *
- * Every user visible function must have an entry in azalea_functions[].
- */
-const zend_function_entry azalea_functions[] = {
-	ZEND_NS_NAMED_FE(AZALEA_NS, timer, ZEND_FN(azalea_timer), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
-	PHP_FE_END	/* Must be the last line in azalea_functions[] */
-};
-/* }}} */
-
-/* {{{ azalea_module_entry
- */
+/* {{{ azalea_module_entry */
 zend_module_entry azalea_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"azalea",
