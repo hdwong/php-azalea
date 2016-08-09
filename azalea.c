@@ -62,6 +62,13 @@ PHP_MINIT_FUNCTION(azalea)
 }
 /* }}} */
 
+/* {{{ PHP_MSHUTDOWN_FUNCTION */
+PHP_MSHUTDOWN_FUNCTION(azalea)
+{
+	return SUCCESS;
+}
+/* }}} */
+
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(azalea)
@@ -160,8 +167,10 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 PHP_MINFO_FUNCTION(azalea)
 {
 	php_info_print_table_start();
-	php_info_print_table_header(2, "azalea support", "enabled");
+	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
 	php_info_print_table_end();
+
+	DISPLAY_INI_ENTRIES();
 }
 /* }}} */
 
@@ -187,9 +196,9 @@ zend_module_entry azalea_module_entry = {
 	"azalea",
 	azalea_functions,
 	PHP_MINIT(azalea),
-	NULL,
-	PHP_RINIT(azalea),		/* Replace with NULL if there's nothing to do at request start */
-	PHP_RSHUTDOWN(azalea),	/* Replace with NULL if there's nothing to do at request end */
+	PHP_MSHUTDOWN(azalea),
+	PHP_RINIT(azalea),
+	PHP_RSHUTDOWN(azalea),
 	PHP_MINFO(azalea),
 	PHP_AZALEA_VERSION,
 	STANDARD_MODULE_PROPERTIES
