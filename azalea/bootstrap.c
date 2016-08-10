@@ -8,6 +8,7 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
+#include "azalea/loader.h"
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 #include "azalea/controller.h"
@@ -523,7 +524,7 @@ PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controller
 					break;
 				}
 				// require controller file
-				int status = azaleaRequire(ZSTR_VAL(controllerPath), ZSTR_LEN(controllerPath));
+				int status = azaleaRequire(ZSTR_VAL(controllerPath));
 				if (!status) {
 					tstr = strpprintf(0, "Controller file `%s` compile error.", ZSTR_VAL(controllerPath));
 					throw404(tstr);

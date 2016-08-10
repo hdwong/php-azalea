@@ -6,8 +6,9 @@
 
 #include "php.h"
 #include "php_azalea.h"
-#include "azalea/azalea.h"
 #include "azalea/namespace.h"
+#include "azalea/azalea.h"
+#include "azalea/loader.h"
 #include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
@@ -189,7 +190,7 @@ PHP_METHOD(azalea_view, render)
 	// start render
 	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
 	azaleaRegisterTemplateFunctions();
-	if (!azaleaRequire(ZSTR_VAL(tplPath), ZSTR_LEN(tplPath))) {
+	if (!azaleaRequire(ZSTR_VAL(tplPath))) {
 		azaleaUnregisterTemplateFunctions();
 		zend_string_release(tplPath);
 		zend_string *message = strpprintf(0, "Failed to open template file `%s.phtml`.", ZSTR_VAL(tplname));

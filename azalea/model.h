@@ -11,6 +11,8 @@ AZALEA_STARTUP_FUNCTION(model);
 
 PHP_METHOD(azalea_model, getModel);
 
+PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from);
+
 extern zend_class_entry *azalea_model_ce;
 
 #endif /* AZALEA_MODEL_H_ */

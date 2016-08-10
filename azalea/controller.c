@@ -13,6 +13,7 @@
 #include "azalea/request.h"
 #include "azalea/response.h"
 #include "azalea/session.h"
+#include "azalea/model.h"
 #include "azalea/view.h"
 #include "azalea/exception.h"
 

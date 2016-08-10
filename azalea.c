@@ -29,6 +29,7 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
+#include "azalea/loader.h"
 #include "azalea/bootstrap.h"
 #include "azalea/config.h"
 #include "azalea/controller.h"
@@ -47,7 +48,7 @@ PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
 
-    AZALEA_STARTUP(azalea);
+    AZALEA_STARTUP(loader);
     AZALEA_STARTUP(bootstrap);
     AZALEA_STARTUP(config);
     AZALEA_STARTUP(controller);

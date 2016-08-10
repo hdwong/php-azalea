@@ -8,6 +8,7 @@ if test "$PHP_AZALEA" != "no"; then
   PHP_NEW_EXTENSION(azalea, \
     azalea.c \
     azalea/azalea.c \
+    azalea/loader.c \
     azalea/bootstrap.c \
     azalea/config.c \
     azalea/controller.c \
