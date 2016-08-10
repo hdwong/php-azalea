@@ -72,9 +72,9 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 /* {{{ proto azaleaServiceRequest */
 {
 	zend_string *serviceUrl;
-	zval *arguments = NULL, serviceArgs;
+	zval *arguments = NULL, *reqHeaders = NULL, serviceArgs;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|a", &serviceUrl, &arguments) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|aa", &serviceUrl, &arguments, &reqHeaders) == FAILURE) {
 		return;
 	}
 
@@ -101,7 +101,7 @@ static void azaleaServiceRequest(INTERNAL_FUNCTION_PARAMETERS, zval *instance, z
 	}
 
 	// curl exec
-	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, return_value);
+	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
 	azaleaCurlClose(cp);
 
 	zend_string *serviceMethod;

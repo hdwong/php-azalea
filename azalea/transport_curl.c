@@ -44,7 +44,7 @@ int azaleaCurlClose(void *cp)
 }
 
 
-zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **arguments, zval *result)
+zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **arguments, zval *reqHeaders, zval *result)
 {
 	CURLcode ret;
 	struct curl_slist *headers = NULL;
@@ -57,6 +57,15 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 	headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
 	headers = curl_slist_append(headers, "Connection: Keep-Alive");
 	headers = curl_slist_append(headers, "Keep-Alive: 300");
+	// custom request headers
+	if (reqHeaders && Z_TYPE_P(reqHeaders) == IS_ARRAY) {
+		zval *headerValue;
+		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(reqHeaders), headerValue) {
+			if (Z_TYPE_P(headerValue) == IS_STRING) {
+				headers = curl_slist_append(headers, Z_STRVAL_P(headerValue));
+			}
+		} ZEND_HASH_FOREACH_END();
+	}
 	// token
 	if ((conf = azaleaConfigSubFind("service", "token")) && Z_TYPE_P(conf) == IS_STRING && Z_STRLEN_P(conf)) {
 		// check url is equal with config.service.url

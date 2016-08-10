@@ -62,6 +62,8 @@ AZALEA_STARTUP_FUNCTION(model)
 	azalea_model_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_model_ce->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 
+	AZALEA_STARTUP(service);
+
 #if NODE_BEAUTY_REDIS
 	AZALEA_NODE_BEAUTY_STARTUP(redis);
 #endif
@@ -181,6 +183,7 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 				zend_string_release(tstr);
 				RETURN_FALSE;
 			}
+			zval_ptr_dtor(&modelPath);
 			// check model class exists
 			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
 				tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
@@ -188,13 +191,12 @@ PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 				zend_string_release(tstr);
 				RETURN_FALSE;
 			}
-			// check super class name
-			if (!instanceof_function(ce, azalea_model_ce)) {
-				throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
-				RETURN_FALSE;
-			}
-			zval_ptr_dtor(&modelPath);
 		} while (0);
+		// check super class name
+		if (!instanceof_function(ce, azalea_model_ce)) {
+			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
+			RETURN_FALSE;
+		}
 		// init controller instance
 		instance = &rv;
 		object_init_ex(instance, ce);
