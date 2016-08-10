@@ -47,6 +47,9 @@ PHP_METHOD(azalea_loader, load)
 	}
 
 	result = azaleaRequire(ZSTR_VAL(filename));
+	if (0 == result) {
+		php_error_docref(NULL, E_ERROR, "No such file `%s`", ZSTR_VAL(filename));
+	}
 	RETURN_LONG(result);
 }
 /* }}} */
