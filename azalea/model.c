@@ -49,7 +49,7 @@ zend_class_entry *azalea_model_ce;
  */
 static zend_function_entry azalea_model_methods[] = {
 	PHP_ME(azalea_model, loadModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
-	PHP_ME(azalea_model, getModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
+	PHP_ME(azalea_model, getModel, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
 	{NULL, NULL, NULL}
 };
 /* }}} */
