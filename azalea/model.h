@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(model);
 
+PHP_METHOD(azalea_model, loadModel);
 PHP_METHOD(azalea_model, getModel);
 
 void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from);

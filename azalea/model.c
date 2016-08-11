@@ -48,6 +48,7 @@ zend_class_entry *azalea_model_ce;
 /* {{{ class Azalea\Model methods
  */
 static zend_function_entry azalea_model_methods[] = {
+	PHP_ME(azalea_model, loadModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
 	PHP_ME(azalea_model, getModel, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	{NULL, NULL, NULL}
 };
@@ -69,6 +70,53 @@ AZALEA_STARTUP_FUNCTION(model)
 #endif
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto loadModel */
+PHP_METHOD(azalea_model, loadModel)
+{
+	zval *models;
+	int argc, offset = 0;
+	zend_bool hasError = 1;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "+", &models, &argc) == FAILURE) {
+		return;
+	}
+
+	zend_string *filename, *tstr;
+	do {
+		if (Z_TYPE_P(models + offset) != IS_STRING) {
+			continue;
+		}
+		zend_string *lcName = zend_string_tolower(Z_STR_P(models + offset));
+		zval exists;
+		// load model file
+		filename = strpprintf(0, "%s%c%s.php", ZSTR_VAL(AZALEA_G(modelsPath)), DEFAULT_SLASH, ZSTR_VAL(lcName));
+		zend_string_release(lcName);
+		// check file exists
+		php_stat(ZSTR_VAL(filename), (php_stat_len) ZSTR_LEN(filename), FS_IS_R, &exists);
+		if (Z_TYPE(exists) == IS_FALSE) {
+			tstr = strpprintf(0, "Model file `%s` not found.", ZSTR_VAL(filename));
+			throw404(tstr);
+			break;
+		}
+		// require model file
+		if (!azaleaRequire(ZSTR_VAL(filename))) {
+			tstr = strpprintf(0, "Model file `%s` compile error.", ZSTR_VAL(filename));
+			throw404(tstr);
+			break;
+		}
+		zend_string_release(filename);
+		hasError = 0;
+	} while (++offset < argc);
+
+	if (hasError) {
+		zend_string_release(filename);
+		zend_string_release(tstr);
+		RETURN_FALSE;
+	}
+	RETURN_TRUE;
 }
 /* }}} */
 
