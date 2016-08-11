@@ -13,6 +13,8 @@
 #include "azalea/exception.h"
 #include "azalea/node-beauty/redis.h"
 
+#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+
 zend_class_entry *azalea_node_beauty_redis_ce;
 
 /* {{{ class RedisModel methods
@@ -45,12 +47,67 @@ AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(redis)
 /* {{{ proto keys */
 PHP_METHOD(azalea_node_beauty_redis, keys)
 {
+	zend_string *key = NULL;
+	zval ret, arg1, arg2, *keys;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S", &key) == FAILURE) {
+		return;
+	}
+
+	if (!key) {
+		key = zend_string_init(ZEND_STRL("*"), 0);
+	}
+	ZVAL_STRINGL(&arg1, "keys", sizeof("keys") - 1);
+	array_init(&arg2);
+	add_assoc_str(&arg2, "key", zend_string_dup(key, 0));
+	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
+	zval_ptr_dtor(&arg1);
+	zval_ptr_dtor(&arg2);
+	zend_string_release(key);
+
+	if (Z_TYPE(ret) == IS_OBJECT && (keys = zend_read_property(NULL, &ret, ZEND_STRL("keys"), 1, NULL))) {
+		RETVAL_ZVAL(keys, 1, 0);
+	} else {
+		RETVAL_FALSE;
+	}
+	zval_ptr_dtor(&ret);
 }
 /* }}} */
 
-/* {{{ proto keys */
+/* {{{ proto get */
 PHP_METHOD(azalea_node_beauty_redis, get)
 {
+	/* $format = enum['json'(default), 'php', 'raw'] */
+	zend_string *key, *format = NULL;
+	zval *def = NULL;
+	zval ret, arg1, arg2, *value;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|zS", &key, &def, &format) == FAILURE) {
+		return;
+	}
+
+	// default format is json
+	if (!format || strncasecmp(ZSTR_VAL(format), "json", sizeof("json") - 1) ||
+			strncasecmp(ZSTR_VAL(format), "php", sizeof("php") - 1)) {
+		format = zend_string_init(ZEND_STRL("json"), 0);
+	}
+	ZVAL_STRINGL(&arg1, "value", sizeof("value") - 1);
+	array_init(&arg2);
+	add_assoc_str(&arg2, "key", zend_string_dup(key, 0));
+	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
+	zval_ptr_dtor(&arg1);
+	zval_ptr_dtor(&arg2);
+	zend_string_release(format);
+
+	if (Z_TYPE(ret) == IS_OBJECT && (value = zend_read_property(NULL, &ret, ZEND_STRL("value"), 1, NULL)) &&
+			Z_TYPE_P(value) != IS_NULL) {
+		RETVAL_ZVAL(value, 1, 0);
+	} else if (def) {
+		RETVAL_ZVAL(def, 1, 0);
+	} else {
+		RETVAL_NULL();
+	}
+	zval_ptr_dtor(&ret);
 }
 /* }}} */
 

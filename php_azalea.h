@@ -44,7 +44,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_LOCATION_NAME "location"
 
 #define NODE_BEAUTY_MYSQL 0
-#define NODE_BEAUTY_REDIS 1
+#define NODE_BEAUTY_REDIS 0
 #define NODE_BEAUTY_MONGO 0
 #define NODE_BEAUTY_SOLR  0
 #define NODE_BEAUTY_EMAIL 0
@@ -77,8 +77,9 @@ extern zend_module_entry azalea_module_entry;
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	double timer;
 	zend_ulong renderLevel;
-	azalea_bootstrap_t bootstrap;
 	zend_string *environ;
+	azalea_bootstrap_t bootstrap;
+	void *curlHandle;
 	zend_string *directory;
 	zend_string *uri;
 	zend_string *baseUri;

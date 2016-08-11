@@ -34,16 +34,6 @@ void * azaleaCurlOpen()
 	return cp;
 }
 
-int azaleaCurlClose(void *cp)
-{
-	if (cp) {
-		curl_easy_cleanup(cp);
-	}
-
-	return 1;
-}
-
-
 zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **arguments, zval *reqHeaders, zval *result)
 {
 	CURLcode ret;
