@@ -16,11 +16,11 @@ PHP_FUNCTION(azalea_ip);
 PHP_FUNCTION(azalea_randomString);
 PHP_FUNCTION(azalea_maskString);
 
-PHPAPI double azaleaGetMicrotime();
-PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
-PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name);
-PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
-PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);
+double azaleaGetMicrotime();
+zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
+zval * azaleaGlobalsFind(uint type, zend_string *name);
+zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
+void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);
 #define azaleaSetHeader(string, httpCode) azaleaSetHeaderStr((string)->val, (string)->len, httpCode)
 
 #endif

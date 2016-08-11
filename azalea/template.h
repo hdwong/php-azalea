@@ -10,7 +10,7 @@
 PHP_FUNCTION(azalea_template_printf);
 PHP_FUNCTION(azalea_template_sprintf);
 
-PHPAPI void azaleaRegisterTemplateFunctions();
-PHPAPI void azaleaUnregisterTemplateFunctions();
+void azaleaRegisterTemplateFunctions();
+void azaleaUnregisterTemplateFunctions();
 
 #endif /* AZALEA_TEMPLATE_H_ */

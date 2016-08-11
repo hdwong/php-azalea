@@ -64,7 +64,7 @@ PHP_FUNCTION(azalea_template_sprintf)
 /* }}} */
 
 /* {{{ proto registerTemplateFunctions */
-PHPAPI void azaleaRegisterTemplateFunctions()
+void azaleaRegisterTemplateFunctions()
 {
 	if (0 == AZALEA_G(renderLevel)++) {
 		zend_register_functions(NULL, azalea_template_functions, NULL, MODULE_TEMPORARY);
@@ -73,7 +73,7 @@ PHPAPI void azaleaRegisterTemplateFunctions()
 /* }}} */
 
 /* {{{ proto unregisterTemplateFunctions */
-PHPAPI void azaleaUnregisterTemplateFunctions()
+void azaleaUnregisterTemplateFunctions()
 {
 	if (0 == --AZALEA_G(renderLevel)) {
 		zend_unregister_functions(azalea_template_functions, -1, NULL);

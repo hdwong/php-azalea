@@ -11,7 +11,7 @@ AZALEA_STARTUP_FUNCTION(loader);
 
 PHP_METHOD(azalea_loader, load);
 
-PHPAPI int azaleaRequire(char *path);
+int azaleaRequire(char *path);
 
 extern zend_class_entry *azalea_loader_ce;
 

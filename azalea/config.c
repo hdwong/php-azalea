@@ -141,7 +141,7 @@ static void azaleaDeepCopy(zval *dst, zval *src) {
 
 
 /* {{{ proto void loadConfig(mixed $config) */
-PHPAPI void azaleaLoadConfig(zval *val)
+void azaleaLoadConfig(zval *val)
 {
 	zval *config = &AZALEA_G(config);
 	if (val) {
@@ -318,7 +318,7 @@ PHPAPI void azaleaLoadConfig(zval *val)
 /* }}} */
 
 /* {{{ proto mixed azaleaConfigSubFind(string $key, string $subKey) */
-PHPAPI zval * azaleaConfigSubFind(const char *key, const char *subKey)
+zval * azaleaConfigSubFind(const char *key, const char *subKey)
 {
 	zval *found = zend_hash_str_find(Z_ARRVAL(AZALEA_G(config)), key, strlen(key));
 	if (!found) {

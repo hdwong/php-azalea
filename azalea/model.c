@@ -80,7 +80,7 @@ PHP_METHOD(azalea_model, getModel)
 /* }}} */
 
 /** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
-PHPAPI void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
+void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
 	zend_string *modelName, *lcName, *name, *modelClass, *tstr;
 	zend_class_entry *ce;

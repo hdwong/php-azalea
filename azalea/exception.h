@@ -16,8 +16,8 @@ PHP_METHOD(azalea_exception500, getServiceInfo);
 #define throw404(message) \
 	if (message) throw404Str((message)->val, (message)->len); \
 	else throw404Str("", 0);
-PHPAPI void throw404Str(const char *message, size_t len);
-PHPAPI void throw500Str(const char *message, size_t len, zend_string *serviceMethod, zend_string *serviceUrl, zval *arguments);
+void throw404Str(const char *message, size_t len);
+void throw500Str(const char *message, size_t len, zend_string *serviceMethod, zend_string *serviceUrl, zval *arguments);
 
 extern zend_class_entry *azalea_exception_ce;
 extern zend_class_entry *azalea_exception404_ce;

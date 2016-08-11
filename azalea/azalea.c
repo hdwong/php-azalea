@@ -123,7 +123,7 @@ PHP_FUNCTION(azalea_maskString)
 /* }}} */
 
 /* {{{ proto azaleaUrl */
-PHPAPI zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
+zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 {
 	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
@@ -223,7 +223,7 @@ PHP_FUNCTION(azalea_ip)
 /* }}} */
 
 /* {{{ proto azaleaRequestFind */
-PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name)
+zval * azaleaGlobalsFind(uint type, zend_string *name)
 {
 	zval *carrier, *field;
 	carrier = &PG(http_globals)[type];
@@ -239,7 +239,7 @@ PHPAPI zval * azaleaGlobalsFind(uint type, zend_string *name)
 /* }}} */
 
 /* {{{ proto azaleaGlobalsStrFind */
-PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
+zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
 {
 	zval *carrier, *field;
 	carrier = &PG(http_globals)[type];
@@ -255,7 +255,7 @@ PHPAPI zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
 /* }}} */
 
 /* {{{ proto azaleaSetHeaderStr */
-PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode)
+void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode)
 {
 	sapi_header_line ctr = {0};
 	ctr.line = line;
@@ -266,7 +266,7 @@ PHPAPI void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode)
 /* }}} */
 
 /* {{{ proto azaleaGetMicrotime */
-PHPAPI double azaleaGetMicrotime()
+double azaleaGetMicrotime()
 {
 	struct timeval tp = {0};
 	if (gettimeofday(&tp, NULL)) {

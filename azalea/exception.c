@@ -111,7 +111,7 @@ PHP_METHOD(azalea_exception500, getServiceInfo)
 /* }}} */
 
 /* {{{ proto throw404Str */
-PHPAPI void throw404Str(const char *message, size_t len)
+void throw404Str(const char *message, size_t len)
 {
 	zval route;
 	azalea_exception_t rv = {{0}}, *exception = &rv;
@@ -144,7 +144,7 @@ PHPAPI void throw404Str(const char *message, size_t len)
 /* }}} */
 
 /* {{{ proto throw500Str */
-PHPAPI void throw500Str(const char *message, size_t len, zend_string *serverMethod, zend_string *serviceUrl, zval *arguments)
+void throw500Str(const char *message, size_t len, zend_string *serverMethod, zend_string *serviceUrl, zval *arguments)
 {
 	azalea_exception_t rv = {{0}}, *exception = &rv;
 

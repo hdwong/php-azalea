@@ -19,9 +19,9 @@ PHP_METHOD(azalea_request, getQuery);
 PHP_METHOD(azalea_request, getPost);
 PHP_METHOD(azalea_request, getCookie);
 
-PHPAPI zend_string * azaleaGetBaseUri(void);
-PHPAPI zend_string * azaleaGetUri(void);
-PHPAPI zend_string * azaleaGetRequestUri(void);
+zend_string * azaleaGetBaseUri(void);
+zend_string * azaleaGetUri(void);
+zend_string * azaleaGetRequestUri(void);
 
 extern zend_class_entry *azalea_request_ce;
 

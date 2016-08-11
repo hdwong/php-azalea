@@ -475,7 +475,7 @@ static void processContent(zval *result)
 /* }}} */
 
 /* {{{ proto azaleaDispatch */
-PHPAPI zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
 {
 	zend_string *name, *lcName, *controllerClass, *actionMethod = NULL, *tstr;
 	zend_class_entry *ce;

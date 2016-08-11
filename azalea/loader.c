@@ -55,7 +55,7 @@ PHP_METHOD(azalea_loader, load)
 /* }}} */
 
 /** {{{ int azaleaRequiree(char *filename) */
-PHPAPI int azaleaRequire(char *filename)
+int azaleaRequire(char *filename)
 {
 	zend_file_handle file_handle;
 	zend_op_array *op_array;

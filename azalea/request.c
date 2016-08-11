@@ -45,7 +45,7 @@ AZALEA_STARTUP_FUNCTION(request)
 /* }}} */
 
 /* {{{ proto azaleaGetBaseUri */
-PHPAPI zend_string * azaleaGetBaseUri(void)
+zend_string * azaleaGetBaseUri(void)
 {
 	if (!AZALEA_G(baseUri)) {
 		return NULL;
@@ -55,7 +55,7 @@ PHPAPI zend_string * azaleaGetBaseUri(void)
 /* }}} */
 
 /* {{{ proto azaleaGetUri */
-PHPAPI zend_string * azaleaGetUri(void)
+zend_string * azaleaGetUri(void)
 {
 	if (!AZALEA_G(uri)) {
 		return NULL;
@@ -65,7 +65,7 @@ PHPAPI zend_string * azaleaGetUri(void)
 /* }}} */
 
 /* {{{ proto azaleaGetRequestUri */
-PHPAPI zend_string * azaleaGetRequestUri(void)
+zend_string * azaleaGetRequestUri(void)
 {
 	zval *field;
 	field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REQUEST_URI"));

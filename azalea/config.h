@@ -13,9 +13,9 @@ PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getSub);
 PHP_METHOD(azalea_config, getAll);
 
-PHPAPI void azaleaLoadConfig(zval *);
+void azaleaLoadConfig(zval *);
 #define azaleaConfigFind(key) azaleaConfigSubFind(key, NULL)
-PHPAPI zval * azaleaConfigSubFind(const char *key, const char *subKey);
+zval * azaleaConfigSubFind(const char *key, const char *subKey);
 
 extern zend_class_entry *azalea_config_ce;
 
