@@ -46,7 +46,7 @@ PHP_METHOD(azalea_loader, load)
 		return;
 	}
 
-	result = azaleaRequire(ZSTR_VAL(filename));
+	result = azaleaRequire(ZSTR_VAL(filename), 1);
 	if (0 == result) {
 		php_error_docref(NULL, E_ERROR, "No such file `%s`", ZSTR_VAL(filename));
 	}
@@ -54,8 +54,8 @@ PHP_METHOD(azalea_loader, load)
 }
 /* }}} */
 
-/** {{{ int azaleaRequiree(char *filename) */
-int azaleaRequire(char *filename)
+/** {{{ int azaleaRequiree(char *filename, zend_bool once) */
+int azaleaRequire(char *filename, zend_bool once)
 {
 	zend_file_handle file_handle;
 	zend_op_array *op_array;
@@ -68,7 +68,7 @@ int azaleaRequire(char *filename)
 	}
 
 	path = zend_string_init(realpath, strlen(realpath), 0);
-	if (zend_hash_exists(&EG(included_files), path)) {
+	if (once && zend_hash_exists(&EG(included_files), path)) {
 		zend_string_release(path);
 		return -1;
 	}

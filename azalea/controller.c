@@ -27,6 +27,7 @@ static zend_function_entry azalea_controller_methods[] = {
 	PHP_ME(azalea_controller, getRequest, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, getResponse, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, getSession, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
+	PHP_ME(azalea_controller, loadModel, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, getModel, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, getView, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_controller, throw404, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
@@ -72,10 +73,17 @@ PHP_METHOD(azalea_controller, getSession)
 }
 /* }}} */
 
+/* {{{ proto loadModel */
+PHP_METHOD(azalea_controller, loadModel)
+{
+	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+}
+/* }}} */
+
 /* {{{ proto getModel */
 PHP_METHOD(azalea_controller, getModel)
 {
-	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
 }
 /* }}} */
 

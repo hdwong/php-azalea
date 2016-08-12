@@ -76,6 +76,20 @@ AZALEA_STARTUP_FUNCTION(model)
 /* {{{ proto loadModel */
 PHP_METHOD(azalea_model, loadModel)
 {
+	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+}
+/* }}} */
+
+/* {{{ proto getModel */
+PHP_METHOD(azalea_model, getModel)
+{
+	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+}
+/* }}} */
+
+/** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
+void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
+{
 	zval *models;
 	int argc, offset = 0;
 	zend_bool hasError = 1;
@@ -102,7 +116,7 @@ PHP_METHOD(azalea_model, loadModel)
 			break;
 		}
 		// require model file
-		if (!azaleaRequire(ZSTR_VAL(filename))) {
+		if (!azaleaRequire(ZSTR_VAL(filename), 1)) {
 			tstr = strpprintf(0, "Model file `%s` compile error.", ZSTR_VAL(filename));
 			throw404(tstr);
 			break;
@@ -120,15 +134,8 @@ PHP_METHOD(azalea_model, loadModel)
 }
 /* }}} */
 
-/* {{{ proto getModel */
-PHP_METHOD(azalea_model, getModel)
-{
-	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
-}
-/* }}} */
-
-/** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
-void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
+/** {{{ int azaleaGetModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
+void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
 	zend_string *modelName, *lcName, *name, *modelClass, *tstr;
 	zend_class_entry *ce;
@@ -225,7 +232,7 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 				RETURN_FALSE;
 			}
 			// require model file
-			if (!azaleaRequire(Z_STRVAL(modelPath))) {
+			if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
 				tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
 				throw404(tstr);
 				zend_string_release(tstr);

@@ -524,7 +524,7 @@ zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, z
 					break;
 				}
 				// require controller file
-				int status = azaleaRequire(ZSTR_VAL(controllerPath));
+				int status = azaleaRequire(ZSTR_VAL(controllerPath), 1);
 				if (!status) {
 					tstr = strpprintf(0, "Controller file `%s` compile error.", ZSTR_VAL(controllerPath));
 					throw404(tstr);
