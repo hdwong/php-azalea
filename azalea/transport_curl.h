@@ -12,5 +12,6 @@ static int php_zlib_decode(const char *in_buf, size_t in_len, char **out_buf, si
 
 void * azaleaCurlOpen();
 zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **serviceUrl, zval **arguments, zval *headers, zval *result);
+int azaleaCurlClose(void *cp);
 
 #endif /* AZALEA_TRANSPORT_CURL_H_ */

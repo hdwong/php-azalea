@@ -111,16 +111,16 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 {
 	// curl open once
 	void *cp;
-	if (!AZALEA_G(curlHandle)) {
+//	if (!AZALEA_G(curlHandle)) {
 		cp = azaleaCurlOpen();
 		if (!cp) {
 			throw500Str(ZEND_STRL("Service request start failed."), NULL, NULL, NULL);
 			return;
 		}
-		AZALEA_G(curlHandle) = cp;
-	} else {
-		cp = AZALEA_G(curlHandle);
-	}
+//		AZALEA_G(curlHandle) = cp;
+//	} else {
+//		cp = AZALEA_G(curlHandle);
+//	}
 
 	if (strncasecmp(ZSTR_VAL(serviceUrl), "http://", sizeof("http://") - 1) &&
 			strncasecmp(ZSTR_VAL(serviceUrl), "https://", sizeof("https://") - 1)) {
@@ -140,6 +140,7 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 
 	// curl exec
 	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
+	azaleaCurlClose(cp);
 
 	zend_string *serviceMethod;
 	switch (method) {
