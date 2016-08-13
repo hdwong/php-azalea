@@ -233,7 +233,9 @@ void azaleaLoadConfig(zval *val)
 		add_assoc_stringl_ex(found, ZEND_STRL("name"), ZEND_STRL("sid"));
 	}
 	// config.session.lifetime
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("lifetime"))) {
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("lifetime"));
+	if (!field || Z_TYPE_P(field) != IS_STRING ||
+			!is_numeric_string(Z_STRVAL_P(field), Z_STRLEN_P(field), NULL, NULL, 0)) {
 		add_assoc_long_ex(found, ZEND_STRL("lifetime"), 0);
 	}
 	// config.session.path
