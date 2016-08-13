@@ -16,7 +16,9 @@ PHP_METHOD(azalea_request, getBaseUri);
 PHP_METHOD(azalea_request, isPost);
 PHP_METHOD(azalea_request, isAjax);
 PHP_METHOD(azalea_request, getQuery);
+PHP_METHOD(azalea_request, getQueryTrim);
 PHP_METHOD(azalea_request, getPost);
+PHP_METHOD(azalea_request, getPostTrim);
 PHP_METHOD(azalea_request, getCookie);
 
 zend_string * azaleaGetBaseUri(void);

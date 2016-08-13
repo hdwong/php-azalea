@@ -10,6 +10,7 @@
 #include "azalea/namespace.h"
 #include "azalea/request.h"
 
+#include "ext/standard/php_string.h"  // for php_trim
 #include "main/SAPI.h"  // for request_info
 
 zend_class_entry *azalea_request_ce;
@@ -24,7 +25,9 @@ static zend_function_entry azalea_request_methods[] = {
 	PHP_ME(azalea_request, isPost, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, isAjax, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getQuery, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, getQueryTrim, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getPost, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, getPostTrim, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getCookie, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
@@ -159,6 +162,18 @@ PHP_METHOD(azalea_request, getQuery)
 }
 /* }}} */
 
+/* {{{ proto mixed getQueryTrim(name, default) */
+PHP_METHOD(azalea_request, getQueryTrim)
+{
+	PHP_MN(azalea_request_getQuery)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	if (Z_TYPE_P(return_value) == IS_STRING) {
+		zend_string *t = Z_STR_P(return_value);
+		RETVAL_STR(php_trim(t, ZEND_STRL(" "), 3));
+		zend_string_release(t);
+	}
+}
+/* }}} */
+
 /* {{{ proto mixed getPost(name, default) */
 PHP_METHOD(azalea_request, getPost)
 {
@@ -178,6 +193,18 @@ PHP_METHOD(azalea_request, getPost)
 		RETURN_ZVAL(def, 1, 0);
 	}
 	RETURN_NULL();
+}
+/* }}} */
+
+/* {{{ proto mixed getPostTrim(name, default) */
+PHP_METHOD(azalea_request, getPostTrim)
+{
+	PHP_MN(azalea_request_getPost)(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	if (Z_TYPE_P(return_value) == IS_STRING) {
+		zend_string *t = Z_STR_P(return_value);
+		RETVAL_STR(php_trim(t, ZEND_STRL(" "), 3));
+		zend_string_release(t);
+	}
 }
 /* }}} */
 
