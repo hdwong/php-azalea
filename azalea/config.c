@@ -234,7 +234,7 @@ void azaleaLoadConfig(zval *val)
 	}
 	// config.session.lifetime
 	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("lifetime"));
-	if (!field || Z_TYPE_P(field) != IS_STRING ||
+	if (!field || (Z_TYPE_P(field) != IS_LONG && Z_TYPE_P(field) != IS_STRING) ||
 			!is_numeric_string(Z_STRVAL_P(field), Z_STRLEN_P(field), NULL, NULL, 0)) {
 		add_assoc_long_ex(found, ZEND_STRL("lifetime"), 0);
 	}
@@ -287,7 +287,9 @@ void azaleaLoadConfig(zval *val)
 		add_assoc_long_ex(found, ZEND_STRL("connecttimeout"), 2);
 	}
 	// config.service.retry
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("retry"))) {
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("retry"));
+	if (!field || (Z_TYPE_P(field) != IS_LONG && Z_TYPE_P(field) != IS_STRING) ||
+			!is_numeric_string(Z_STRVAL_P(field), Z_STRLEN_P(field), NULL, NULL, 0)) {
 		add_assoc_long_ex(found, ZEND_STRL("retry"), 0);
 	}
 	// ---------- sub of config.dispatch ----------

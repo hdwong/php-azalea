@@ -8,6 +8,7 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
+#include "azalea/config.h"
 #include "azalea/model.h"
 #include "azalea/service.h"
 #include "azalea/exception.h"
@@ -137,11 +138,6 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 		zend_hash_copy(Z_ARRVAL(serviceArgs), Z_ARRVAL_P(arguments), (copy_ctor_func_t) zval_add_ref);
 		arguments = &serviceArgs;
 	}
-
-	// curl exec
-	zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
-	azaleaCurlClose(cp);
-
 	zend_string *serviceMethod;
 	switch (method) {
 		case AZALEA_SERVICE_METHOD_GET:
@@ -159,30 +155,46 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 		default:
 			serviceMethod = zend_string_init(ZEND_STRL("Unknown method"), 0);
 	}
+
+	// curl exec
 	zend_bool error = 1;
+	zend_long retryCount = 0;
+	zval *retry = azaleaConfigSubFind("service", "retry");
+	if (retry) {
+		convert_to_long(retry);
+		if (Z_LVAL_P(retry) > 0) {
+			retryCount = Z_LVAL_P(retry);
+		}
+	}
 	do {
+		zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
 		if (statusCode == 0) {
+			if (retryCount-- > 0) {
+				// retry
+				continue;
+			}
 			throw500Str(ZEND_STRL("Service response is invalid."), serviceMethod, serviceUrl, arguments);
 			break;
 		}
-		if (statusCode != 200) {
-			if (Z_TYPE_P(return_value) == IS_OBJECT) {
-				// array
-				zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
-				throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, serviceMethod, serviceUrl, arguments);
-			} else {
-				// string
-				throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), serviceMethod, serviceUrl, arguments);
-			}
-			break;
+		if (statusCode == 200) {
+			error = 0;
+		} else if (Z_TYPE_P(return_value) == IS_OBJECT) {
+			// object
+			zval *message = zend_read_property(NULL, return_value, ZEND_STRL("message"), 1, NULL);
+			throw500Str(message ? Z_STRVAL_P(message) : "", message ? Z_STRLEN_P(message) : 0, serviceMethod, serviceUrl, arguments);
+		} else {
+			// string
+			throw500Str(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value), serviceMethod, serviceUrl, arguments);
 		}
-		error = 0;
-	} while (0);
+		break;
+	} while (1);
 	if (arguments) {
 		zval_ptr_dtor(arguments);
 	}
 	zend_string_release(serviceMethod);
 	zend_string_release(serviceUrl);
+	azaleaCurlClose(cp);
+
 	if (error) {
 		return;
 	}
