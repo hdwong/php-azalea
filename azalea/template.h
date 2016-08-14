@@ -11,6 +11,6 @@ PHP_FUNCTION(azalea_template_printf);
 PHP_FUNCTION(azalea_template_sprintf);
 
 void azaleaRegisterTemplateFunctions();
-void azaleaUnregisterTemplateFunctions();
+void azaleaUnregisterTemplateFunctions(zend_bool forced);
 
 #endif /* AZALEA_TEMPLATE_H_ */

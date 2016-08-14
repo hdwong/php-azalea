@@ -15,6 +15,7 @@ PHP_FUNCTION(azalea_env);
 PHP_FUNCTION(azalea_ip);
 PHP_FUNCTION(azalea_randomString);
 PHP_FUNCTION(azalea_maskString);
+PHP_FUNCTION(azalea_hasServiceException);
 
 double azaleaGetMicrotime();
 zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);

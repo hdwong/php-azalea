@@ -111,17 +111,11 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 		zval *reqHeaders, zend_bool returnRawContent, zval *return_value)
 {
 	// curl open once
-	void *cp;
-//	if (!AZALEA_G(curlHandle)) {
-		cp = azaleaCurlOpen();
-		if (!cp) {
-			throw500Str(ZEND_STRL("Service request start failed."), NULL, NULL, NULL);
-			return;
-		}
-//		AZALEA_G(curlHandle) = cp;
-//	} else {
-//		cp = AZALEA_G(curlHandle);
-//	}
+	void *cp = azaleaCurlOpen();
+	if (!cp) {
+		throw500Str(ZEND_STRL("Service request start failed."), NULL, NULL, NULL);
+		return;
+	}
 
 	if (strncasecmp(ZSTR_VAL(serviceUrl), "http://", sizeof("http://") - 1) &&
 			strncasecmp(ZSTR_VAL(serviceUrl), "https://", sizeof("https://") - 1)) {
@@ -173,6 +167,7 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 				// retry
 				continue;
 			}
+			AZALEA_G(hasServiceException) = 1;
 			throw500Str(ZEND_STRL("Service response is invalid."), serviceMethod, serviceUrl, arguments);
 			break;
 		}

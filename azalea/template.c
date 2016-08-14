@@ -68,15 +68,18 @@ void azaleaRegisterTemplateFunctions()
 {
 	if (0 == AZALEA_G(renderLevel)++) {
 		zend_register_functions(NULL, azalea_template_functions, NULL, MODULE_TEMPORARY);
+		AZALEA_G(registeredTemplateFunctions) = 1;
 	}
 }
 /* }}} */
 
 /* {{{ proto unregisterTemplateFunctions */
-void azaleaUnregisterTemplateFunctions()
+void azaleaUnregisterTemplateFunctions(zend_bool forced)
 {
-	if (0 == --AZALEA_G(renderLevel)) {
+	if (0 == --AZALEA_G(renderLevel) || forced) {
 		zend_unregister_functions(azalea_template_functions, -1, NULL);
+		AZALEA_G(registeredTemplateFunctions) = 0;
+		AZALEA_G(renderLevel) = 0;
 	}
 }
 /* }}} */

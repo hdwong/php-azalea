@@ -191,14 +191,14 @@ PHP_METHOD(azalea_view, render)
 	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
 	azaleaRegisterTemplateFunctions();
 	if (!azaleaRequire(ZSTR_VAL(tplPath), 0)) {
-		azaleaUnregisterTemplateFunctions();
+		azaleaUnregisterTemplateFunctions(0);
 		zend_string_release(tplPath);
 		zend_string *message = strpprintf(0, "Failed to open template file `%s.phtml`.", ZSTR_VAL(tplname));
 		throw404(message);
 		zend_string_release(message);
 		RETURN_FALSE;
 	}
-	azaleaUnregisterTemplateFunctions();
+	azaleaUnregisterTemplateFunctions(0);
 	zend_string_release(tplPath);
 	php_output_get_contents(return_value);
 	php_output_discard();

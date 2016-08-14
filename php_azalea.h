@@ -79,7 +79,8 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_ulong renderLevel;
 	zend_string *environ;
 	azalea_bootstrap_t bootstrap;
-	void *curlHandle;
+	zend_bool registeredTemplateFunctions;
+	zend_bool hasServiceException;
 	zend_string *directory;
 	zend_string *uri;
 	zend_string *baseUri;
