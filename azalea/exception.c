@@ -19,6 +19,7 @@ zend_class_entry *azalea_exception500_ce;
 /* {{{ class Azalea\Exception methods
  */
 static zend_function_entry azalea_exception_methods[] = {
+	PHP_ME(azalea_exception, hasServiceException, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -64,6 +65,13 @@ AZALEA_STARTUP_FUNCTION(exception)
 	zend_declare_property_null(azalea_exception500_ce, ZEND_STRL("_arguments"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ prote bool hasServiceException(void) */
+PHP_METHOD(azalea_exception, hasServiceException)
+{
+	RETURN_BOOL(AZALEA_G(hasServiceException));
 }
 /* }}} */
 

@@ -10,6 +10,7 @@
 #include "azalea/azalea.h"
 #include "azalea/loader.h"
 #include "azalea/config.h"
+#include "azalea/request.h"
 #include "azalea/model.h"
 #include "azalea/service.h"
 #include "azalea/exception.h"
@@ -48,6 +49,7 @@ zend_class_entry *azalea_model_ce;
 /* {{{ class Azalea\Model methods
  */
 static zend_function_entry azalea_model_methods[] = {
+	PHP_ME(azalea_model, getRequest, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_model, loadModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
 	PHP_ME(azalea_model, getModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
 	{NULL, NULL, NULL}
@@ -70,6 +72,13 @@ AZALEA_STARTUP_FUNCTION(model)
 #endif
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto getRequest */
+PHP_METHOD(azalea_model, getRequest)
+{
+	object_init_ex(return_value, azalea_request_ce);
 }
 /* }}} */
 

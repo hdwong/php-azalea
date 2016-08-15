@@ -41,7 +41,6 @@ AZALEA_STARTUP_FUNCTION(request)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Request), azalea_request_methods);
 	azalea_request_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_request_ce->ce_flags |= ZEND_ACC_FINAL;
-	zend_declare_property_null(azalea_request_ce, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }

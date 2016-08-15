@@ -35,7 +35,6 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, hasServiceException, ZEND_FN(azalea_hasServiceException), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
@@ -120,13 +119,6 @@ PHP_FUNCTION(azalea_maskString)
 		}
 	}
 	RETURN_STR(string);
-}
-/* }}} */
-
-/* {{{ prote azalea_hasServiceException */
-PHP_FUNCTION(azalea_hasServiceException)
-{
-	RETURN_BOOL(AZALEA_G(hasServiceException));
 }
 /* }}} */
 

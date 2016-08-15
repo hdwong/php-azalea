@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(exception);
 
+PHP_METHOD(azalea_exception, hasServiceException);
 PHP_METHOD(azalea_exception404, getUri);
 PHP_METHOD(azalea_exception404, getRoute);
 PHP_METHOD(azalea_exception500, getServiceInfo);
