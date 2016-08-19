@@ -44,7 +44,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_LOCATION_NAME "location"
 
 #define NODE_BEAUTY_MYSQL 0
-#define NODE_BEAUTY_REDIS 0
+#define NODE_BEAUTY_REDIS 1
 #define NODE_BEAUTY_MONGO 0
 #define NODE_BEAUTY_SOLR  0
 #define NODE_BEAUTY_EMAIL 0

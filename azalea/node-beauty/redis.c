@@ -59,7 +59,7 @@ PHP_METHOD(azalea_node_beauty_redis, keys)
 	}
 	ZVAL_STRINGL(&arg1, "keys", sizeof("keys") - 1);
 	array_init(&arg2);
-	add_assoc_str(&arg2, "key", zend_string_dup(key, 0));
+	add_assoc_str(&arg2, "key", zend_string_copy(key));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);
@@ -93,7 +93,7 @@ PHP_METHOD(azalea_node_beauty_redis, get)
 	}
 	ZVAL_STRINGL(&arg1, "value", sizeof("value") - 1);
 	array_init(&arg2);
-	add_assoc_str(&arg2, "key", zend_string_dup(key, 0));
+	add_assoc_str(&arg2, "key", zend_string_copy(key));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);
