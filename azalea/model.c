@@ -146,7 +146,8 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 /** {{{ int azaleaGetModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
 void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
-	zend_string *modelName, *lcName, *name, *modelClass, *tstr;
+	zend_string *modelName;
+	zend_string *name, *lcName, *lcClassName, *modelClass, *tstr;
 	zend_class_entry *ce;
 	azalea_model_t *instance = NULL, rv = {{0}};
 
@@ -155,13 +156,13 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	}
 
 	lcName = zend_string_tolower(modelName);
-	name = zend_string_init(ZSTR_VAL(lcName), ZSTR_LEN(lcName), 0);
+	name = zend_string_dup(lcName, 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
 	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));
 	zend_string_release(name);
 
-	name = zend_string_tolower(modelClass);
-	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), name);
+	lcClassName = zend_string_tolower(modelClass);
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), lcClassName);
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
@@ -249,7 +250,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			}
 			zval_ptr_dtor(&modelPath);
 			// check model class exists
-			if (!(ce = zend_hash_find_ptr(EG(class_table), name))) {
+			if (!(ce = zend_hash_find_ptr(EG(class_table), lcClassName))) {
 				tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
 				throw404(tstr);
 				zend_string_release(tstr);
@@ -286,9 +287,9 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 				zend_string *serviceUrl, *t;
 				t = zend_string_dup(Z_STR_P(field), 0);
 				tstr = php_trim(t, ZEND_STRL("/"), 2);
-				zend_string_release(t);
 				serviceUrl = strpprintf(0, "%s/%s", ZSTR_VAL(tstr), ZSTR_VAL(lcName));
 				zend_update_property_str(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), serviceUrl);
+				zend_string_release(t);
 				zend_string_release(tstr);
 				zend_string_release(serviceUrl);
 			}
@@ -298,11 +299,11 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			zend_call_method_with_0_params(instance, ce, NULL, "__init", NULL);
 		}
 		// cache instance
-		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(name), ZSTR_LEN(name), instance);
+		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(lcClassName), ZSTR_LEN(lcClassName), instance);
 	}
 	zend_string_release(lcName);
 	zend_string_release(modelClass);
-	zend_string_release(name);
+	zend_string_release(lcClassName);
 
 	RETURN_ZVAL(instance, 1, 0);
 }
