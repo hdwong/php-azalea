@@ -155,7 +155,8 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		return;
 	}
 
-	lcName = zend_string_tolower(modelName);
+	lcName = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
+	zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
 	name = zend_string_dup(lcName, 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
 	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));

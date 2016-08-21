@@ -347,7 +347,7 @@ PHP_METHOD(azalea_bootstrap, run)
 					zval *args = &AZALEA_G(pathArgs);
 					while ((field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset++))) {
 						zend_hash_next_index_insert_new(Z_ARRVAL_P(args), field);
-						zval_add_ref(field);
+						zval_add_ref(field);  // release for AZALEA_G(pathArgs)
 					}
 				}
 			}
@@ -358,13 +358,13 @@ PHP_METHOD(azalea_bootstrap, run)
 		// default controller
 		conf = azaleaConfigSubFind("dispatch", "default_controller");
 		AZALEA_G(controllerName) = Z_STR_P(conf);
-		zval_add_ref(conf);
+		zval_add_ref(conf);  // release for AZALEA_G(controllerName)
 	}
 	if (!AZALEA_G(actionName)) {
 		// default controller
 		conf = azaleaConfigSubFind("dispatch", "default_action");
 		AZALEA_G(actionName) = Z_STR_P(conf);
-		zval_add_ref(conf);
+		zval_add_ref(conf);  // release for AZALEA_G(actionName)
 	}
 
 	// session start
@@ -570,7 +570,6 @@ zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, z
 
 		// cache instance
 		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(lcName), ZSTR_LEN(lcName), instance);
-//		zval_addref_p(instance);
 	}
 	zend_string_release(controllerClass);
 	zend_string_release(lcName);
