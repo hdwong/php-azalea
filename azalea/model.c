@@ -112,8 +112,9 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 		if (Z_TYPE_P(models + offset) != IS_STRING) {
 			continue;
 		}
-		zend_string *lcName = zend_string_tolower(Z_STR_P(models + offset));
 		zval exists;
+		zend_string *lcName = zend_string_init(Z_STRVAL_P(models + offset), Z_STRLEN_P(models + offset), 0);
+		zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
 		// load model file
 		filename = strpprintf(0, "%s%c%s.php", ZSTR_VAL(AZALEA_G(modelsPath)), DEFAULT_SLASH, ZSTR_VAL(lcName));
 		zend_string_release(lcName);
