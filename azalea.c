@@ -40,6 +40,7 @@
 #include "azalea/view.h"
 #include "azalea/template.h"
 #include "azalea/exception.h"
+#include "azalea/transport_curl.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -81,6 +82,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	ZVAL_UNDEF(&AZALEA_G(bootstrap));
+	AZALEA_G(curlHandle) = NULL;
 	AZALEA_G(registeredTemplateFunctions) = 0;
 	AZALEA_G(hasServiceException) = 0;
 	AZALEA_G(directory) = NULL;
@@ -117,6 +119,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	if (Z_TYPE(AZALEA_G(bootstrap)) != IS_UNDEF) {
 		zval_ptr_dtor(&AZALEA_G(bootstrap));
+	}
+	if (AZALEA_G(curlHandle)) {
+		azaleaCurlClose(AZALEA_G(curlHandle));
 	}
 	if (AZALEA_G(registeredTemplateFunctions)) {
 		azaleaUnregisterTemplateFunctions(1);
