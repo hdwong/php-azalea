@@ -9,6 +9,7 @@
 
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(redis);
 
+PHP_METHOD(azalea_node_beauty_redis, __construct);
 PHP_METHOD(azalea_node_beauty_redis, keys);
 PHP_METHOD(azalea_node_beauty_redis, get);
 PHP_METHOD(azalea_node_beauty_redis, set);
