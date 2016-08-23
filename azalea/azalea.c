@@ -192,37 +192,44 @@ PHP_FUNCTION(azalea_env)
 }
 /* }}} */
 
-/* {{{ azalea_ip */
-PHP_FUNCTION(azalea_ip)
+/* {{{ proto azaleaRequestIp */
+zend_string * azaleaRequestIp()
 {
-	if (!AZALEA_G(ip)) {
-		zval *server, *field;
-		zend_string *ip = NULL;
+	if (AZALEA_G(ip)) {
+		return AZALEA_G(ip);
+	}
+	zval *server, *field;
+	zend_string *ip = NULL;
 
-		server = &PG(http_globals)[TRACK_VARS_SERVER];
-		if (Z_TYPE_P(server) == IS_ARRAY) {
-			if ((field= zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_CLIENT_IP"))) &&
-					Z_TYPE_P(field) == IS_STRING) {
-				ip = Z_STR_P(field);
-			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_FORWARDED_FOR"))) &&
-					Z_TYPE_P(field) == IS_STRING) {
-				ip = Z_STR_P(field);
-			} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REMOTE_ADDR"))) &&
-					Z_TYPE_P(field) == IS_STRING) {
-				ip = Z_STR_P(field);
-			}
-		}
-		if (ip) {
-			AZALEA_G(ip) = ip;
-		} else {
-			AZALEA_G(ip) = zend_string_init(ZEND_STRL("0.0.0.0"), 0);
+	server = &PG(http_globals)[TRACK_VARS_SERVER];
+	if (Z_TYPE_P(server) == IS_ARRAY) {
+		if ((field= zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_CLIENT_IP"))) &&
+				Z_TYPE_P(field) == IS_STRING) {
+			ip = Z_STR_P(field);
+		} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_FORWARDED_FOR"))) &&
+				Z_TYPE_P(field) == IS_STRING) {
+			ip = Z_STR_P(field);
+		} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REMOTE_ADDR"))) &&
+				Z_TYPE_P(field) == IS_STRING) {
+			ip = Z_STR_P(field);
 		}
 	}
-	RETURN_STR(zend_string_copy(AZALEA_G(ip)));
+	if (!ip) {
+		ip = zend_string_init(ZEND_STRL("0.0.0.0"), 0);
+	}
+	AZALEA_G(ip) = ip;
+	return ip;
 }
 /* }}} */
 
-/* {{{ proto azaleaRequestFind */
+/* {{{ azalea_ip */
+PHP_FUNCTION(azalea_ip)
+{
+	RETURN_STR_COPY(azaleaRequestIp());
+}
+/* }}} */
+
+/* {{{ proto azaleaGlobalsFind */
 zval * azaleaGlobalsFind(uint type, zend_string *name)
 {
 	zval *carrier, *field;

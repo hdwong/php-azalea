@@ -18,6 +18,7 @@ PHP_FUNCTION(azalea_maskString);
 
 double azaleaGetMicrotime();
 zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
+zend_string * azaleaRequestIp();
 zval * azaleaGlobalsFind(uint type, zend_string *name);
 zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
 void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);

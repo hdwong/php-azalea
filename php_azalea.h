@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.0.2"
+#define PHP_AZALEA_VERSION "1.0.3"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
@@ -50,7 +50,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_EMAIL 0
 #define NODE_BEAUTY_SMS   0
 #define NODE_BEAUTY_UPYUN 0
-#define NODE_BEAUTY_LOCATION 0
+#define NODE_BEAUTY_LOCATION 1
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)

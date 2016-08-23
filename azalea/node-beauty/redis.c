@@ -20,8 +20,7 @@
 
 zend_class_entry *azalea_node_beauty_redis_ce;
 
-/* {{{ class RedisModel methods
- */
+/* {{{ class RedisModel methods */
 static zend_function_entry azalea_node_beauty_redis_methods[] = {
 	PHP_ME(azalea_node_beauty_redis, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_node_beauty_redis, keys, NULL, ZEND_ACC_PUBLIC)
@@ -35,8 +34,7 @@ static zend_function_entry azalea_node_beauty_redis_methods[] = {
 };
 /* }}} */
 
-/* {{{ AZALEA_STARTUP_FUNCTION
- */
+/* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(redis)
 {
 	zend_class_entry ce;

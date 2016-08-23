@@ -22,5 +22,6 @@ if test "$PHP_AZALEA" != "no"; then
     azalea/exception.c \
     azalea/transport_curl.c \
     azalea/node-beauty/redis.c \
+    azalea/node-beauty/location.c \
   , $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi
