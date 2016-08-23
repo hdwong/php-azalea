@@ -164,10 +164,11 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 		smart_str_free(&data);
 		return 0;
 	}
-
 	curl_easy_getinfo(cp, CURLINFO_HTTP_CODE, &statusCode);
 	curl_easy_getinfo(cp, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &downloadLength);
 	curl_easy_getinfo(cp, CURLINFO_CONTENT_TYPE, &contentType);
+	curl_easy_reset(cp);
+
 	//  gzdecode if gzip response
 	if ((zend_long) downloadLength == -1) {
 		// gzip
@@ -187,7 +188,6 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 	} else {
 		ZVAL_STR(result, data.s);
 	}
-
 	smart_str_free(&data);
 
 	return statusCode;
