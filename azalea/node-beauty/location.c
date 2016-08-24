@@ -46,11 +46,73 @@ PHP_METHOD(azalea_node_beauty_location, __construct) {}
 /* {{{ proto get */
 PHP_METHOD(azalea_node_beauty_location, get)
 {
+	zval *codes;
+	zend_string *code = NULL, *tstr;
+	int argc, offset = 0;
+	zval ret, arg1, arg2;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "+", &codes, &argc) == FAILURE) {
+		return;
+	}
+	do {
+		if (Z_TYPE_P(codes + offset) != IS_STRING && Z_TYPE_P(codes + offset) != IS_LONG) {
+			continue;
+		}
+		convert_to_string(codes + offset);
+		if (!code) {
+			code = zend_string_init(Z_STRVAL_P(codes + offset), Z_STRLEN_P(codes + offset), 0);
+		} else {
+			tstr = code;
+			code = strpprintf(0, "%s,%s", ZSTR_VAL(code), Z_STRVAL_P(codes + offset));
+			zend_string_release(tstr);
+		}
+	} while (++offset < argc);
+
+	ZVAL_EMPTY_STRING(&arg1);
+	array_init(&arg2);
+	add_assoc_str_ex(&arg2, ZEND_STRL("id"), code);
+	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
+	zval_ptr_dtor(&arg1);
+	zval_ptr_dtor(&arg2);  // no need to release *code
+
+	if (Z_TYPE(ret) == IS_OBJECT) {
+		RETVAL_ZVAL(&ret, 1, 0);
+	} else {
+		RETVAL_FALSE;
+	}
+	zval_ptr_dtor(&ret);
 }
 /* }}} */
 
 /* {{{ proto children */
-PHP_METHOD(azalea_node_beauty_location, children) {}
+PHP_METHOD(azalea_node_beauty_location, children)
+{
+	zend_string *code = NULL;
+	zval ret, arg1, arg2;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S", &code) == FAILURE) {
+		return;
+	}
+
+	ZVAL_STRINGL(&arg1, "children", sizeof("children") - 1);
+	if (code) {
+		code = zend_string_init(ZSTR_VAL(code), ZSTR_LEN(code), 0);
+		array_init(&arg2);
+		add_assoc_str_ex(&arg2, ZEND_STRL("id"), code);
+		zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
+		zval_ptr_dtor(&arg2);  // no need to release *code
+	} else {
+		zend_call_method_with_1_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1);
+	}
+	zval_ptr_dtor(&arg1);
+
+	if (Z_TYPE(ret) == IS_OBJECT) {
+		RETVAL_ZVAL(&ret, 1, 0);
+	} else {
+		RETVAL_FALSE;
+	}
+	zval_ptr_dtor(&ret);
+}
 /* }}} */
 
 /* {{{ proto ip */
