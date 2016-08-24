@@ -14,6 +14,31 @@
 #include "azalea/exception.h"
 #include "azalea/transport_curl.h"
 
+#if NODE_BEAUTY_MYSQL
+#include "azalea/node-beauty/mysql.h"
+#endif
+#if NODE_BEAUTY_REDIS
+#include "azalea/node-beauty/redis.h"
+#endif
+#if NODE_BEAUTY_MONGO
+#include "azalea/node-beauty/mongo.h"
+#endif
+#if NODE_BEAUTY_SOLR
+#include "azalea/node-beauty/solr.h"
+#endif
+#if NODE_BEAUTY_EMAIL
+#include "azalea/node-beauty/email.h"
+#endif
+#if NODE_BEAUTY_SMS
+#include "azalea/node-beauty/sms.h"
+#endif
+#if NODE_BEAUTY_UPYUN
+#include "azalea/node-beauty/upyun.h"
+#endif
+#if NODE_BEAUTY_LOCATION
+#include "azalea/node-beauty/location.h"
+#endif
+
 zend_class_entry *azalea_service_ce;
 
 /* {{{ class Azalea\ServiceModel methods
@@ -42,6 +67,31 @@ AZALEA_STARTUP_FUNCTION(service)
 	zend_declare_class_constant_long(azalea_service_ce, ZEND_STRL("METHOD_POST"), AZALEA_SERVICE_METHOD_POST);
 	zend_declare_class_constant_long(azalea_service_ce, ZEND_STRL("METHOD_PUT"), AZALEA_SERVICE_METHOD_PUT);
 	zend_declare_class_constant_long(azalea_service_ce, ZEND_STRL("METHOD_DELETE"), AZALEA_SERVICE_METHOD_DELETE);
+
+#if NODE_BEAUTY_MYSQL
+	AZALEA_NODE_BEAUTY_STARTUP(mysql);
+#endif
+#if NODE_BEAUTY_REDIS
+	AZALEA_NODE_BEAUTY_STARTUP(redis);
+#endif
+#if NODE_BEAUTY_MONGO
+	AZALEA_NODE_BEAUTY_STARTUP(mongo);
+#endif
+#if NODE_BEAUTY_SOLR
+	AZALEA_NODE_BEAUTY_STARTUP(solr);
+#endif
+#if NODE_BEAUTY_EMAIL
+	AZALEA_NODE_BEAUTY_STARTUP(email);
+#endif
+#if NODE_BEAUTY_SMS
+	AZALEA_NODE_BEAUTY_STARTUP(sms);
+#endif
+#if NODE_BEAUTY_UPYUN
+	AZALEA_NODE_BEAUTY_STARTUP(upyun);
+#endif
+#if NODE_BEAUTY_LOCATION
+	AZALEA_NODE_BEAUTY_STARTUP(location);
+#endif
 
 	return SUCCESS;
 }
@@ -206,5 +256,52 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 			RETURN_ZVAL(result, 0, 0);
 		}
 	}
+}
+/* }}} */
+
+/* {{{ proto azaleaServiceGetNodeBeautyClassEntry */
+zend_class_entry * azaleaServiceGetNodeBeautyClassEntry(zend_string *name)
+{
+#if NODE_BEAUTY_MYSQL
+	if (0 == strncmp(NODE_BEAUTY_MYSQL_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_mysql_ce;
+	}
+#endif
+#if NODE_BEAUTY_REDIS
+	if (0 == strncmp(NODE_BEAUTY_REDIS_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_redis_ce;
+	}
+#endif
+#if NODE_BEAUTY_MONGO
+	if (0 == strncmp(NODE_BEAUTY_MONGO_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_mongo_ce;
+	}
+#endif
+#if NODE_BEAUTY_SOLR
+	if (0 == strncmp(NODE_BEAUTY_SOLR_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_solr_ce;
+	}
+#endif
+#if NODE_BEAUTY_EMAIL
+	if (0 == strncmp(NODE_BEAUTY_EMAIL_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_email_ce;
+	}
+#endif
+#if NODE_BEAUTY_SMS
+	if (0 == strncmp(NODE_BEAUTY_SMS_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_sms_ce;
+	}
+#endif
+#if NODE_BEAUTY_UPYUN
+	if (0 == strncmp(NODE_BEAUTY_UPYUN_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_upyun_ce;
+	}
+#endif
+#if NODE_BEAUTY_LOCATION
+	if (0 == strncmp(NODE_BEAUTY_LOCATION_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_location_ce;
+	}
+#endif
+	return NULL;
 }
 /* }}} */

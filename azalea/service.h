@@ -24,6 +24,8 @@ PHP_METHOD(azalea_service, put);
 PHP_METHOD(azalea_service, delete);
 PHP_METHOD(azalea_service, request);
 
+zend_class_entry * azaleaServiceGetNodeBeautyClassEntry(zend_string *name);
+
 extern zend_class_entry *azalea_service_ce;
 
 #endif /* AZALEA_SERVICE_H_ */

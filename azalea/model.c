@@ -15,31 +15,6 @@
 #include "azalea/service.h"
 #include "azalea/exception.h"
 
-#if NODE_BEAUTY_MYSQL
-#include "azalea/node-beauty/mysql.h"
-#endif
-#if NODE_BEAUTY_REDIS
-#include "azalea/node-beauty/redis.h"
-#endif
-#if NODE_BEAUTY_MONGO
-#include "azalea/node-beauty/mongo.h"
-#endif
-#if NODE_BEAUTY_SOLR
-#include "azalea/node-beauty/solr.h"
-#endif
-#if NODE_BEAUTY_EMAIL
-#include "azalea/node-beauty/email.h"
-#endif
-#if NODE_BEAUTY_SMS
-#include "azalea/node-beauty/sms.h"
-#endif
-#if NODE_BEAUTY_UPYUN
-#include "azalea/node-beauty/upyun.h"
-#endif
-#if NODE_BEAUTY_LOCATION
-#include "azalea/node-beauty/location.h"
-#endif
-
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "ext/standard/php_filestat.h"	// for php_stat
@@ -65,32 +40,6 @@ AZALEA_STARTUP_FUNCTION(model)
 	azalea_model_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	azalea_model_ce->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 
-	AZALEA_STARTUP(service);
-
-#if NODE_BEAUTY_MYSQL
-	AZALEA_NODE_BEAUTY_STARTUP(mysql);
-#endif
-#if NODE_BEAUTY_REDIS
-	AZALEA_NODE_BEAUTY_STARTUP(redis);
-#endif
-#if NODE_BEAUTY_MONGO
-	AZALEA_NODE_BEAUTY_STARTUP(mongo);
-#endif
-#if NODE_BEAUTY_SOLR
-	AZALEA_NODE_BEAUTY_STARTUP(solr);
-#endif
-#if NODE_BEAUTY_EMAIL
-	AZALEA_NODE_BEAUTY_STARTUP(email);
-#endif
-#if NODE_BEAUTY_SMS
-	AZALEA_NODE_BEAUTY_STARTUP(sms);
-#endif
-#if NODE_BEAUTY_UPYUN
-	AZALEA_NODE_BEAUTY_STARTUP(upyun);
-#endif
-#if NODE_BEAUTY_LOCATION
-	AZALEA_NODE_BEAUTY_STARTUP(location);
-#endif
 	return SUCCESS;
 }
 /* }}} */
@@ -188,59 +137,10 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
-		// try to load node-beauty models
-		zend_bool isNodeBeautyModel = 0;
-#if NODE_BEAUTY_MYSQL
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_MYSQL_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_mysql_ce;
-		}
-#endif
-#if NODE_BEAUTY_REDIS
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_REDIS_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_redis_ce;
-		}
-#endif
-#if NODE_BEAUTY_MONGO
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_MONGO_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_mongo_ce;
-		}
-#endif
-#if NODE_BEAUTY_SOLR
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_SOLR_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_solr_ce;
-		}
-#endif
-#if NODE_BEAUTY_EMAIL
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_EMAIL_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_email_ce;
-		}
-#endif
-#if NODE_BEAUTY_SMS
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_SMS_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_sms_ce;
-		}
-#endif
-#if NODE_BEAUTY_UPYUN
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_UPYUN_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_upyun_ce;
-		}
-#endif
-#if NODE_BEAUTY_LOCATION
-		if (!isNodeBeautyModel && 0 == strncmp(NODE_BEAUTY_LOCATION_NAME, ZSTR_VAL(lcName), ZSTR_LEN(lcName))) {
-			isNodeBeautyModel = 1;
-			ce = azalea_node_beauty_location_ce;
-		}
-#endif
+		ce = azaleaServiceGetNodeBeautyClassEntry(lcName);  // try to load node-beauty models
 		do {
 			// load from extension
-			if (isNodeBeautyModel) {
+			if (ce) {
 				zval *conf;
 				if ((conf = azaleaConfigSubFind("node-beauty", ZSTR_VAL(lcName)))) {
 					convert_to_boolean(conf);
