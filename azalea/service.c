@@ -41,8 +41,7 @@
 
 zend_class_entry *azalea_service_ce;
 
-/* {{{ class Azalea\ServiceModel methods
- */
+/* {{{ class Azalea\ServiceModel methods */
 static zend_function_entry azalea_service_methods[] = {
 	PHP_ME(azalea_service, get, NULL, ZEND_ACC_PROTECTED)
 	PHP_ME(azalea_service, post, NULL, ZEND_ACC_PROTECTED)
@@ -53,8 +52,7 @@ static zend_function_entry azalea_service_methods[] = {
 };
 /* }}} */
 
-/* {{{ AZALEA_STARTUP_FUNCTION
- */
+/* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_STARTUP_FUNCTION(service)
 {
 	zend_class_entry ce;
@@ -94,65 +92,6 @@ AZALEA_STARTUP_FUNCTION(service)
 #endif
 
 	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ proto get */
-PHP_METHOD(azalea_service, get)
-{
-	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_GET);
-}
-/* }}} */
-
-/* {{{ proto post */
-PHP_METHOD(azalea_service, post)
-{
-	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_POST);
-}
-/* }}} */
-
-/* {{{ proto put */
-PHP_METHOD(azalea_service, put)
-{
-	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_PUT);
-}
-/* }}} */
-
-/* {{{ proto delete */
-PHP_METHOD(azalea_service, delete)
-{
-	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_DELETE);
-}
-/* }}} */
-
-/* {{{ proto request */
-PHP_METHOD(azalea_service, request)
-{
-	zend_long method;
-	zend_string *serviceUrl;
-	zval *arguments = NULL, *reqHeaders = NULL;
-	zend_bool returnRawContent = 0;
-
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "lS|azb", &method, &serviceUrl, &arguments, &reqHeaders, &returnRawContent) == FAILURE) {
-		return;
-	}
-
-	azaleaServiceRequest(getThis(), method, serviceUrl, arguments, Z_TYPE_P(reqHeaders) == IS_ARRAY ? reqHeaders : NULL,
-			returnRawContent, return_value);
-}
-/* }}} */
-
-/* {{{ proto azaleaServiceFunction */
-static void azaleaServiceFunction(INTERNAL_FUNCTION_PARAMETERS, azalea_model_t *instance, zend_long method)
-{
-	zend_string *serviceUrl;
-	zval *arguments = NULL;
-
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|a", &serviceUrl, &arguments) == FAILURE) {
-		return;
-	}
-
-	azaleaServiceRequest(instance, method, serviceUrl, arguments, NULL, 0, return_value);
 }
 /* }}} */
 
@@ -256,6 +195,65 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 			RETURN_ZVAL(result, 0, 0);
 		}
 	}
+}
+/* }}} */
+
+/* {{{ proto azaleaServiceFunction */
+static void azaleaServiceFunction(INTERNAL_FUNCTION_PARAMETERS, azalea_model_t *instance, zend_long method)
+{
+	zend_string *serviceUrl;
+	zval *arguments = NULL;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|a", &serviceUrl, &arguments) == FAILURE) {
+		return;
+	}
+
+	azaleaServiceRequest(instance, method, serviceUrl, arguments, NULL, 0, return_value);
+}
+/* }}} */
+
+/* {{{ proto get */
+PHP_METHOD(azalea_service, get)
+{
+	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_GET);
+}
+/* }}} */
+
+/* {{{ proto post */
+PHP_METHOD(azalea_service, post)
+{
+	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_POST);
+}
+/* }}} */
+
+/* {{{ proto put */
+PHP_METHOD(azalea_service, put)
+{
+	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_PUT);
+}
+/* }}} */
+
+/* {{{ proto delete */
+PHP_METHOD(azalea_service, delete)
+{
+	azaleaServiceFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis(), AZALEA_SERVICE_METHOD_DELETE);
+}
+/* }}} */
+
+/* {{{ proto request */
+PHP_METHOD(azalea_service, request)
+{
+	zend_long method;
+	zend_string *serviceUrl;
+	zval *arguments = NULL, *reqHeaders = NULL;
+	zend_bool returnRawContent = 0;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "lS|azb", &method, &serviceUrl, &arguments, &reqHeaders, &returnRawContent) == FAILURE) {
+		return;
+	}
+
+	azaleaServiceRequest(getThis(), method, serviceUrl, arguments, Z_TYPE_P(reqHeaders) == IS_ARRAY ? reqHeaders : NULL,
+			returnRawContent, return_value);
 }
 /* }}} */
 

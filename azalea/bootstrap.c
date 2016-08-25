@@ -256,6 +256,26 @@ PHP_METHOD(azalea_bootstrap, init)
 }
 /* }}} */
 
+/* {{{ proto processContent */
+static void processContent(zval *result)
+{
+	if (Z_TYPE_P(result) != IS_NULL) {
+		if (Z_TYPE_P(result) == IS_ARRAY || Z_TYPE_P(result) == IS_OBJECT) {
+			smart_str buf = {0};
+			php_json_encode(&buf, result, 0);
+			smart_str_0(&buf);
+			PHPWRITE(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
+			smart_str_free(&buf);
+		} else {
+			convert_to_string(result);
+			PHPWRITE(Z_STRVAL_P(result), Z_STRLEN_P(result));
+		}
+		zval_ptr_dtor(result);
+	}
+	ZVAL_TRUE(result);
+}
+/* }}} */
+
 /* {{{ proto bool run(void) */
 PHP_METHOD(azalea_bootstrap, run)
 {
@@ -443,26 +463,6 @@ PHP_METHOD(azalea_bootstrap, getRoute)
 	}
 	add_assoc_zval(return_value, "arguments", &AZALEA_G(pathArgs));
 	zval_add_ref(&AZALEA_G(pathArgs));
-}
-/* }}} */
-
-/* {{{ proto processContent */
-static void processContent(zval *result)
-{
-	if (Z_TYPE_P(result) != IS_NULL) {
-		if (Z_TYPE_P(result) == IS_ARRAY || Z_TYPE_P(result) == IS_OBJECT) {
-			smart_str buf = {0};
-			php_json_encode(&buf, result, 0);
-			smart_str_0(&buf);
-			PHPWRITE(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
-			smart_str_free(&buf);
-		} else {
-			convert_to_string(result);
-			PHPWRITE(Z_STRVAL_P(result), Z_STRLEN_P(result));
-		}
-		zval_ptr_dtor(result);
-	}
-	ZVAL_TRUE(result);
 }
 /* }}} */
 

@@ -9,8 +9,6 @@
 
 AZALEA_STARTUP_FUNCTION(bootstrap);
 
-static void processContent(zval *result);
-
 PHP_METHOD(azalea_bootstrap, __construct);
 PHP_METHOD(azalea_bootstrap, init);
 PHP_METHOD(azalea_bootstrap, run);
