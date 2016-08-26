@@ -232,7 +232,6 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 					}
 					zend_string_release(*url);
 					*url = newUrl;
-					zval_ptr_dtor(*arguments);
 					*arguments = NULL;
 				} else if (method == AZALEA_SERVICE_METHOD_POST || method == AZALEA_SERVICE_METHOD_PUT ||
 						method == AZALEA_SERVICE_METHOD_DELETE) {

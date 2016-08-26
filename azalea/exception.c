@@ -129,7 +129,7 @@ void throw404Str(const char *message, size_t len)
 	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message, len);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 404);
 	// uri
-	zend_update_property_str(azalea_exception404_ce, exception, ZEND_STRL("_uri"), zend_string_copy(AZALEA_G(uri)));
+	zend_update_property_str(azalea_exception404_ce, exception, ZEND_STRL("_uri"), AZALEA_G(uri));
 	// route
 	array_init(&route);
 	if (AZALEA_G(folderName)) {
@@ -162,13 +162,13 @@ void throw500Str(const char *message, size_t len, zend_string *serverMethod, zen
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 500);
 	// serviceMethod
 	if (serverMethod) {
-		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_method"), zend_string_copy(serverMethod));
+		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_method"), serverMethod);
 	} else {
 		zend_update_property_null(azalea_exception500_ce, exception, ZEND_STRL("_method"));
 	}
 	// serviceUrl
 	if (serviceUrl) {
-		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_url"), zend_string_copy(serviceUrl));
+		zend_update_property_str(azalea_exception500_ce, exception, ZEND_STRL("_url"), serviceUrl);
 	} else {
 		zend_update_property_null(azalea_exception500_ce, exception, ZEND_STRL("_url"));
 	}

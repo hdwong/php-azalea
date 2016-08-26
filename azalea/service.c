@@ -121,12 +121,6 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 	} else {
 		serviceUrl = zend_string_init(ZSTR_VAL(serviceUrl), ZSTR_LEN(serviceUrl), 0);
 	}
-	zval serviceArgs;
-	if (arguments) {
-		array_init(&serviceArgs);
-		zend_hash_copy(Z_ARRVAL(serviceArgs), Z_ARRVAL_P(arguments), (copy_ctor_func_t) zval_add_ref);
-		arguments = &serviceArgs;
-	}
 	zend_string *serviceMethod;
 	switch (method) {
 		case AZALEA_SERVICE_METHOD_GET:
@@ -178,14 +172,11 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 		}
 		break;
 	} while (1);
-	if (arguments) {
-		zval_ptr_dtor(arguments);
-	}
 	zend_string_release(serviceMethod);
 	zend_string_release(serviceUrl);
 
 	if (error) {
-		return;
+		RETURN_FALSE;
 	}
 	if (!returnRawContent && Z_TYPE_P(return_value) == IS_OBJECT) {
 		zval *result = zend_read_property(NULL, return_value, ZEND_STRL("result"), 1, NULL);
