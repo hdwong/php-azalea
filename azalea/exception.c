@@ -142,11 +142,7 @@ void throw404Str(const char *message, size_t len)
 	add_assoc_zval(&route, "arguments", &AZALEA_G(pathArgs));
 	zval_add_ref(&AZALEA_G(pathArgs));
 	zend_update_property(azalea_exception404_ce, exception, ZEND_STRL("_route"), &route);
-	// check environ
-	if (0 == strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
-		// WEB
-		azaleaSetHeaderStr(ZEND_STRL("HTTP/1.1 404 Not Found"), 404);
-	}
+	zval_ptr_dtor(&route);
 	zend_throw_exception_object(exception);
 }
 /* }}} */
@@ -175,13 +171,6 @@ void throw500Str(const char *message, size_t len, zend_string *serverMethod, zen
 	// serviceArguments
 	if (arguments) {
 		zend_update_property(azalea_exception500_ce, exception, ZEND_STRL("_arguments"), arguments);
-		zval_add_ref(arguments);
-	}
-
-	// check environ
-	if (0 == strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
-		// WEB
-		azaleaSetHeaderStr(ZEND_STRL("HTTP/1.1 500 Internal Server Error"), 500);
 	}
 	zend_throw_exception_object(exception);
 }

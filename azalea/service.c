@@ -176,6 +176,7 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 	zend_string_release(serviceUrl);
 
 	if (error) {
+		zval_ptr_dtor(return_value);
 		RETURN_FALSE;
 	}
 	if (!returnRawContent && Z_TYPE_P(return_value) == IS_OBJECT) {
