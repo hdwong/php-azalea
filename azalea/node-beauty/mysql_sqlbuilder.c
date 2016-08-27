@@ -61,7 +61,6 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, zend_s
 			type = zend_string_init(ZEND_STRL("AND "), 0);
 		}
 	}
-	php_printf("[%s]", ZSTR_VAL(type));
 	return type;
 }
 
@@ -99,6 +98,7 @@ static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval
 	zval *pData;
 	char *pOp;
 	ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(conditions), key, pData) {
+		op = NULL;
 		// type
 		type = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, type);
 		// field and OP
@@ -110,8 +110,37 @@ static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval
 			op = zend_string_init(pOp + 1, ZSTR_VAL(key) + ZSTR_LEN(key) - pOp - 1, 0);
 			key = zend_string_init(ZSTR_VAL(key), pOp - ZSTR_VAL(key), 0);
 			zend_string_release(tstr);
-		} else {
-			op = zend_string_init(ZEND_STRL("="), 0);
+			// check OP
+			if (strcmp(ZSTR_VAL(op), ">=") &&
+					strcmp(ZSTR_VAL(op), "<=") &&
+					strcmp(ZSTR_VAL(op), "<>") &&
+					strcmp(ZSTR_VAL(op), "!=") &&
+					strcmp(ZSTR_VAL(op), "=") &&
+					strcmp(ZSTR_VAL(op), "<=>") &&
+					strcmp(ZSTR_VAL(op), ">") &&
+					strcmp(ZSTR_VAL(op), "<") &&
+					strcasecmp(ZSTR_VAL(op), "IS") &&
+					strcasecmp(ZSTR_VAL(op), "IS NOT") &&
+					strcasecmp(ZSTR_VAL(op), "NOT IN") &&
+					strcasecmp(ZSTR_VAL(op), "IN") &&
+					strcasecmp(ZSTR_VAL(op), "LIKE") &&
+					strcasecmp(ZSTR_VAL(op), "NOT LIKE")) {
+				zend_string_release(op);
+				op = NULL;
+			} else {
+				tstr = op;
+				op = php_string_toupper(op);
+				zend_string_release(tstr);
+			}
+		}
+		if (!op) {
+			if (Z_TYPE_P(pData) == IS_NULL) {
+				op = zend_string_init(ZEND_STRL("IS"), 0);
+			} else if (Z_TYPE_P(pData) == IS_ARRAY) {
+				op = zend_string_init(ZEND_STRL("IN"), 0);
+			} else {
+				op = zend_string_init(ZEND_STRL("="), 0);
+			}
 		}
 		// build segment
 		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));

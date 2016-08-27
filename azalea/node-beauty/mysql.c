@@ -269,22 +269,28 @@ zend_string * mysqlCompileBinds(zend_string *sql, zval *binds)
 				zend_string_release(delim);
 				value = Z_STRVAL(inString);
 				pInString = &inString;
-			} else {
+			} else if (Z_TYPE_P(pData) == IS_STRING) {
 				value = Z_STRVAL_P(pData);
+			} else {
+				value = NULL;
 			}
 			if (key) {
 				key = mysqlKeyword(key);
 				if (pInString) {
 					tstr = strpprintf(0, "%s IN (\"%s\")", ZSTR_VAL(key), value);
-				} else {
+				} else if (value) {
 					tstr = strpprintf(0, "%s = \"%s\"", ZSTR_VAL(key), value);
+				} else {
+					tstr = strpprintf(0, "%s IS NULL", ZSTR_VAL(key));
 				}
 				zend_string_release(key);
 			} else {
 				if (pInString) {
 					tstr = strpprintf(0, "(\"%s\")", value);
-				} else {
+				} else if (value) {
 					tstr = strpprintf(0, "\"%s\"", value);
+				} else {
+					tstr = zend_string_init(ZEND_STRL("NULL"), 0);
 				}
 			}
 			if (pInString) {
