@@ -51,16 +51,17 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __construct)
 static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, zend_string *type)
 {
 	// check in whereGroupPrefix
-	if (whereGroupPrefix || zend_hash_num_elements(Z_ARRVAL_P(pRec)) == 0) {
+	if (whereGroupPrefix == 0 || zend_hash_num_elements(Z_ARRVAL_P(pRec)) == 0) {
 		type = zend_string_init(ZEND_STRL(""), 0);
 	} else {
 		// get type [AND, OR]
-		if (0 == strcasecmp("OR", ZSTR_VAL(type))) {
+		if (type && 0 == strcasecmp("OR", ZSTR_VAL(type))) {
 			type = zend_string_init(ZEND_STRL("OR "), 0);
 		} else {
 			type = zend_string_init(ZEND_STRL("AND "), 0);
 		}
 	}
+	php_printf("[%s]", ZSTR_VAL(type));
 	return type;
 }
 
@@ -87,14 +88,15 @@ static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval
 		zval cond;
 		array_init(&cond);
 		add_assoc_zval_ex(&cond, Z_STRVAL_P(conditions), Z_STRLEN_P(conditions), value);
+		zval_add_ref(value);
 		conditions = &cond;
 	} else {
 		zval_add_ref(conditions);
 	}
 
 	// foreach
-	zend_string *key, *op, *segment;
-	zval *pData, escaped;
+	zend_string *key, *op, *segment, *tstr;
+	zval *pData;
 	char *pOp;
 	ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(conditions), key, pData) {
 		// type
@@ -104,21 +106,26 @@ static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval
 		pOp = strchr(ZSTR_VAL(key), ' ');
 		if (pOp) {
 			// get OP
-			op = zend_string_init(pOp, ZSTR_VAL(key) + ZSTR_LEN(key) - pOp, 0);
+			tstr = key;
+			op = zend_string_init(pOp + 1, ZSTR_VAL(key) + ZSTR_LEN(key) - pOp - 1, 0);
+			key = zend_string_init(ZSTR_VAL(key), pOp - ZSTR_VAL(key), 0);
+			zend_string_release(tstr);
 		} else {
 			op = zend_string_init(ZEND_STRL("="), 0);
 		}
+		// build segment
+		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));
+		zval binds;
+		array_init(&binds);
+		add_next_index_str(&binds, zend_string_copy(key));
+		add_next_index_zval(&binds, pData);
+		zval_add_ref(pData);
+		tstr = mysqlCompileBinds(segment, &binds);  // where string
+		zval_ptr_dtor(&binds);
 
-
-//		// value
-		mysqlEscape(&escaped, pData);
-
-//		// build segment
-		segment = strpprintf(0, "%s? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));
-		php_printf("[%s]", ZSTR_VAL(segment));
+		add_next_index_str(pRec, tstr);
 
 		ZVAL_TRUE(pWhereGroupPrefix);
-		zval_ptr_dtor(&escaped);
 		zend_string_release(segment);
 		zend_string_release(op);
 		zend_string_release(key);

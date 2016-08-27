@@ -125,33 +125,38 @@ PHP_METHOD(azalea_node_beauty_mysql_result, __construct) {}
 zend_string * mysqlEscapeStr(zend_string *val)
 {
 	char *result, *pResult, *p = ZSTR_VAL(val);
-	size_t len = ZSTR_LEN(val), lenResult = 0;
-	result = ecalloc(sizeof(char), len * 2);
+	size_t len = 0;
+	result = ecalloc(sizeof(char), ZSTR_LEN(val) * 2);
 	pResult = result;
 	while (*p) {
 		if (*p == '\\' || *p == '"' || *p == '\'') {
 			*pResult++ = '\\';
 			*pResult++ = *p;
-			lenResult += 2;
+			len += 2;
 		} else if (*p == '\0') {
 			*pResult++ = '\\';
 			*pResult++ = '0';
-			lenResult += 2;
+			len += 2;
 		} else if (*p == '\r') {
 			*pResult++ = '\\';
 			*pResult++ = 'r';
-			lenResult += 2;
+			len += 2;
 		} else if (*p == '\n') {
 			*pResult++ = '\\';
 			*pResult++ = 'n';
-			lenResult += 2;
+			len += 2;
 		} else {
 			*pResult++ = *p;
-			++lenResult;
+			++len;
 		}
 		++p;
 	}
-	zend_string *ret = zend_string_init(result, lenResult, 0);
+	zend_string *ret;
+	if (len == ZSTR_LEN(val)) {
+		ret = zend_string_copy(val);
+	} else {
+		ret = zend_string_init(result, len, 0);
+	}
 	efree(result);
 	return ret;
 }
