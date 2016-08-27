@@ -10,11 +10,19 @@
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(mysql);
 
 PHP_METHOD(azalea_node_beauty_mysql, __construct);
+PHP_METHOD(azalea_node_beauty_mysql, __init);
 PHP_METHOD(azalea_node_beauty_mysql, escape);
 PHP_METHOD(azalea_node_beauty_mysql, query);
+PHP_METHOD(azalea_node_beauty_mysql, getQueries);
+PHP_METHOD(azalea_node_beauty_mysql, insert);
+PHP_METHOD(azalea_node_beauty_mysql, replace);
+PHP_METHOD(azalea_node_beauty_mysql, update);
+PHP_METHOD(azalea_node_beauty_mysql, delete);
+PHP_METHOD(azalea_node_beauty_mysql, getSqlBuilder);
 
 PHP_METHOD(azalea_node_beauty_mysql_result, __construct);
 PHP_METHOD(azalea_node_beauty_mysql_result, getSql);
+PHP_METHOD(azalea_node_beauty_mysql_result, getError);
 PHP_METHOD(azalea_node_beauty_mysql_result, getTimer);
 
 PHP_METHOD(azalea_node_beauty_mysql_query, all);
@@ -28,6 +36,11 @@ PHP_METHOD(azalea_node_beauty_mysql_query, fields);
 PHP_METHOD(azalea_node_beauty_mysql_execute, insertId);
 PHP_METHOD(azalea_node_beauty_mysql_execute, affected);
 PHP_METHOD(azalea_node_beauty_mysql_execute, changed);
+
+zend_string * mysqlEscapeStr(zend_string *val);
+void mysqlEscape(zval *return_value, zval *val);
+zend_string * mysqlKeyword(zend_string *str);
+zend_string * mysqlCompileBinds(zend_string *sql, zval *binds);
 
 extern zend_class_entry *azalea_node_beauty_mysql_ce;
 
