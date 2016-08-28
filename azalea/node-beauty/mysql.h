@@ -38,9 +38,10 @@ PHP_METHOD(azalea_node_beauty_mysql_execute, affected);
 PHP_METHOD(azalea_node_beauty_mysql_execute, changed);
 
 zend_string * mysqlEscapeStr(zend_string *val);
-void mysqlEscape(zval *return_value, zval *val);
+void mysqlEscapeEx(zval *return_value, zval *val, zend_bool escapeValue);
+#define mysqlEscape(ret, val) mysqlEscapeEx(ret, val, 1)
 zend_string * mysqlKeyword(zend_string *str);
-zend_string * mysqlCompileBinds(zend_string *sql, zval *binds);
+zend_string * mysqlCompileBinds(zend_string *sql, zval *binds, zend_bool escapeValue);
 
 extern zend_class_entry *azalea_node_beauty_mysql_ce;
 

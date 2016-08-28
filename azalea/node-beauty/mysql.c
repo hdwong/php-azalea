@@ -163,7 +163,7 @@ zend_string * mysqlEscapeStr(zend_string *val)
 /* }}} */
 
 /* {{{ proto mysqlEscape */
-void mysqlEscape(zval *return_value, zval *val)
+void mysqlEscapeEx(zval *return_value, zval *val, zend_bool escapeValue)
 {
 	switch (Z_TYPE_P(val)) {
 		case IS_ARRAY:
@@ -174,7 +174,7 @@ void mysqlEscape(zval *return_value, zval *val)
 			ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(val), h, key, pData) {
 				{
 					zval ret;
-					mysqlEscape(&ret, pData);
+					mysqlEscapeEx(&ret, pData, escapeValue);
 					if (Z_TYPE(ret) == IS_STRING || Z_TYPE(ret) == IS_ARRAY || Z_TYPE(ret) == IS_NULL) {
 						if (key) {
 							key = mysqlEscapeStr(key);
@@ -184,14 +184,18 @@ void mysqlEscape(zval *return_value, zval *val)
 							add_index_zval(return_value, h, &ret);
 						}
 					} else {
-						php_error_docref(NULL, E_ERROR, "Escape array error");
+						php_error_docref(NULL, E_ERROR, "expects parameter 2 to be a valid value");
 						RETURN_FALSE;
 					}
 				}
 			} ZEND_HASH_FOREACH_END();
 			return;
 		case IS_STRING:
-			RETURN_STR(mysqlEscapeStr(Z_STR_P(val)));
+			if (escapeValue) {
+				RETURN_STR(mysqlEscapeStr(Z_STR_P(val)));
+			} else {
+				RETURN_ZVAL(val, 1, 0);
+			}
 			return;
 		case IS_LONG:
 		case IS_DOUBLE:
@@ -233,10 +237,10 @@ zend_string * mysqlKeyword(zend_string *str)
 /* }}} */
 
 /* {{{ proto mysqlCompileBinds */
-zend_string * mysqlCompileBinds(zend_string *sql, zval *binds)
+zend_string * mysqlCompileBinds(zend_string *sql, zval *binds, zend_bool escapeValue)
 {
 	zval args;
-	mysqlEscape(&args, binds);
+	mysqlEscapeEx(&args, binds, escapeValue);
 	if (Z_TYPE(args) == IS_FALSE) {
 		zval_ptr_dtor(&args);
 		return zend_string_init(ZSTR_VAL(sql), ZSTR_LEN(sql), 0);
@@ -257,14 +261,24 @@ zend_string * mysqlCompileBinds(zend_string *sql, zval *binds)
 		}
 		if (*(pos + 1) == '?') {
 			// keyword escape
-			zend_string *key = mysqlEscapeStr(Z_STR_P(pData));
-			tstr = mysqlKeyword(key);
-			zend_string_release(key);
+			if (escapeValue) {
+				tstr = mysqlKeyword(Z_STR_P(pData));
+			} else {
+				// escape keyword field
+				zend_string *field = mysqlEscapeStr(Z_STR_P(pData));
+				tstr = mysqlKeyword(field);
+				zend_string_release(field);
+			}
 			p = pos + 2;
 		} else {
 			// value escape
 			if (Z_TYPE_P(pData) == IS_ARRAY) {
-				zend_string *delim = zend_string_init(ZEND_STRL("\",\""), 0);
+				zend_string *delim;
+				if (escapeValue) {
+					delim = zend_string_init(ZEND_STRL("\",\""), 0);
+				} else {
+					delim = zend_string_init(ZEND_STRL(","), 0);
+				}
 				php_implode(delim, pData, &inString);
 				zend_string_release(delim);
 				value = Z_STRVAL(inString);
@@ -277,18 +291,34 @@ zend_string * mysqlCompileBinds(zend_string *sql, zval *binds)
 			if (key) {
 				key = mysqlKeyword(key);
 				if (pInString) {
-					tstr = strpprintf(0, "%s IN (\"%s\")", ZSTR_VAL(key), value);
+					if (escapeValue) {
+						tstr = strpprintf(0, "%s IN (\"%s\")", ZSTR_VAL(key), value);
+					} else {
+						tstr = strpprintf(0, "%s IN (%s)", ZSTR_VAL(key), value);
+					}
 				} else if (value) {
-					tstr = strpprintf(0, "%s = \"%s\"", ZSTR_VAL(key), value);
+					if (escapeValue) {
+						tstr = strpprintf(0, "%s = \"%s\"", ZSTR_VAL(key), value);
+					} else {
+						tstr = strpprintf(0, "%s = %s", ZSTR_VAL(key), value);
+					}
 				} else {
 					tstr = strpprintf(0, "%s IS NULL", ZSTR_VAL(key));
 				}
 				zend_string_release(key);
 			} else {
 				if (pInString) {
-					tstr = strpprintf(0, "(\"%s\")", value);
+					if (escapeValue) {
+						tstr = strpprintf(0, "(\"%s\")", value);
+					} else {
+						tstr = strpprintf(0, "(%s)", value);
+					}
 				} else if (value) {
-					tstr = strpprintf(0, "\"%s\"", value);
+					if (escapeValue) {
+						tstr = strpprintf(0, "\"%s\"", value);
+					} else {
+						tstr = zend_string_copy(Z_STR_P(pData));
+					}
 				} else {
 					tstr = zend_string_init(ZEND_STRL("NULL"), 0);
 				}
@@ -463,7 +493,7 @@ PHP_METHOD(azalea_node_beauty_mysql, query)
 	}
 	if (binds && strchr(ZSTR_VAL(sql), '?') &&
 			Z_TYPE_P(binds) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(binds)) > 0) {
-		sql = mysqlCompileBinds(sql, binds);
+		sql = mysqlCompileBinds(sql, binds, 1);
 	} else {
 		sql = zend_string_init(ZSTR_VAL(sql), ZSTR_LEN(sql), 0);
 	}
