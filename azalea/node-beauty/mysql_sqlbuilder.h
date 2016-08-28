@@ -22,7 +22,8 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhereGroupStart);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, notWhereGroupStart);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orNotWhereGroupStart);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, whereGroupEnd);
-PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, test);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, select);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, distinct);
 
 extern zend_class_entry *mysqlSqlBuilderCe;
 
