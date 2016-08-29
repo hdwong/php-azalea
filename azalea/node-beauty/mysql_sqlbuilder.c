@@ -39,6 +39,7 @@ static zend_function_entry azalea_node_beauty_mysql_sqlbuilder_methods[] = {
 	PHP_ME(azalea_node_beauty_mysql_sqlbuilder, orderBy, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_node_beauty_mysql_sqlbuilder, groupBy, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_node_beauty_mysql_sqlbuilder, getSql, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_node_beauty_mysql_sqlbuilder, query, NULL, ZEND_ACC_PUBLIC)
 
 	{NULL, NULL, NULL}
 };
@@ -52,6 +53,7 @@ void mysqlSqlBuilderStartup()
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(MysqlSqlBuilder), azalea_node_beauty_mysql_sqlbuilder_methods);
 	mysqlSqlBuilderCe = zend_register_internal_class(&ce);
 	mysqlSqlBuilderCe->ce_flags |= ZEND_ACC_FINAL;
+	zend_declare_property_null(mysqlSqlBuilderCe, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(mysqlSqlBuilderCe, ZEND_STRL("_where"), ZEND_ACC_PRIVATE);
 	zend_declare_property_bool(mysqlSqlBuilderCe, ZEND_STRL("_whereGroupPrefix"), 0, ZEND_ACC_PRIVATE);
 	zend_declare_property_long(mysqlSqlBuilderCe, ZEND_STRL("_whereGroupDepth"), 0, ZEND_ACC_PRIVATE);
@@ -66,28 +68,46 @@ void mysqlSqlBuilderStartup()
 }
 /* }}} */
 
+/* {{{ proto mysqlReset */
+static void mysqlReset(zval *instance)
+{
+	zval dummy, *pValue;
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	zend_update_property_bool(mysqlSqlBuilderCe, instance, ZEND_STRL("_whereGroupPrefix"), 0);
+	zend_update_property_long(mysqlSqlBuilderCe, instance, ZEND_STRL("_whereGroupDepth"), 0);
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_select"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	zend_update_property_bool(mysqlSqlBuilderCe, instance, ZEND_STRL("_distinct"), 0);
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_from"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_join"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_orderBy"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_groupBy"), 1, NULL);
+	zval_ptr_dtor(pValue);
+	array_init(pValue);
+	zend_update_property_null(mysqlSqlBuilderCe, instance, ZEND_STRL("_limit"));
+	zend_update_property_long(mysqlSqlBuilderCe, instance, ZEND_STRL("_offset"), 0);
+}
+/* }}} */
+
 /* {{{ proto __construct */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __construct)
 {
-	zval value;
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_where"), &value);
-	zval_ptr_dtor(&value);
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_select"), &value);
-	zval_ptr_dtor(&value);
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_from"), &value);
-	zval_ptr_dtor(&value);
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_join"), &value);
-	zval_ptr_dtor(&value);
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_orderBy"), &value);
-	zval_ptr_dtor(&value);
-	array_init(&value);
-	zend_update_property(mysqlSqlBuilderCe, getThis(), ZEND_STRL("_groupBy"), &value);
-	zval_ptr_dtor(&value);
+	zval *serviceInstance, *instance = getThis();
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &serviceInstance) == FAILURE) {
+		return;
+	}
+
+	zend_update_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_instance"), serviceInstance);
+	mysqlReset(instance);
 }
 /* }}} */
 
@@ -115,7 +135,7 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, const 
 /* }}} */
 
 /* {{{ proto mysqlWhere */
-static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, const char *pType, zend_bool escapeValue)
+void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, const char *pType, zend_bool escapeValue)
 {
 	zval *where, *pRec, *pWhereGroupPrefix;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
@@ -195,13 +215,21 @@ static void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval
 				op = zend_string_init(ZEND_STRL("="), 0);
 			}
 		}
+		if ((0 == strcmp(ZSTR_VAL(op), "IN") || 0 == strcmp(ZSTR_VAL(op), "NOT IN")) && Z_TYPE_P(pData) != IS_ARRAY) {
+			zval array;
+			array_init(&array);
+			add_next_index_zval(&array, pData);
+			pData = &array;
+		} else {
+			zval_add_ref(pData);
+		}
+
 		// build segment
 		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));
 		zval binds;
 		array_init(&binds);
 		add_next_index_str(&binds, zend_string_copy(key));
 		add_next_index_zval(&binds, pData);
-		zval_add_ref(pData);
 		tstr = mysqlCompileBinds(segment, &binds, escapeValue);  // where string
 		zval_ptr_dtor(&binds);
 
@@ -378,7 +406,8 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, whereGroupEnd)
 }
 /* }}} */
 
-static zend_string * mysqlCompileWhere(zval *instance, zend_long recType)
+/* {{{ proto mysqlCompileWhere */
+zend_string * mysqlCompileWhere(zval *instance, zend_long recType)
 {
 	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
@@ -392,7 +421,7 @@ static zend_string * mysqlCompileWhere(zval *instance, zend_long recType)
 	while (Z_LVAL_P(pWhereGroupDepth) > 0) {
 		mysqlWhereGroupEnd(instance);
 	}
-	zend_string *delim = zend_string_init(ZEND_STRL("\n"), 0), *ret;
+	zend_string *delim = zend_string_init(ZEND_STRL(" "), 0), *ret;
 	zval wh;
 	php_implode(delim, pRec, &wh);
 	zend_string_release(delim);
@@ -401,9 +430,9 @@ static zend_string * mysqlCompileWhere(zval *instance, zend_long recType)
 	// reset after compiled
 	zval_ptr_dtor(pRec);
 	array_init(pRec);
-	ZVAL_FALSE(pWhereGroupPrefix);
 	return ret;
 }
+/* }}} */
 
 /* {{{ proto select */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, select)
@@ -712,33 +741,132 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 }
 /* }}} */
 
-static zend_string * mysqlGetSql(zval *instance)
+static zend_string * mysqlCompileSql(zval *instance)
 {
-	smart_str buf = {0};
-	smart_str_appendl_ex(&buf, ZEND_STRL("SELECT "), 0);
+	zval *pValue;
+	smart_str buf = {0}, *sql = &buf;
+	zend_string *tstr, *delimComma, *delimSpace;
+	delimComma = zend_string_init(ZEND_STRL(","), 0);
+	delimSpace = zend_string_init(ZEND_STRL(" "), 0);
 
-
+	smart_str_appendl_ex(sql, ZEND_STRL("SELECT"), 0);
+	// distinct
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_distinct"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_TRUE) {
+		smart_str_appendl_ex(sql, ZEND_STRL(" DISTINCT"), 0);
+	}
+	// select
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_select"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(pValue)) > 0) {
+		zval dummy;
+		php_implode(delimComma, pValue, &dummy);
+		smart_str_appendc(sql, ' ');
+		smart_str_append(sql, Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	} else {
+		smart_str_appendl_ex(sql, ZEND_STRL(" *"), 0);
+	}
+	// from
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_from"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(pValue)) > 0) {
+		zval dummy;
+		php_implode(delimComma, pValue, &dummy);
+		smart_str_appendl_ex(sql, ZEND_STRL(" FROM "), 0);
+		smart_str_append(sql, Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	}
+	// join
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_join"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(pValue)) > 0) {
+		zval dummy;
+		php_implode(delimSpace, pValue, &dummy);
+		smart_str_appendc(sql, ' ');
+		smart_str_append(sql, Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	}
+	// where
+	tstr = mysqlCompileWhere(instance, RECKEY_WHERE);
+	if (tstr && ZSTR_LEN(tstr)) {
+		smart_str_appendl_ex(sql, ZEND_STRL(" WHERE "), 0);
+		smart_str_append(sql, tstr);
+		zend_string_release(tstr);
+	}
+	// groupby
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_groupBy"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(pValue)) > 0) {
+		zval dummy;
+		php_implode(delimComma, pValue, &dummy);
+		smart_str_appendl_ex(sql, ZEND_STRL(" GROUP BY "), 0);
+		smart_str_append(sql, Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	}
+	// orderby
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_orderBy"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(pValue)) > 0) {
+		zval dummy;
+		php_implode(delimComma, pValue, &dummy);
+		smart_str_appendl_ex(sql, ZEND_STRL(" ORDER BY "), 0);
+		smart_str_append(sql, Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	}
+	// having
+	tstr = mysqlCompileWhere(instance, RECKEY_HAVING);
+	if (tstr && ZSTR_LEN(tstr)) {
+		smart_str_appendl_ex(sql, ZEND_STRL(" HAVING "), 0);
+		smart_str_append(sql, tstr);
+		zend_string_release(tstr);
+	}
+	// limit & offset
+	pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_limit"), 1, NULL);
+	if (Z_TYPE_P(pValue) == IS_LONG) {
+		zend_long limit = Z_LVAL_P(pValue);
+		smart_str_appendl_ex(sql, ZEND_STRL(" LIMIT "), 0);
+		pValue = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_offset"), 1, NULL);
+		if (Z_TYPE_P(pValue) == IS_LONG && Z_LVAL_P(pValue) > 0) {
+			smart_str_append_long(sql, Z_LVAL_P(pValue));
+			smart_str_appendc(sql, ',');
+		}
+		smart_str_append_long(sql, limit);
+	}
+	smart_str_0(sql);
 	zend_string *ret = zend_string_copy(buf.s);
-	smart_str_free(&buf);
+
+	zend_string_release(delimComma);
+	zend_string_release(delimSpace);
+	smart_str_free(sql);
+	mysqlReset(instance);
 	return ret;
 }
 
 /* {{{ proto getSql */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, getSql)
 {
-	RETURN_STR(mysqlGetSql(getThis()));
+	RETURN_STR(mysqlCompileSql(getThis()));
 }
 /* }}} */
 
 /* {{{ proto __toString */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __toString)
 {
-	RETURN_STR(mysqlGetSql(getThis()));
+	RETURN_STR(mysqlCompileSql(getThis()));
 }
 /* }}} */
 
+/* {{{ proto query */
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, query)
+{
+	zend_string *sql;
+	zend_bool throwsException = 1;
 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|b", &throwsException) == FAILURE) {
+		return;
+	}
 
+	zval *instance = getThis(), *pServiceInstance;
+	pServiceInstance = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_instance"), 1, NULL);
+	sql = mysqlCompileSql(instance);
+	mysqlQuery(pServiceInstance, return_value, sql, throwsException);
 
-
-
+	zend_string_release(sql);
+}
+/* }}} */

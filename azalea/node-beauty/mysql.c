@@ -121,6 +121,18 @@ PHP_METHOD(azalea_node_beauty_mysql, __init)
 PHP_METHOD(azalea_node_beauty_mysql_result, __construct) {}
 /* }}} */
 
+/* {{{ proto throwEmptyExecuteResult */
+static zval * throwEmptyExecuteResult(const char *error, size_t len)
+{
+	zval rv = {{0}}, *instance = &rv;
+	object_init_ex(instance, mysqlExecuteResultCe);
+	if (error) {
+		zend_update_property_stringl(mysqlResultCe, instance, ZEND_STRL("_error"), error, len);
+	}
+	return instance;
+}
+/* }}} */
+
 /* {{{ proto mysqlEscapeStr */
 zend_string * mysqlEscapeStr(zend_string *val)
 {
@@ -366,17 +378,19 @@ static void mysqlCompileKeyValues(zval *ret, zval *set)
 	zval *pData;
 	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pSet), pRow) {
 		array_init(&row);
-		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(pRow), key, pData) {
-			if (!key) {
-				continue;
-			}
-			if (0 == i) {
-				// first row to save keys
-				add_next_index_str(&keys, mysqlKeyword(key));
-			}
-			add_next_index_zval(&row, pData);
-			zval_add_ref(pData);
-		} ZEND_HASH_FOREACH_END();
+		if (Z_TYPE_P(pRow) == IS_ARRAY) {
+			ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(pRow), key, pData) {
+				if (!key) {
+					continue;
+				}
+				if (0 == i) {
+					// first row to save keys
+					add_next_index_str(&keys, mysqlKeyword(key));
+				}
+				add_next_index_zval(&row, pData);
+				zval_add_ref(pData);
+			} ZEND_HASH_FOREACH_END();
+		}
 		zend_string *delim = zend_string_init(ZEND_STRL("\",\""), 0);
 		zval value;
 		php_implode(delim, &row, &value);
@@ -409,7 +423,7 @@ PHP_METHOD(azalea_node_beauty_mysql, escape)
 /* }}} */
 
 /* {{{ proto mysqlQuery */
-static void mysqlQuery(zval *serviceInstance, zval *return_value, zend_string *sql, zend_bool throwsException)
+void mysqlQuery(zval *serviceInstance, zval *return_value, zend_string *sql, zend_bool throwsException)
 {
 	zval ret, arg1, arg2, *value, rv = {{0}}, *instance = &rv;
 
@@ -525,7 +539,7 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 	zval *set, keyValues;
 	zend_bool ignoreErrors = 0, duplicateKeyUpdate = 0;
 	zend_bool throwsException = 1;
-	zval rv = {{0}}, *instance = &rv;
+	zval *instance = getThis();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sa|bbb", &tableName, &set, &ignoreErrors, &duplicateKeyUpdate, &throwsException) == FAILURE) {
 		return;
@@ -534,8 +548,7 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 	// new ExecuteResult instance
 	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
 		// field set is empty
-		object_init_ex(instance, mysqlExecuteResultCe);
-		RETURN_ZVAL(instance, 0, 0);
+		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
 	}
 	mysqlCompileKeyValues(&keyValues, set);
 
@@ -544,20 +557,17 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 	values = zend_hash_index_find(Z_ARRVAL(keyValues), 1);
 	if (zend_hash_num_elements(Z_ARRVAL_P(keys)) == 0) {
 		// fieldName is empty
-		zval_ptr_dtor(&keyValues);
-		object_init_ex(instance, mysqlExecuteResultCe);
-		RETURN_ZVAL(instance, 0, 0);
+		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field name is empty")), 0, 0);
 	}
 
 	// build sql
 	zend_string *sql, *delim, *strDuplicateKeyUpdate = NULL, *tstr;
 	zval keysString, valuesString;
 
-	delim = zend_string_init(ZEND_STRL(","), 0);
-	tableName = mysqlEscapeStr(tableName);
-	tstr = tableName;
-	tableName = mysqlKeyword(tableName);
+	tstr = mysqlEscapeStr(tableName);
+	tableName = mysqlKeyword(tstr);
 	zend_string_release(tstr);
+	delim = zend_string_init(ZEND_STRL(","), 0);
 	php_implode(delim, keys, &keysString);
 	php_implode(delim, values, &valuesString);
 	zend_string_release(delim);
@@ -584,7 +594,7 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 			strDuplicateKeyUpdate ? ZSTR_VAL(strDuplicateKeyUpdate) : "");
 
 	// execute query
-	mysqlQuery(getThis(), return_value, sql, throwsException);
+	mysqlQuery(instance, return_value, sql, throwsException);
 
 	zend_string_release(sql);
 	zend_string_release(tableName);
@@ -603,7 +613,7 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	zend_string *tableName;
 	zval *set, keyValues;
 	zend_bool throwsException = 1;
-	zval rv = {{0}}, *instance = &rv;
+	zval *instance = getThis();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sa|b", &tableName, &set, &throwsException) == FAILURE) {
 		return;
@@ -612,8 +622,7 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	// new ExecuteResult instance
 	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
 		// field set is empty
-		object_init_ex(instance, mysqlExecuteResultCe);
-		RETURN_ZVAL(instance, 0, 0);
+		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
 	}
 	mysqlCompileKeyValues(&keyValues, set);
 
@@ -622,20 +631,17 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	values = zend_hash_index_find(Z_ARRVAL(keyValues), 1);
 	if (zend_hash_num_elements(Z_ARRVAL_P(keys)) == 0) {
 		// fieldName is empty
-		zval_ptr_dtor(&keyValues);
-		object_init_ex(instance, mysqlExecuteResultCe);
-		RETURN_ZVAL(instance, 0, 0);
+		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field name is empty")), 0, 0);
 	}
 
 	// build sql
 	zend_string *sql, *delim, *tstr;
 	zval keysString, valuesString;
 
-	delim = zend_string_init(ZEND_STRL(","), 0);
-	tableName = mysqlEscapeStr(tableName);
-	tstr = tableName;
-	tableName = mysqlKeyword(tableName);
+	tstr = mysqlEscapeStr(tableName);
+	tableName = mysqlKeyword(tstr);
 	zend_string_release(tstr);
+	delim = zend_string_init(ZEND_STRL(","), 0);
 	php_implode(delim, keys, &keysString);
 	php_implode(delim, values, &valuesString);
 	zend_string_release(delim);
@@ -643,7 +649,7 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	sql = strpprintf(0, "REPLACE INTO %s (%s) VALUES %s", ZSTR_VAL(tableName), Z_STRVAL(keysString), Z_STRVAL(valuesString));
 
 	// execute query
-	mysqlQuery(getThis(), return_value, sql, throwsException);
+	mysqlQuery(instance, return_value, sql, throwsException);
 
 	zend_string_release(sql);
 	zend_string_release(tableName);
@@ -653,15 +659,131 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 }
 /* }}} */
 
+/* {{{ proto mysqlCompileUpdateWhere */
+static zend_string * mysqlCompileUpdateWhere(zval *instance, zval *where)
+{
+	if (!where || Z_TYPE_P(where) != IS_ARRAY) {
+		return NULL;
+	}
+	// new and init mysqlSqlBuilder
+	zval rv = {{0}}, *sqlBuilder = &rv;
+	object_init_ex(sqlBuilder, mysqlSqlBuilderCe);
+	if (zend_hash_str_exists(&(mysqlSqlBuilderCe->function_table), ZEND_STRL("__construct"))) {
+		zend_call_method_with_1_params(&rv, mysqlSqlBuilderCe, NULL, "__construct", NULL, instance);
+	}
+	mysqlWhere(sqlBuilder, RECKEY_WHERE, where, NULL, "AND", 1);
+	zend_string *whereSql = mysqlCompileWhere(sqlBuilder, RECKEY_WHERE);
+	zval_ptr_dtor(sqlBuilder);
+	if (!whereSql) {
+		return NULL;
+	}
+	if (!ZSTR_LEN(whereSql)) {
+		zend_string_release(whereSql);
+		return NULL;
+	}
+	return whereSql;
+
+}
+/* }}} */
+
 /* {{{ proto update */
 PHP_METHOD(azalea_node_beauty_mysql, update)
 {
+	zend_string *tableName, *key, *tstr, *sql;
+	zval *set, *where = NULL, *instance = getThis();
+	zend_bool throwsException = 1;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sa|zb", &tableName, &set, &where, &throwsException) == FAILURE) {
+		return;
+	}
+
+	// new ExecuteResult instance
+	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
+		// field set is empty
+		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
+	}
+	// compileSet
+	zval setValues, setString, *pData;
+	zend_string *delim;
+	array_init(&setValues);
+	ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(set), key, pData) {
+		if (!key) {
+			continue;
+		}
+		zval value;
+		tstr = mysqlEscapeStr(key);
+		key = mysqlKeyword(tstr);
+		zend_string_release(tstr);
+		if (Z_TYPE_P(pData) == IS_ARRAY) {
+			// escape & value
+			zval *escape, *pValue;
+			if (!(pValue = zend_hash_str_find(Z_ARRVAL_P(pData), ZEND_STRL("value")))) {
+				continue;
+			}
+			if ((escape = zend_hash_str_find(Z_ARRVAL_P(pData), ZEND_STRL("escape")))) {
+				convert_to_boolean(escape);
+			}
+			mysqlEscapeEx(&value, pValue, !escape || Z_TYPE_P(escape) == IS_TRUE);
+			tstr = strpprintf(0, "%s = %s", ZSTR_VAL(key), Z_STRVAL(value));
+		} else {
+			// string
+			mysqlEscape(&value, pData);
+			tstr = strpprintf(0, "%s = \"%s\"", ZSTR_VAL(key), Z_STRVAL(value));
+		}
+		add_next_index_str(&setValues, tstr);
+		zend_string_release(key);
+		zval_ptr_dtor(&value);
+	} ZEND_HASH_FOREACH_END();
+	delim = zend_string_init(ZEND_STRL(","), 0);
+	php_implode(delim, &setValues, &setString);
+	zend_string_release(delim);
+	zval_ptr_dtor(&setValues);
+
+	// get sql
+	tstr = mysqlEscapeStr(tableName);
+	tableName = mysqlKeyword(tstr);
+	zend_string_release(tstr);
+	tstr = mysqlCompileUpdateWhere(instance, where);
+	if (tstr) {
+		sql = strpprintf(0, "UPDATE %s SET %s WHERE %s", ZSTR_VAL(tableName), Z_STRVAL(setString), ZSTR_VAL(tstr));
+		zend_string_release(tstr);
+	} else {
+		sql = strpprintf(0, "UPDATE %s SET %s", ZSTR_VAL(tableName), Z_STRVAL(setString));
+	}
+	zval_ptr_dtor(&setString);
+	zend_string_release(tableName);
+
+	mysqlQuery(instance, return_value, sql, throwsException);
+	zend_string_release(sql);
 }
 /* }}} */
 
 /* {{{ proto delete */
 PHP_METHOD(azalea_node_beauty_mysql, delete)
 {
+	zend_string *tableName, *tstr, *sql;
+	zval *where = NULL, *instance = getThis();
+	zend_bool throwsException = 1;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|zb", &tableName, &where, &throwsException) == FAILURE) {
+		return;
+	}
+
+	// get sql
+	tstr = mysqlEscapeStr(tableName);
+	tableName = mysqlKeyword(tstr);
+	zend_string_release(tstr);
+	tstr = mysqlCompileUpdateWhere(instance, where);
+	if (tstr) {
+		sql = strpprintf(0, "DELETE FROM %s WHERE %s", ZSTR_VAL(tableName), ZSTR_VAL(tstr));
+		zend_string_release(tstr);
+	} else {
+		sql = strpprintf(0, "DELETE FROM %s", ZSTR_VAL(tableName));
+	}
+	zend_string_release(tableName);
+
+	mysqlQuery(instance, return_value, sql, throwsException);
+	zend_string_release(sql);
 }
 /* }}} */
 
@@ -672,7 +794,7 @@ PHP_METHOD(azalea_node_beauty_mysql, getSqlBuilder)
 	object_init_ex(&rv, mysqlSqlBuilderCe);
 	// call __init method
 	if (zend_hash_str_exists(&(mysqlSqlBuilderCe->function_table), ZEND_STRL("__construct"))) {
-		zend_call_method_with_0_params(&rv, mysqlSqlBuilderCe, NULL, "__construct", NULL);
+		zend_call_method_with_1_params(&rv, mysqlSqlBuilderCe, NULL, "__construct", NULL, getThis());
 	}
 	RETURN_ZVAL(&rv, 0, 0);
 }
@@ -683,10 +805,7 @@ PHP_METHOD(azalea_node_beauty_mysql, getSqlBuilder)
 PHP_METHOD(azalea_node_beauty_mysql_result, getSql)
 {
 	zval *value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_sql"), 1, NULL);
-	if (value && Z_TYPE_P(value) == IS_STRING) {
-		RETURN_ZVAL(value, 1, 0);
-	}
-	RETURN_NULL();
+	RETURN_ZVAL(value, 1, 0);
 }
 /* }}} */
 
@@ -694,10 +813,7 @@ PHP_METHOD(azalea_node_beauty_mysql_result, getSql)
 PHP_METHOD(azalea_node_beauty_mysql_result, getError)
 {
 	zval *value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_error"), 1, NULL);
-	if (value) {
-		RETURN_ZVAL(value, 1, 0);
-	}
-	RETURN_NULL();
+	RETURN_ZVAL(value, 1, 0);
 }
 /* }}} */
 
@@ -705,7 +821,7 @@ PHP_METHOD(azalea_node_beauty_mysql_result, getError)
 PHP_METHOD(azalea_node_beauty_mysql_result, getTimer)
 {
 	zval *value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_timer"), 1, NULL);
-	if (value && Z_TYPE_P(value) == IS_LONG) {
+	if (Z_TYPE_P(value) == IS_LONG) {
 		RETURN_LONG(Z_LVAL_P(value));
 	}
 	RETURN_NULL();
@@ -716,8 +832,12 @@ PHP_METHOD(azalea_node_beauty_mysql_result, getTimer)
 /* {{{ proto all*/
 PHP_METHOD(azalea_node_beauty_mysql_query, all)
 {
-	zval *value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	RETURN_ZVAL(value, 1, 0);
+	zval *result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	if (Z_TYPE_P(result) != IS_ARRAY) {
+		array_init(return_value);
+	} else {
+		RETURN_ZVAL(result, 1, 0);
+	}
 }
 /* }}} */
 
@@ -725,15 +845,18 @@ PHP_METHOD(azalea_node_beauty_mysql_query, all)
 PHP_METHOD(azalea_node_beauty_mysql_query, allWithKey)
 {
 	zend_string *fieldName;
-	zval *row, *value, *key;
+	zval *row, *result, *key;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &fieldName) == FAILURE) {
 		return;
 	}
 
-	value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
 	array_init(return_value);
-	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(value), row) {
+	if (Z_TYPE_P(result) != IS_ARRAY) {
+		return;
+	}
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(result), row) {
 		key = zend_read_property(NULL, row, ZSTR_VAL(fieldName), ZSTR_LEN(fieldName), 1, NULL);
 		if (Z_TYPE_P(key) == IS_STRING) {
 			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), row);
@@ -752,6 +875,9 @@ static zend_string * mysqlFindFieldName(zval *row, zval *index)
 	zend_ulong h = 0;
 	zend_bool found = 0;
 	zend_string *keyValue;
+	if (Z_TYPE_P(row) != IS_OBJECT) {
+		return NULL;
+	}
 	ZEND_HASH_FOREACH_STR_KEY(Z_OBJPROP_P(row), keyValue) {
 		if (!keyValue) {
 			continue;
@@ -788,7 +914,7 @@ PHP_METHOD(azalea_node_beauty_mysql_query, column)
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
 	array_init(return_value);
-	if (!(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
+	if (Z_TYPE_P(result) != IS_ARRAY || !(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
 		return;
 	}
 	// find fieldName
@@ -831,7 +957,7 @@ PHP_METHOD(azalea_node_beauty_mysql_query, columnWithKey)
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
 	array_init(return_value);
-	if (!(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
+	if (Z_TYPE_P(result) != IS_ARRAY || !(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
 		return;
 	}
 	// find fieldName
@@ -877,7 +1003,7 @@ PHP_METHOD(azalea_node_beauty_mysql_query, row)
 		index = 0;
 	}
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	if (index >= zend_hash_num_elements(Z_ARRVAL_P(result)) ||
+	if (Z_TYPE_P(result) != IS_ARRAY || index >= zend_hash_num_elements(Z_ARRVAL_P(result)) ||
 			!(row = zend_hash_index_find(Z_ARRVAL_P(result), index))) {
 		RETURN_NULL();
 	}
@@ -903,7 +1029,7 @@ PHP_METHOD(azalea_node_beauty_mysql_query, field)
 	}
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	if (!(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
+	if (Z_TYPE_P(result) != IS_ARRAY || !(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
 		RETURN_FALSE;
 	}
 	// find fieldName
@@ -923,11 +1049,14 @@ PHP_METHOD(azalea_node_beauty_mysql_query, field)
 PHP_METHOD(azalea_node_beauty_mysql_query, fields)
 {
 	zend_string *key;
-	zval *value = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL), *row;
-	if (!(row = zend_hash_index_find(Z_ARRVAL_P(value), 0))) {
+	zval *result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL), *row;
+	if (Z_TYPE_P(result) != IS_ARRAY || !(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
 		RETURN_FALSE;
 	}
 	array_init(return_value);
+	if (Z_TYPE_P(row) != IS_OBJECT) {
+		return;
+	}
 	ZEND_HASH_FOREACH_STR_KEY(Z_OBJPROP_P(row), key) {
 		if (!key) {
 			continue;
@@ -944,9 +1073,11 @@ PHP_METHOD(azalea_node_beauty_mysql_execute, insertId)
 	zval *result, *insertId;
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	insertId = zend_read_property(NULL, result, ZEND_STRL("insertId"), 1, NULL);
-	if (Z_TYPE_P(insertId) == IS_LONG) {
-		RETURN_LONG(Z_LVAL_P(insertId));
+	if (Z_TYPE_P(result) == IS_OBJECT) {
+		insertId = zend_read_property(NULL, result, ZEND_STRL("insertId"), 1, NULL);
+		if (Z_TYPE_P(insertId) == IS_LONG) {
+			RETURN_LONG(Z_LVAL_P(insertId));
+		}
 	}
 	RETURN_FALSE;
 }
@@ -958,9 +1089,11 @@ PHP_METHOD(azalea_node_beauty_mysql_execute, affected)
 	zval *result, *affected;
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	affected = zend_read_property(NULL, result, ZEND_STRL("affectedRows"), 1, NULL);
-	if (Z_TYPE_P(affected) == IS_LONG) {
-		RETURN_LONG(Z_LVAL_P(affected));
+	if (Z_TYPE_P(result) == IS_OBJECT) {
+		affected = zend_read_property(NULL, result, ZEND_STRL("affectedRows"), 1, NULL);
+		if (Z_TYPE_P(affected) == IS_LONG) {
+			RETURN_LONG(Z_LVAL_P(affected));
+		}
 	}
 	RETURN_FALSE;
 }
@@ -972,9 +1105,11 @@ PHP_METHOD(azalea_node_beauty_mysql_execute, changed)
 	zval *result, *changed;
 
 	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	changed = zend_read_property(NULL, result, ZEND_STRL("changedRows"), 1, NULL);
-	if (Z_TYPE_P(changed) == IS_LONG) {
-		RETURN_LONG(Z_LVAL_P(changed));
+	if (Z_TYPE_P(result) == IS_OBJECT) {
+		changed = zend_read_property(NULL, result, ZEND_STRL("changedRows"), 1, NULL);
+		if (Z_TYPE_P(changed) == IS_LONG) {
+			RETURN_LONG(Z_LVAL_P(changed));
+		}
 	}
 	RETURN_FALSE;
 }

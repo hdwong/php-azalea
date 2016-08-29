@@ -32,6 +32,10 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, getSql);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, query);
+
+zend_string * mysqlCompileWhere(zval *instance, zend_long recType);
+void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, const char *pType, zend_bool escapeValue);
 
 extern zend_class_entry *mysqlSqlBuilderCe;
 

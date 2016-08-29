@@ -42,6 +42,7 @@ void mysqlEscapeEx(zval *return_value, zval *val, zend_bool escapeValue);
 #define mysqlEscape(ret, val) mysqlEscapeEx(ret, val, 1)
 zend_string * mysqlKeyword(zend_string *str);
 zend_string * mysqlCompileBinds(zend_string *sql, zval *binds, zend_bool escapeValue);
+void mysqlQuery(zval *serviceInstance, zval *return_value, zend_string *sql, zend_bool throwsException);
 
 extern zend_class_entry *azalea_node_beauty_mysql_ce;
 
