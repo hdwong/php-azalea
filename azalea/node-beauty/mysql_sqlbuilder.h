@@ -31,6 +31,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limit);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, getSql);
 
 extern zend_class_entry *mysqlSqlBuilderCe;
 

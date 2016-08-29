@@ -13,6 +13,7 @@
 
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"  // for php_trim
+#include "Zend/zend_smart_str.h"  // for smart_str_*
 
 zend_class_entry *mysqlSqlBuilderCe;
 
@@ -714,7 +715,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 static zend_string * mysqlGetSql(zval *instance)
 {
 	smart_str buf = {0};
-	smart_str_appendl(&buf, ZEND_STRL("SELECT "));
+	smart_str_appendl_ex(&buf, ZEND_STRL("SELECT "), 0);
 
 
 	zend_string *ret = zend_string_copy(buf.s);
