@@ -517,7 +517,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 	}
 	// foreach
 	zend_ulong h;
-	zend_string *key, *tableName, *value;
+	zend_string *key, *tableName, *value, *tstr;
 	zval *pData;
 	pFrom = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_from"), 1, NULL);
 	ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(from), h, key, pData) {
@@ -526,16 +526,35 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 		}
 		if (key) {
 			key = php_trim(key, ZEND_STRL(" "), 3);
-			tableName = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
-			value = strpprintf(0, "`%s` AS `%s`", ZSTR_VAL(tableName), ZSTR_VAL(key));
+			tstr = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
+			tableName = mysqlKeyword(tstr);
+			zend_string_release(tstr);
+			value = strpprintf(0, "%s AS `%s`", ZSTR_VAL(tableName), ZSTR_VAL(key));
 			add_next_index_str(pFrom, value);
 			zend_string_release(key);
 			zend_string_release(tableName);
 		} else {
 			tableName = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
-			value = strpprintf(0, "`%s`", ZSTR_VAL(tableName));
+			char *pos = strchr(ZSTR_VAL(tableName), ' ');
+			if (pos) {
+				// alias in tableName
+				tstr = zend_string_init(pos + 1, ZSTR_VAL(tableName) + ZSTR_LEN(tableName) - pos - 1, 0);
+				key = php_trim(tstr, ZEND_STRL(" "), 1);
+				zend_string_release(tstr);
+				tstr= zend_string_init(ZSTR_VAL(tableName), pos - ZSTR_VAL(tableName), 0);
+				zend_string_release(tableName);
+				tableName = mysqlKeyword(tstr);
+				zend_string_release(tstr);
+				value = strpprintf(0, "%s AS `%s`", ZSTR_VAL(tableName), ZSTR_VAL(key));
+				zend_string_release(key);
+			} else {
+				tstr = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
+				value = mysqlKeyword(tstr);
+				zend_string_release(tstr);
+			}
 			add_next_index_str(pFrom, value);
 			zend_string_release(tableName);
+
 		}
 	} ZEND_HASH_FOREACH_END();
 	zval_ptr_dtor(from);
@@ -585,7 +604,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 	}
 	// foreach
 	zend_ulong h;
-	zend_string *key, *tableName, *value;
+	zend_string *key, *tableName, *value, *tstr;
 	zval *pData;
 	pJoin = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_join"), 1, NULL);
 	ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(join), h, key, pData) {
@@ -594,14 +613,33 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 		}
 		if (key) {
 			key = php_trim(key, ZEND_STRL(" "), 3);
-			tableName = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
-			value = strpprintf(0, "%s `%s` AS `%s` %s", ZSTR_VAL(type), ZSTR_VAL(tableName), ZSTR_VAL(key), ZSTR_VAL(condition));
+			tstr = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
+			tableName = mysqlKeyword(tstr);
+			zend_string_release(tstr);
+			value = strpprintf(0, "%s %s AS `%s` %s", ZSTR_VAL(type), ZSTR_VAL(tableName), ZSTR_VAL(key), ZSTR_VAL(condition));
 			add_next_index_str(pJoin, value);
 			zend_string_release(key);
 			zend_string_release(tableName);
 		} else {
 			tableName = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
-			value = strpprintf(0, "%s `%s` %s", ZSTR_VAL(type), ZSTR_VAL(tableName), ZSTR_VAL(condition));
+			char *pos = strchr(ZSTR_VAL(tableName), ' ');
+			if (pos) {
+				// alias in tableName
+				tstr = zend_string_init(pos + 1, ZSTR_VAL(tableName) + ZSTR_LEN(tableName) - pos - 1, 0);
+				key = php_trim(tstr, ZEND_STRL(" "), 1);
+				zend_string_release(tstr);
+				tstr= zend_string_init(ZSTR_VAL(tableName), pos - ZSTR_VAL(tableName), 0);
+				zend_string_release(tableName);
+				tableName = mysqlKeyword(tstr);
+				zend_string_release(tstr);
+				value = strpprintf(0, "%s %s AS `%s` %s", ZSTR_VAL(type), ZSTR_VAL(tableName), ZSTR_VAL(key), ZSTR_VAL(condition));
+				zend_string_release(key);
+			} else {
+				tstr = php_trim(Z_STR_P(pData), ZEND_STRL(" "), 3);
+				tableName = mysqlKeyword(tstr);
+				zend_string_release(tstr);
+				value = strpprintf(0, "%s %s %s", ZSTR_VAL(type), ZSTR_VAL(tableName), ZSTR_VAL(condition));
+			}
 			add_next_index_str(pJoin, value);
 			zend_string_release(tableName);
 		}
