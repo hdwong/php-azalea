@@ -111,7 +111,7 @@ PHP_METHOD(azalea_controller, getView)
 	if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
 		tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
 	} else {
-		tpldir = zend_string_init(ZEND_STRL(""), 0);
+		tpldir = ZSTR_EMPTY_ALLOC();
 	}
 	themeName = azaleaConfigFind("theme");
 	if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {

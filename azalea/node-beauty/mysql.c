@@ -367,6 +367,9 @@ static void mysqlCompileKeyValues(zval *ret, zval *set)
 	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pSet), pRow) {
 		array_init(&row);
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(pRow), key, pData) {
+			if (!key) {
+				continue;
+			}
 			if (0 == i) {
 				// first row to save keys
 				add_next_index_str(&keys, mysqlKeyword(key));
@@ -750,6 +753,9 @@ static zend_string * mysqlFindFieldName(zval *row, zval *index)
 	zend_bool found = 0;
 	zend_string *keyValue;
 	ZEND_HASH_FOREACH_STR_KEY(Z_OBJPROP_P(row), keyValue) {
+		if (!keyValue) {
+			continue;
+		}
 		if ((Z_TYPE_P(index) == IS_LONG && Z_LVAL_P(index) == h++) ||
 				(Z_TYPE_P(index) == IS_STRING && 0 == strcasecmp(ZSTR_VAL(keyValue), Z_STRVAL_P(index)))) {
 			found = 1;
@@ -923,6 +929,9 @@ PHP_METHOD(azalea_node_beauty_mysql_query, fields)
 	}
 	array_init(return_value);
 	ZEND_HASH_FOREACH_STR_KEY(Z_OBJPROP_P(row), key) {
+		if (!key) {
+			continue;
+		}
 		add_next_index_str(return_value, zend_string_copy(key));
 	} ZEND_HASH_FOREACH_END();
 }

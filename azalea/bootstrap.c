@@ -205,7 +205,7 @@ PHP_METHOD(azalea_bootstrap, init)
 		uri = php_trim(uri, ZEND_STRL("/"), 3);
 		zend_string_release(t);
 	} else {
-		uri = zend_string_init(ZEND_STRL(""), 0);
+		uri = ZSTR_EMPTY_ALLOC();
 	}
 	AZALEA_G(uri) = uri;
 

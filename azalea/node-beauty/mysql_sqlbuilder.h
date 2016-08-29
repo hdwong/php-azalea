@@ -13,6 +13,7 @@
 void mysqlSqlBuilderStartup();
 
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __construct);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __toString);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, where);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhere);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, having);
@@ -24,6 +25,12 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orNotWhereGroupStart);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, whereGroupEnd);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, select);
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, distinct);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limit);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy);
+PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy);
 
 extern zend_class_entry *mysqlSqlBuilderCe;
 

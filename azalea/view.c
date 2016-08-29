@@ -168,6 +168,9 @@ PHP_METHOD(azalea_view, render)
 	if ((environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL)) &&
 			Z_TYPE_P(environVars) == IS_ARRAY) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(environVars), key, pVal) {
+			if (!key) {
+				continue;
+			}
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
 				Z_TRY_ADDREF_P(pVal);
@@ -181,6 +184,9 @@ PHP_METHOD(azalea_view, render)
 	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(data), key, pVal) {
+			if (!key) {
+				continue;
+			}
 			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
 					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
 				Z_TRY_ADDREF_P(pVal);
