@@ -671,8 +671,11 @@ static zend_string * mysqlCompileUpdateWhere(zval *instance, zval *where)
 	if (zend_hash_str_exists(&(mysqlSqlBuilderCe->function_table), ZEND_STRL("__construct"))) {
 		zend_call_method_with_1_params(&rv, mysqlSqlBuilderCe, NULL, "__construct", NULL, instance);
 	}
-	mysqlWhere(sqlBuilder, RECKEY_WHERE, where, NULL, "AND", 1);
-	zend_string *whereSql = mysqlCompileWhere(sqlBuilder, RECKEY_WHERE);
+	zend_string *type, *whereSql;
+	type = zend_string_init(ZEND_STRL("AND"), 0);
+	mysqlWhere(sqlBuilder, RECKEY_WHERE, where, NULL, type, 1);
+	zend_string_release(type);
+	whereSql = mysqlCompileWhere(sqlBuilder, RECKEY_WHERE);
 	zval_ptr_dtor(sqlBuilder);
 	if (!whereSql) {
 		return NULL;
