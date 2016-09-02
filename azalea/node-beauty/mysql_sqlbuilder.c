@@ -137,14 +137,13 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, const 
 /* {{{ proto mysqlWhere */
 void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, const char *pType, zend_bool escapeValue)
 {
-	zval *where, *pRec, *pWhereGroupPrefix;
+	zval *where, *pRec, rec, cond, *pWhereGroupPrefix;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
 	pRec = zend_hash_index_find(Z_ARRVAL_P(where), recType);
 	pWhereGroupPrefix = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_whereGroupPrefix"), 1, NULL);
 
 	// init rec property
 	if (!pRec) {
-		zval rec;
 		pRec = &rec;
 		array_init(pRec);
 		zend_hash_index_add(Z_ARRVAL_P(where), recType, pRec);
@@ -154,7 +153,6 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		return;
 	}
 	if (Z_TYPE_P(conditions) != IS_ARRAY) {
-		zval cond;
 		array_init(&cond);
 		add_assoc_zval_ex(&cond, Z_STRVAL_P(conditions), Z_STRLEN_P(conditions), value);
 		zval_add_ref(value);
@@ -215,8 +213,8 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 				op = zend_string_init(ZEND_STRL("="), 0);
 			}
 		}
+		zval array;
 		if ((0 == strcmp(ZSTR_VAL(op), "IN") || 0 == strcmp(ZSTR_VAL(op), "NOT IN")) && Z_TYPE_P(pData) != IS_ARRAY) {
-			zval array;
 			array_init(&array);
 			add_next_index_zval(&array, pData);
 			pData = &array;
@@ -311,7 +309,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orHaving)
 static void mysqlWhereGroupStart(zval *instance, const char *pType)
 {
 	zend_long recType = RECKEY_WHERE;
-	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth;
+	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth, rec;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
 	pRec = zend_hash_index_find(Z_ARRVAL_P(where), recType);
 	pWhereGroupPrefix = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_whereGroupPrefix"), 1, NULL);
@@ -319,7 +317,6 @@ static void mysqlWhereGroupStart(zval *instance, const char *pType)
 
 	// init rec property
 	if (!pRec) {
-		zval rec;
 		pRec = &rec;
 		array_init(pRec);
 		zend_hash_index_add(Z_ARRVAL_P(where), recType, pRec);
@@ -341,7 +338,7 @@ static void mysqlWhereGroupStart(zval *instance, const char *pType)
 static void mysqlWhereGroupEnd(zval *instance)
 {
 	zend_long recType = RECKEY_WHERE;
-	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth;
+	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth, rec;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
 	pRec = zend_hash_index_find(Z_ARRVAL_P(where), recType);
 	pWhereGroupPrefix = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_whereGroupPrefix"), 1, NULL);
@@ -352,7 +349,6 @@ static void mysqlWhereGroupEnd(zval *instance)
 	}
 	// init rec property
 	if (!pRec) {
-		zval rec;
 		pRec = &rec;
 		array_init(pRec);
 		zend_hash_index_add(Z_ARRVAL_P(where), recType, pRec);
@@ -445,7 +441,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, select)
 		return;
 	}
 
-	zval selects, *ret, *pSelect, *instance = getThis(), *pData;
+	zval selects, *ret, *pSelect, *instance = getThis(), *pData, escaped;
 	zend_string *delim, *tstr;
 	array_init(&selects);
 	delim = zend_string_init(ZEND_STRL(","), 0);
@@ -454,10 +450,9 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, select)
 
 	// escape if need be
 	if (escapeValue) {
-		zval t;
-		mysqlEscape(&t, &selects);
+		mysqlEscape(&escaped, &selects);
 		zval_ptr_dtor(&selects);
-		ret = &t;
+		ret = &escaped;
 	} else {
 		ret = &selects;
 	}
@@ -495,7 +490,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, distinct)
 /* {{{ proto from */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 {
-	zval *from, *pFrom, *instance = getThis();
+	zval *from, froms, *pFrom, *instance = getThis();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &from) == FAILURE) {
 		return;
@@ -508,7 +503,6 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 	// form table name
 	if (Z_TYPE_P(from) == IS_STRING) {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
-		zval froms;
 		array_init(&froms);
 		php_explode(delim, Z_STR_P(from), &froms, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -567,7 +561,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 /* {{{ proto join */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 {
-	zval *join, *pJoin, *instance = getThis();
+	zval *join, joins, *pJoin, *instance = getThis();
 	zend_string *condition, *type = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zS|S", &join, &condition, &type) == FAILURE) {
@@ -595,7 +589,6 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 	// join table name
 	if (Z_TYPE_P(join) == IS_STRING) {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
-		zval joins;
 		array_init(&joins);
 		php_explode(delim, Z_STR_P(join), &joins, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -703,7 +696,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage)
 /* {{{ proto orderBy */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 {
-	zval *orderBy, *pOrderBy, *instance = getThis();
+	zval *orderBy, orderBys, *pOrderBy, *instance = getThis();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &orderBy) == FAILURE) {
 		return;
@@ -716,7 +709,6 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 	// orderBy field name
 	if (Z_TYPE_P(orderBy) == IS_STRING) {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
-		zval orderBys;
 		array_init(&orderBys);
 		php_explode(delim, Z_STR_P(orderBy), &orderBys, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -743,7 +735,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 /* {{{ proto groupBy */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 {
-	zval *groupBy, *pGroupBy, *instance = getThis();
+	zval *groupBy, groupBys, *pGroupBy, *instance = getThis();
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &groupBy) == FAILURE) {
 		return;
@@ -756,11 +748,10 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 	// orderBy field name
 	if (Z_TYPE_P(groupBy) == IS_STRING) {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
-		zval orderBys;
-		array_init(&orderBys);
-		php_explode(delim, Z_STR_P(groupBy), &orderBys, ZEND_LONG_MAX);
+		array_init(&groupBys);
+		php_explode(delim, Z_STR_P(groupBy), &groupBys, ZEND_LONG_MAX);
 		zend_string_release(delim);
-		groupBy = &orderBys;
+		groupBy = &groupBys;
 	} else {
 		zval_add_ref(groupBy);
 	}
