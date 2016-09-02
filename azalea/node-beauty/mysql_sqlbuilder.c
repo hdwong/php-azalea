@@ -120,11 +120,11 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, const 
 		type = ZSTR_EMPTY_ALLOC();
 	} else {
 		// get type [AND, OR]
-		if (type && 0 == strcasecmp("OR", pType)) {
+		if (pType && 0 == strcasecmp("OR", pType)) {
 			type = zend_string_init(ZEND_STRL("OR "), 0);
-		} else if (type && 0 == strcasecmp("NOT", pType)) {
+		} else if (pType && 0 == strcasecmp("NOT", pType)) {
 			type = zend_string_init(ZEND_STRL("NOT "), 0);
-		} else if (type && 0 == strcasecmp("OR NOT", pType)) {
+		} else if (pType && 0 == strcasecmp("OR NOT", pType)) {
 			type = zend_string_init(ZEND_STRL("OR NOT "), 0);
 		} else {
 			type = zend_string_init(ZEND_STRL("AND "), 0);
