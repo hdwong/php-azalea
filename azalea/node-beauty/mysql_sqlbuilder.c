@@ -112,18 +112,19 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, __construct)
 /* }}} */
 
 /* {{{ proto mysqlGetType */
-static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, zend_string *type)
+static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, const char *pType)
 {
+	zend_string *type;
 	// check in whereGroupPrefix
 	if (whereGroupPrefix == 0 || zend_hash_num_elements(Z_ARRVAL_P(pRec)) == 0) {
 		type = ZSTR_EMPTY_ALLOC();
 	} else {
 		// get type [AND, OR]
-		if (type && 0 == strcasecmp("OR", ZSTR_VAL(type))) {
+		if (type && 0 == strcasecmp("OR", pType)) {
 			type = zend_string_init(ZEND_STRL("OR "), 0);
-		} else if (type && 0 == strcasecmp("NOT", ZSTR_VAL(type))) {
+		} else if (type && 0 == strcasecmp("NOT", pType)) {
 			type = zend_string_init(ZEND_STRL("NOT "), 0);
-		} else if (type && 0 == strcasecmp("OR NOT", ZSTR_VAL(type))) {
+		} else if (type && 0 == strcasecmp("OR NOT", pType)) {
 			type = zend_string_init(ZEND_STRL("OR NOT "), 0);
 		} else {
 			type = zend_string_init(ZEND_STRL("AND "), 0);
@@ -134,7 +135,7 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, zend_s
 /* }}} */
 
 /* {{{ proto mysqlWhere */
-void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, zend_string *type, zend_bool escapeValue)
+void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value, const char *pType, zend_bool escapeValue)
 {
 	zval *where, *pRec, *pWhereGroupPrefix;
 	where = zend_read_property(mysqlSqlBuilderCe, instance, ZEND_STRL("_where"), 1, NULL);
@@ -163,7 +164,7 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 	}
 
 	// foreach
-	zend_string *stype, *key, *op, *segment, *tstr;
+	zend_string *type, *key, *op, *segment, *tstr;
 	zval *pData;
 	char *pOp;
 	ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(conditions), key, pData) {
@@ -172,7 +173,7 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		}
 		op = NULL;
 		// type
-		stype = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, type);
+		type = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, pType);
 		// field and OP
 		key = php_trim(key, ZEND_STRL(" "), 3);
 		pOp = strchr(ZSTR_VAL(key), ' ');
@@ -224,9 +225,9 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		}
 
 		// build segment
-		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(stype), ZSTR_VAL(op));
+		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));
 		zend_string_release(op);
-		zend_string_release(stype);
+		zend_string_release(type);
 
 		zval binds;
 		array_init(&binds);
@@ -256,9 +257,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, where)
 		return;
 	}
 
-	zend_string *type = zend_string_init(ZEND_STRL("AND"), 0);
-	mysqlWhere(getThis(), RECKEY_WHERE, conditions, value, type, escapeValue);
-	zend_string_release(type);
+	mysqlWhere(getThis(), RECKEY_WHERE, conditions, value, "AND", escapeValue);
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -273,9 +272,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhere)
 		return;
 	}
 
-	zend_string *type = zend_string_init(ZEND_STRL("OR"), 0);
-	mysqlWhere(getThis(), RECKEY_WHERE, conditions, value, type, escapeValue);
-	zend_string_release(type);
+	mysqlWhere(getThis(), RECKEY_WHERE, conditions, value, "OR", escapeValue);
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -290,9 +287,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, having)
 		return;
 	}
 
-	zend_string *type = zend_string_init(ZEND_STRL("AND"), 0);
-	mysqlWhere(getThis(), RECKEY_HAVING, conditions, value, type, escapeValue);
-	zend_string_release(type);
+	mysqlWhere(getThis(), RECKEY_HAVING, conditions, value, "AND", escapeValue);
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -307,15 +302,13 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orHaving)
 		return;
 	}
 
-	zend_string *type = zend_string_init(ZEND_STRL("OR"), 0);
-	mysqlWhere(getThis(), RECKEY_HAVING, conditions, value, type, escapeValue);
-	zend_string_release(type);
+	mysqlWhere(getThis(), RECKEY_HAVING, conditions, value, "OR", escapeValue);
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
 
 /* {{{ proto mysqlWhereGroupStart */
-static void mysqlWhereGroupStart(zval *instance, zend_string *type)
+static void mysqlWhereGroupStart(zval *instance, const char *pType)
 {
 	zend_long recType = RECKEY_WHERE;
 	zval *where, *pRec, *pWhereGroupPrefix, *pWhereGroupDepth;
@@ -332,8 +325,8 @@ static void mysqlWhereGroupStart(zval *instance, zend_string *type)
 		zend_hash_index_add(Z_ARRVAL_P(where), recType, pRec);
 	}
 
-	zend_string *tstr;
-	type = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, type);
+	zend_string *type, *tstr;
+	type = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, pType);
 	tstr = strpprintf(0, "%s(", ZSTR_VAL(type));
 	zend_string_release(type);
 
@@ -377,9 +370,7 @@ static void mysqlWhereGroupEnd(zval *instance)
 /* {{{ proto whereGroupStart */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, whereGroupStart)
 {
-	zend_string *type = zend_string_init(ZEND_STRL("AND"), 0);
-	mysqlWhereGroupStart(getThis(), type);
-	zend_string_release(type);
+	mysqlWhereGroupStart(getThis(), "AND");
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -387,9 +378,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, whereGroupStart)
 /* {{{ proto orWhereGroupStart */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhereGroupStart)
 {
-	zend_string *type = zend_string_init(ZEND_STRL("OR"), 0);
-	mysqlWhereGroupStart(getThis(), type);
-	zend_string_release(type);
+	mysqlWhereGroupStart(getThis(), "OR");
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -397,9 +386,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhereGroupStart)
 /* {{{ proto notWhereGroupStart */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, notWhereGroupStart)
 {
-	zend_string *type = zend_string_init(ZEND_STRL("NOT"), 0);
-	mysqlWhereGroupStart(getThis(), type);
-	zend_string_release(type);
+	mysqlWhereGroupStart(getThis(), "NOT");
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
@@ -407,9 +394,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, notWhereGroupStart)
 /* {{{ proto orNotWhereGroupStart */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orNotWhereGroupStart)
 {
-	zend_string *type = zend_string_init(ZEND_STRL("OR NOT"), 0);
-	mysqlWhereGroupStart(getThis(), type);
-	zend_string_release(type);
+	mysqlWhereGroupStart(getThis(), "OR NOT");
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
