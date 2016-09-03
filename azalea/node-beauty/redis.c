@@ -8,7 +8,6 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
-#include "azalea/model.h"
 #include "azalea/service.h"
 #include "azalea/exception.h"
 #include "azalea/node-beauty/redis.h"
