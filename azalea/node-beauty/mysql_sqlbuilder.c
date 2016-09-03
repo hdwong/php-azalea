@@ -696,9 +696,10 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage)
 /* {{{ proto orderBy */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 {
-	zval *orderBy, orderBys, *pOrderBy, *instance = getThis();
+	zval *orderBy, orderBys, *pOrderBy, escaped, *instance = getThis();
+	zend_bool escapeValue = 1;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &orderBy) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|b", &orderBy, &escapeValue) == FAILURE) {
 		return;
 	}
 	if (Z_TYPE_P(orderBy) != IS_ARRAY && Z_TYPE_P(orderBy) != IS_STRING) {
@@ -715,6 +716,12 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 		orderBy = &orderBys;
 	} else {
 		zval_add_ref(orderBy);
+	}
+	// escape if need be
+	if (escapeValue) {
+		mysqlEscape(&escaped, orderBy);
+		zval_ptr_dtor(orderBy);
+		orderBy = &escaped;
 	}
 	// foreach
 	zend_ulong h;
@@ -735,9 +742,10 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 /* {{{ proto groupBy */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 {
-	zval *groupBy, groupBys, *pGroupBy, *instance = getThis();
+	zval *groupBy, groupBys, *pGroupBy, escaped, *instance = getThis();
+	zend_bool escapeValue = 1;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &groupBy) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|b", &groupBy, &escapeValue) == FAILURE) {
 		return;
 	}
 	if (Z_TYPE_P(groupBy) != IS_ARRAY && Z_TYPE_P(groupBy) != IS_STRING) {
@@ -754,6 +762,12 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 		groupBy = &groupBys;
 	} else {
 		zval_add_ref(groupBy);
+	}
+	// escape if need be
+	if (escapeValue) {
+		mysqlEscape(&escaped, groupBy);
+		zval_ptr_dtor(groupBy);
+		groupBy = &escaped;
 	}
 	// foreach
 	zend_ulong h;
