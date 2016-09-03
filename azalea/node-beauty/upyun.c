@@ -54,8 +54,8 @@ static void upyunWrite(zval *instance, zval *ret, zend_string *type, zend_string
 
 	ZVAL_STRINGL(&arg1, "file", sizeof("file") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("type"), zend_string_init(ZSTR_VAL(type), ZSTR_LEN(type), 0));
-	add_assoc_str_ex(&arg2, ZEND_STRL("filename"), zend_string_init(ZSTR_VAL(filename), ZSTR_LEN(filename), 0));
+	add_assoc_str_ex(&arg2, ZEND_STRL("type"), zend_string_copy(type));
+	add_assoc_str_ex(&arg2, ZEND_STRL("filename"), zend_string_copy(filename));
 	add_assoc_str_ex(&arg2, ZEND_STRL("content"), content);
 	zend_call_method_with_2_params(instance, azalea_service_ce, NULL, "post", ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
@@ -109,7 +109,7 @@ PHP_METHOD(azalea_node_beauty_upyun, upload)
 	if (extname) {
 		filename = strpprintf(0, "%s.%s", ZSTR_VAL(filename), ZSTR_VAL(extname));
 	} else {
-		filename = zend_string_init(ZSTR_VAL(filename), ZSTR_LEN(filename), 0);
+		zend_string_addref(filename);
 	}
 	upyunWrite(getThis(), &ret, type, filename, ZSTR_VAL(content), ZSTR_LEN(content));
 	zend_string_release(content);
@@ -135,8 +135,8 @@ PHP_METHOD(azalea_node_beauty_upyun, copyUrl)
 
 	ZVAL_STRINGL(&arg1, "copy", sizeof("copy") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("type"), zend_string_init(ZSTR_VAL(type), ZSTR_LEN(type), 0));
-	add_assoc_str_ex(&arg2, ZEND_STRL("url"), zend_string_init(ZSTR_VAL(url), ZSTR_LEN(url), 0));
+	add_assoc_str_ex(&arg2, ZEND_STRL("type"), zend_string_copy(type));
+	add_assoc_str_ex(&arg2, ZEND_STRL("url"), zend_string_copy(url));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "post", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);
@@ -162,7 +162,7 @@ PHP_METHOD(azalea_node_beauty_upyun, remove)
 
 	ZVAL_STRINGL(&arg1, "file", sizeof("file") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("filename"), zend_string_init(ZSTR_VAL(filename), ZSTR_LEN(filename), 0));
+	add_assoc_str_ex(&arg2, ZEND_STRL("filename"), zend_string_copy(filename));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "delete", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);

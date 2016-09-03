@@ -169,6 +169,7 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		if (!key) {
 			continue;
 		}
+		zval array, binds;
 		op = NULL;
 		// type
 		type = mysqlGetType(Z_TYPE_P(pWhereGroupPrefix) == IS_TRUE, pRec, pType);
@@ -213,7 +214,6 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 				op = zend_string_init(ZEND_STRL("="), 0);
 			}
 		}
-		zval array;
 		if ((0 == strcmp(ZSTR_VAL(op), "IN") || 0 == strcmp(ZSTR_VAL(op), "NOT IN")) && Z_TYPE_P(pData) != IS_ARRAY) {
 			array_init(&array);
 			add_next_index_zval(&array, pData);
@@ -223,7 +223,6 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		}
 
 		// build segment
-		zval binds;
 		segment = strpprintf(0, "%s?? %s ?", ZSTR_VAL(type), ZSTR_VAL(op));
 		zend_string_release(op);
 		zend_string_release(type);
@@ -484,7 +483,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 {
 	zval *from, froms, *pFrom, *instance = getThis(), *pData;
 	zend_ulong h;
-	zend_string *key, *tableName, *value, *tstr;
+	zend_string *key, *tableName, *value, *tstr, *delim;
 	char *pos;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &from) == FAILURE) {
@@ -497,7 +496,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 
 	// form table name
 	if (Z_TYPE_P(from) == IS_STRING) {
-		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
+		delim = zend_string_init(ZEND_STRL(","), 0);
 		array_init(&froms);
 		php_explode(delim, Z_STR_P(from), &froms, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -554,7 +553,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, from)
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 {
 	zval *join, joins, *pJoin, *instance = getThis(), *pData;
-	zend_string *condition, *type = NULL, *key, *tableName, *value, *tstr;
+	zend_string *condition, *type = NULL, *key, *tableName, *value, *tstr, *delim;
 	zend_ulong h;
 	char *pos;
 
@@ -582,7 +581,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, join)
 	}
 	// join table name
 	if (Z_TYPE_P(join) == IS_STRING) {
-		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
+		delim = zend_string_init(ZEND_STRL(","), 0);
 		array_init(&joins);
 		php_explode(delim, Z_STR_P(join), &joins, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -688,6 +687,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, limitPage)
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 {
 	zval *orderBy, orderBys, *pOrderBy, escaped, *instance = getThis(), *pData;
+	zend_string *delim;
 	zend_bool escapeValue = 1;
 	zend_ulong h;
 
@@ -701,7 +701,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 
 	// orderBy field name
 	if (Z_TYPE_P(orderBy) == IS_STRING) {
-		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
+		delim = zend_string_init(ZEND_STRL(","), 0);
 		array_init(&orderBys);
 		php_explode(delim, Z_STR_P(orderBy), &orderBys, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -733,6 +733,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orderBy)
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 {
 	zval *groupBy, groupBys, *pGroupBy, escaped, *instance = getThis(), *pData;
+	zend_string *delim;
 	zend_bool escapeValue = 1;
 	zend_ulong h;
 
@@ -746,7 +747,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, groupBy)
 
 	// orderBy field name
 	if (Z_TYPE_P(groupBy) == IS_STRING) {
-		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
+		delim = zend_string_init(ZEND_STRL(","), 0);
 		array_init(&groupBys);
 		php_explode(delim, Z_STR_P(groupBy), &groupBys, ZEND_LONG_MAX);
 		zend_string_release(delim);
@@ -778,7 +779,7 @@ static zend_string * mysqlCompileSql(zval *instance)
 {
 	zval *pValue;
 	smart_str buf = {0}, *sql = &buf;
-	zend_string *tstr, *delimComma, *delimSpace;
+	zend_string *tstr, *delimComma, *delimSpace, *ret;
 
 	delimComma = zend_string_init(ZEND_STRL(","), 0);
 	delimSpace = zend_string_init(ZEND_STRL(" "), 0);
@@ -862,7 +863,7 @@ static zend_string * mysqlCompileSql(zval *instance)
 		smart_str_append_long(sql, limit);
 	}
 	smart_str_0(sql);
-	zend_string *ret = zend_string_copy(buf.s);
+	ret = zend_string_copy(buf.s);
 
 	zend_string_release(delimComma);
 	zend_string_release(delimSpace);
