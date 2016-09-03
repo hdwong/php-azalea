@@ -49,7 +49,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_SOLR  0
 #define NODE_BEAUTY_EMAIL 0
 #define NODE_BEAUTY_SMS   0
-#define NODE_BEAUTY_UPYUN 0
+#define NODE_BEAUTY_UPYUN 1
 #define NODE_BEAUTY_LOCATION 1
 
 #ifdef PHP_WIN32
