@@ -828,47 +828,6 @@ PHP_METHOD(azalea_node_beauty_mysql_result, getTimer)
 }
 /* }}} */
 
-/* ----- Azalea\MysqlQueryResult ----- */
-/* {{{ proto all*/
-PHP_METHOD(azalea_node_beauty_mysql_query, all)
-{
-	zval *result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	if (Z_TYPE_P(result) != IS_ARRAY) {
-		array_init(return_value);
-	} else {
-		RETURN_ZVAL(result, 1, 0);
-	}
-}
-/* }}} */
-
-/* {{{ proto allWithKey*/
-PHP_METHOD(azalea_node_beauty_mysql_query, allWithKey)
-{
-	zend_string *fieldName;
-	zval *row, *result, *key;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &fieldName) == FAILURE) {
-		return;
-	}
-
-	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
-	array_init(return_value);
-	if (Z_TYPE_P(result) != IS_ARRAY) {
-		return;
-	}
-	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(result), row) {
-		key = zend_read_property(NULL, row, ZSTR_VAL(fieldName), ZSTR_LEN(fieldName), 1, NULL);
-		if (Z_TYPE_P(key) == IS_STRING) {
-			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), row);
-			zval_add_ref(row);
-		} else if (Z_TYPE_P(key) == IS_LONG) {
-			add_index_zval(return_value, Z_LVAL_P(key), row);
-			zval_add_ref(row);
-		}
-	} ZEND_HASH_FOREACH_END();
-}
-/* }}} */
-
 /* {{{ proto mysqlFindFieldName */
 static zend_string * mysqlFindFieldName(zval *row, zval *index)
 {
@@ -892,6 +851,58 @@ static zend_string * mysqlFindFieldName(zval *row, zval *index)
 		return NULL;
 	}
 	return zend_string_init(ZSTR_VAL(keyValue), ZSTR_LEN(keyValue), 0);
+}
+/* }}} */
+
+/* ----- Azalea\MysqlQueryResult ----- */
+/* {{{ proto all*/
+PHP_METHOD(azalea_node_beauty_mysql_query, all)
+{
+	zval *result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	if (Z_TYPE_P(result) != IS_ARRAY) {
+		array_init(return_value);
+	} else {
+		RETURN_ZVAL(result, 1, 0);
+	}
+}
+/* }}} */
+
+/* {{{ proto allWithKey*/
+PHP_METHOD(azalea_node_beauty_mysql_query, allWithKey)
+{
+	zval *keyField, *row, *result;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &keyField) == FAILURE) {
+		return;
+	}
+
+	if (Z_TYPE_P(keyField) != IS_STRING && Z_TYPE_P(keyField) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "expects parameter 1 to be string or numeric value");
+		return;
+	}
+
+	result = zend_read_property(mysqlResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	array_init(return_value);
+	if (Z_TYPE_P(result) != IS_ARRAY || !(row = zend_hash_index_find(Z_ARRVAL_P(result), 0))) {
+		return;
+	}
+	// find fieldName
+	zend_string *key = mysqlFindFieldName(row, keyField);
+	if (!key) {
+		php_error_docref(NULL, E_NOTICE, "key not found");
+		return;
+	}
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(result), row) {
+		keyField = zend_read_property(NULL, row, ZSTR_VAL(key), ZSTR_LEN(key), 1, NULL);
+		if (Z_TYPE_P(keyField) == IS_STRING) {
+			add_assoc_zval_ex(return_value, Z_STRVAL_P(keyField), Z_STRLEN_P(keyField), row);
+			zval_add_ref(row);
+		} else if (Z_TYPE_P(keyField) == IS_LONG) {
+			add_index_zval(return_value, Z_LVAL_P(keyField), row);
+			zval_add_ref(row);
+		}
+	} ZEND_HASH_FOREACH_END();
+	zend_string_release(key);
 }
 /* }}} */
 
