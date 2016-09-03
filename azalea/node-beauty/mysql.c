@@ -517,7 +517,7 @@ PHP_METHOD(azalea_node_beauty_mysql, query)
 			Z_TYPE_P(binds) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(binds)) > 0) {
 		sql = mysqlCompileBinds(sql, binds, 1);
 	} else {
-		sql = zend_string_init(ZSTR_VAL(sql), ZSTR_LEN(sql), 0);
+		zend_string_addref(sql);
 	}
 
 	mysqlQuery(getThis(), return_value, sql, throwsException);
@@ -847,7 +847,7 @@ static zend_string * mysqlFindFieldName(zval *row, zval *index)
 	if (!found) {
 		return NULL;
 	}
-	return zend_string_init(ZSTR_VAL(keyValue), ZSTR_LEN(keyValue), 0);
+	return zend_string_dup(keyValue, 0);
 }
 /* }}} */
 

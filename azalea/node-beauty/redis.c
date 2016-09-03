@@ -61,7 +61,7 @@ PHP_METHOD(azalea_node_beauty_redis, keys)
 	if (!key) {
 		key = zend_string_init(ZEND_STRL("*"), 0);
 	} else {
-		key = zend_string_init(ZSTR_VAL(key), ZSTR_LEN(key), 0);
+		zend_string_addref(key);
 	}
 
 	ZVAL_STRINGL(&arg1, "keys", sizeof("keys") - 1);
@@ -91,11 +91,10 @@ PHP_METHOD(azalea_node_beauty_redis, get)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|zS", &key, &def, &format) == FAILURE) {
 		return;
 	}
-	key = zend_string_init(ZSTR_VAL(key), ZSTR_LEN(key), 0);
 
 	ZVAL_STRINGL(&arg1, "value", sizeof("value") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("key"), key);
+	add_assoc_str_ex(&arg2, ZEND_STRL("key"), zend_string_copy(key));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);  // no need to release *key
@@ -143,7 +142,6 @@ PHP_METHOD(azalea_node_beauty_redis, set)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sz|lS", &key, &val, &lifetime, &format) == FAILURE) {
 		return;
 	}
-	key = zend_string_init(ZSTR_VAL(key), ZSTR_LEN(key), 0);
 	if (lifetime < 0) {
 		lifetime = 0;
 	}
@@ -182,7 +180,7 @@ PHP_METHOD(azalea_node_beauty_redis, set)
 	}
 	ZVAL_STRINGL(&arg1, "value", sizeof("value") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("key"), key);
+	add_assoc_str_ex(&arg2, ZEND_STRL("key"), zend_string_copy(key));
 	add_assoc_str_ex(&arg2, ZEND_STRL("value"), strValue);
 	add_assoc_long_ex(&arg2, ZEND_STRL("ex"), lifetime);
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "put", &ret, &arg1, &arg2);
@@ -244,11 +242,10 @@ PHP_METHOD(azalea_node_beauty_redis, incr)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|l", &key, &increment) == FAILURE) {
 		return;
 	}
-	key = zend_string_init(ZSTR_VAL(key), ZSTR_LEN(key), 0);
 
 	ZVAL_STRINGL(&arg1, "incr", sizeof("incr") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("key"), key);
+	add_assoc_str_ex(&arg2, ZEND_STRL("key"), zend_string_copy(key));
 	add_assoc_long_ex(&arg2, ZEND_STRL("increment"), increment);
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "put", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);

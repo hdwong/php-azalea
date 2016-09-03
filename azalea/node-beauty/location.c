@@ -95,9 +95,8 @@ PHP_METHOD(azalea_node_beauty_location, children)
 
 	ZVAL_STRINGL(&arg1, "children", sizeof("children") - 1);
 	if (code) {
-		code = zend_string_init(ZSTR_VAL(code), ZSTR_LEN(code), 0);
 		array_init(&arg2);
-		add_assoc_str_ex(&arg2, ZEND_STRL("id"), code);
+		add_assoc_str_ex(&arg2, ZEND_STRL("id"), zend_string_copy(code));
 		zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "get", &ret, &arg1, &arg2);
 		zval_ptr_dtor(&arg2);  // no need to release *code
 	} else {
@@ -124,7 +123,7 @@ PHP_METHOD(azalea_node_beauty_location, ip)
 		return;
 	}
 	if (ip) {
-		ip = zend_string_init(ZSTR_VAL(ip), ZSTR_LEN(ip), 0);
+		zend_string_addref(ip);
 	} else {
 		ip = zend_string_copy(azaleaRequestIp());
 	}
