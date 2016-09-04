@@ -25,6 +25,7 @@ if test "$PHP_AZALEA" != "no"; then
     azalea/node-beauty/mysql_sqlbuilder.c \
     azalea/node-beauty/redis.c \
     azalea/node-beauty/email.c \
+    azalea/node-beauty/sms.c \
     azalea/node-beauty/upyun.c \
     azalea/node-beauty/location.c \
   , $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
