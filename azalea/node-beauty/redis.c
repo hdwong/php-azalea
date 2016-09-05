@@ -166,14 +166,7 @@ PHP_METHOD(azalea_node_beauty_redis, set)
 	} else {
 		// default format is json
 		smart_str buf = {0};
-		zend_long options = 0, depth = PHP_JSON_PARSER_DEFAULT_DEPTH;
-		JSON_G(error_code) = PHP_JSON_ERROR_NONE;
-		JSON_G(encode_max_depth) = (int)depth;
-		php_json_encode(&buf, val, (int)options);
-		if (JSON_G(error_code) != PHP_JSON_ERROR_NONE && !(options & PHP_JSON_PARTIAL_OUTPUT_ON_ERROR)) {
-			smart_str_free(&buf);
-			RETURN_FALSE;
-		}
+		php_json_encode(&buf, val, 0);
 		smart_str_0(&buf);
 		strValue = zend_string_dup(buf.s, 0);
 		smart_str_free(&buf);
