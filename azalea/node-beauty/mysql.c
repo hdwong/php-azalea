@@ -122,16 +122,13 @@ PHP_METHOD(azalea_node_beauty_mysql, __init)
 PHP_METHOD(azalea_node_beauty_mysql_result, __construct) {}
 /* }}} */
 
-/* {{{ proto throwEmptyExecuteResult */
-static zval * throwEmptyExecuteResult(const char *error, size_t len)
+/* {{{ proto returnEmptyExecuteResult */
+static void returnEmptyExecuteResult(zval *instance, const char *error, size_t len)
 {
-	zval rv = {{0}}, *instance = &rv;
-
 	object_init_ex(instance, mysqlExecuteResultCe);
 	if (error) {
 		zend_update_property_stringl(mysqlResultCe, instance, ZEND_STRL("_error"), error, len);
 	}
-	return instance;
 }
 /* }}} */
 
@@ -554,7 +551,7 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 	// new ExecuteResult instance
 	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
 		// field set is empty
-		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
+		return returnEmptyExecuteResult(return_value, ZEND_STRL("Field set is empty"));
 	}
 	mysqlCompileKeyValues(&keyValues, set);
 
@@ -562,7 +559,7 @@ PHP_METHOD(azalea_node_beauty_mysql, insert)
 	values = zend_hash_index_find(Z_ARRVAL(keyValues), 1);
 	if (zend_hash_num_elements(Z_ARRVAL_P(keys)) == 0) {
 		// fieldName is empty
-		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field name is empty")), 0, 0);
+		return returnEmptyExecuteResult(return_value, ZEND_STRL("Field name is empty"));
 	}
 
 	// build sql
@@ -622,7 +619,7 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	// new ExecuteResult instance
 	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
 		// field set is empty
-		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
+		return returnEmptyExecuteResult(return_value, ZEND_STRL("Field set is empty"));
 	}
 	mysqlCompileKeyValues(&keyValues, set);
 
@@ -630,7 +627,7 @@ PHP_METHOD(azalea_node_beauty_mysql, replace)
 	values = zend_hash_index_find(Z_ARRVAL(keyValues), 1);
 	if (zend_hash_num_elements(Z_ARRVAL_P(keys)) == 0) {
 		// fieldName is empty
-		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field name is empty")), 0, 0);
+		return returnEmptyExecuteResult(return_value, ZEND_STRL("Field name is empty"));
 	}
 
 	// build sql
@@ -698,7 +695,7 @@ PHP_METHOD(azalea_node_beauty_mysql, update)
 	// new ExecuteResult instance
 	if (zend_hash_num_elements(Z_ARRVAL_P(set)) == 0) {
 		// field set is empty
-		RETURN_ZVAL(throwEmptyExecuteResult(ZEND_STRL("Field set is empty")), 0, 0);
+		return returnEmptyExecuteResult(return_value, ZEND_STRL("Field set is empty"));
 	}
 	// compileSet
 	array_init(&setValues);
