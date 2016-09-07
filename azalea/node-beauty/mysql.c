@@ -499,22 +499,34 @@ void mysqlQuery(zval *serviceInstance, zval *return_value, zend_string *sql, zen
 PHP_METHOD(azalea_node_beauty_mysql, query)
 {
 	zend_string *sql;
-	zval *binds = NULL;
+	zval *binds = NULL, array;
 	zend_bool throwsException = 1;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|zb", &sql, &binds, &throwsException) == FAILURE) {
 		return;
 	}
 
-	if (binds && Z_TYPE_P(binds) != IS_ARRAY && Z_TYPE_P(binds) != IS_NULL) {
+	if (binds && Z_TYPE_P(binds) > IS_ARRAY) {
 		php_error_docref(NULL, E_WARNING, "expects parameter 2 to be array");
 		binds = NULL;
+	}
+	// convert binds to array
+	if (binds && Z_TYPE_P(binds) != IS_ARRAY) {
+		array_init(&array);
+		add_next_index_zval(&array, binds);
+		binds = &array;
+	} else if (binds) {
+		zval_add_ref(binds);
 	}
 	if (binds && strchr(ZSTR_VAL(sql), '?') &&
 			Z_TYPE_P(binds) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(binds)) > 0) {
 		sql = mysqlCompileBinds(sql, binds, 1);
 	} else {
 		zend_string_addref(sql);
+	}
+
+	if (binds) {
+		zval_ptr_dtor(binds);
 	}
 
 	mysqlQuery(getThis(), return_value, sql, throwsException);
