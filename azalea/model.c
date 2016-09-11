@@ -18,6 +18,7 @@
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "ext/standard/php_filestat.h"	// for php_stat
+#include "ext/standard/php_var.h"
 
 zend_class_entry *azalea_model_ce;
 
@@ -117,9 +118,10 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
 	zend_string *modelName;
-	zend_string *name, *lcName, *lcClassName, *modelClass, *tstr;
+	zend_string *name, *lcName, *nodeBeautyLcName, *lcClassName, *modelClass, *tstr;
 	zend_class_entry *ce;
 	azalea_model_t *instance = NULL, rv = {{0}};
+	zval *conf, *field;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &modelName) == FAILURE) {
 		return;
@@ -137,48 +139,52 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
-		ce = azaleaServiceGetNodeBeautyClassEntry(lcName);  // try to load node-beauty models
-		do {
-			// load from extension
-			if (ce) {
-				zval *conf;
-				if ((conf = azaleaConfigSubFind("node-beauty", ZSTR_VAL(lcName)))) {
-					convert_to_boolean(conf);
-					if (Z_TYPE_P(conf) == IS_TRUE) {
-						break;
-					}
+		ce = NULL;
+		// try to load node-beauty models
+		conf = azaleaConfigFind("node-beauty");
+		if (conf && Z_TYPE_P(conf) == IS_ARRAY && (conf = zend_hash_find(Z_ARRVAL_P(conf), lcName)) &&
+				Z_TYPE_P(conf) == IS_STRING) {
+			if (!is_numeric_string(Z_STRVAL_P(conf), Z_STRLEN_P(conf), NULL, NULL, 0)) {
+				nodeBeautyLcName = zend_string_tolower(Z_STR_P(conf));
+			} else {
+				nodeBeautyLcName = zend_string_copy(lcName);
+			}
+			ce = azaleaServiceGetNodeBeautyClassEntry(nodeBeautyLcName);
+			zend_string_release(nodeBeautyLcName);
+		}
+		if (!ce) {
+			do {
+				// load model file
+				zval modelPath, exists;
+				ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
+				tstr = Z_STR(modelPath);
+				Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
+				zend_string_release(tstr);
+				// check file exists
+				php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
+				if (Z_TYPE(exists) == IS_FALSE) {
+					tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
+					throw404(tstr);
+					zend_string_release(tstr);
+					RETURN_FALSE;
 				}
-			}
-			// load model file
-			zval modelPath, exists;
-			ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
-			tstr = Z_STR(modelPath);
-			Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
-			zend_string_release(tstr);
-			// check file exists
-			php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
-			if (Z_TYPE(exists) == IS_FALSE) {
-				tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
-				throw404(tstr);
-				zend_string_release(tstr);
-				RETURN_FALSE;
-			}
-			// require model file
-			if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
-				tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
-				throw404(tstr);
-				zend_string_release(tstr);
-				RETURN_FALSE;
-			}
-			zval_ptr_dtor(&modelPath);
-			// check model class exists
-			if (!(ce = zend_hash_find_ptr(EG(class_table), lcClassName))) {
-				tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
-				throw404(tstr);
-				zend_string_release(tstr);
-				RETURN_FALSE;
-			}
-		} while (0);
+				// require model file
+				if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
+					tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
+					throw404(tstr);
+					zend_string_release(tstr);
+					RETURN_FALSE;
+				}
+				zval_ptr_dtor(&modelPath);
+				// check model class exists
+				if (!(ce = zend_hash_find_ptr(EG(class_table), lcClassName))) {
+					tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
+					throw404(tstr);
+					zend_string_release(tstr);
+					RETURN_FALSE;
+				}
+			} while (0);
+		}
 		// check super class name
 		if (!instanceof_function(ce, azalea_model_ce)) {
 			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
@@ -193,7 +199,6 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		}
 		// service model construct
 		if (instanceof_function(ce, azalea_service_ce)) {
-			zval *field;
 			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 1, NULL)) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				zend_string_release(lcName);

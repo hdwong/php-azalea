@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.0.5"
+#define PHP_AZALEA_VERSION "1.0.6"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
@@ -38,6 +38,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_REDIS_NAME "redis"
 #define NODE_BEAUTY_MONGO_NAME "mongo"
 #define NODE_BEAUTY_SOLR_NAME  "solr"
+#define NODE_BEAUTY_ES_NAME    "elasticsearch"
 #define NODE_BEAUTY_EMAIL_NAME "email"
 #define NODE_BEAUTY_SMS_NAME   "sms"
 #define NODE_BEAUTY_UPYUN_NAME "upyun"
@@ -47,6 +48,7 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_REDIS 1
 #define NODE_BEAUTY_MONGO 0
 #define NODE_BEAUTY_SOLR  0
+#define NODE_BEAUTY_ES    1
 #define NODE_BEAUTY_EMAIL 1
 #define NODE_BEAUTY_SMS   1
 #define NODE_BEAUTY_UPYUN 1

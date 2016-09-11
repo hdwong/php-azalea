@@ -184,6 +184,7 @@ PHP_MINFO_FUNCTION(azalea)
 	php_info_print_table_row(2, "node-beauty-redis", NODE_BEAUTY_REDIS ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-mongo", NODE_BEAUTY_MONGO ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-solr", NODE_BEAUTY_SOLR ? "yes" : "no");
+	php_info_print_table_row(2, "node-beauty-elasticsearch", NODE_BEAUTY_ES ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-location", NODE_BEAUTY_LOCATION ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-email", NODE_BEAUTY_EMAIL ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-sms", NODE_BEAUTY_SMS ? "yes" : "no");

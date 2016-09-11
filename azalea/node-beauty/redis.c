@@ -138,6 +138,7 @@ PHP_METHOD(azalea_node_beauty_redis, set)
 	zval *val;
 	zend_long lifetime = 0;
 	zval ret, arg1, arg2, *value;
+	smart_str buf = {0};
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sz|lS", &key, &val, &lifetime, &format) == FAILURE) {
 		return;
@@ -157,18 +158,16 @@ PHP_METHOD(azalea_node_beauty_redis, set)
 	} else if (format && !strncasecmp(ZSTR_VAL(format), "php", sizeof("php") - 1)) {
 		// php
 		php_serialize_data_t var_hash;
-		smart_str buf = {0};
 		PHP_VAR_SERIALIZE_INIT(var_hash);
 		php_var_serialize(&buf, val, &var_hash);
 		PHP_VAR_SERIALIZE_DESTROY(var_hash);
-		strValue = zend_string_dup(buf.s, 0);
+		strValue = zend_string_copy(buf.s);
 		smart_str_free(&buf);
 	} else {
 		// default format is json
-		smart_str buf = {0};
 		php_json_encode(&buf, val, 0);
 		smart_str_0(&buf);
-		strValue = zend_string_dup(buf.s, 0);
+		strValue = zend_string_copy(buf.s);
 		smart_str_free(&buf);
 	}
 	ZVAL_STRINGL(&arg1, "value", sizeof("value") - 1);

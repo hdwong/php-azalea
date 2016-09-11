@@ -26,6 +26,9 @@
 #if NODE_BEAUTY_SOLR
 #include "azalea/node-beauty/solr.h"
 #endif
+#if NODE_BEAUTY_ES
+#include "azalea/node-beauty/es.h"
+#endif
 #if NODE_BEAUTY_EMAIL
 #include "azalea/node-beauty/email.h"
 #endif
@@ -77,6 +80,9 @@ AZALEA_STARTUP_FUNCTION(service)
 #endif
 #if NODE_BEAUTY_SOLR
 	AZALEA_NODE_BEAUTY_STARTUP(solr);
+#endif
+#if NODE_BEAUTY_ES
+	AZALEA_NODE_BEAUTY_STARTUP(es);
 #endif
 #if NODE_BEAUTY_EMAIL
 	AZALEA_NODE_BEAUTY_STARTUP(email);
@@ -270,6 +276,11 @@ zend_class_entry * azaleaServiceGetNodeBeautyClassEntry(zend_string *name)
 #if NODE_BEAUTY_SOLR
 	if (0 == strncmp(NODE_BEAUTY_SOLR_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
 		return azalea_node_beauty_solr_ce;
+	}
+#endif
+#if NODE_BEAUTY_ES
+	if (0 == strncmp(NODE_BEAUTY_ES_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_node_beauty_es_ce;
 	}
 #endif
 #if NODE_BEAUTY_EMAIL
