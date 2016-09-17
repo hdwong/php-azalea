@@ -15,10 +15,11 @@
 #include "azalea/service.h"
 #include "azalea/exception.h"
 
-#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+#include "Zend/zend_smart_str.h"  // for smart_str_*
 #include "ext/standard/php_string.h"  // for php_trim function
 #include "ext/standard/php_filestat.h"	// for php_stat
-#include "ext/standard/php_var.h"
+#include "ext/standard/php_var.h"  // for php_var_serialize
+#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 
 #if EXT_MODEL_PINYIN
 #include "azalea/ext-models/pinyin.h"
@@ -138,7 +139,7 @@ static zend_class_entry * azaleaModelGetExtModelClassEntry(zend_string *name)
 void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 {
 	zend_string *modelName;
-	zend_string *name, *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *modelClass, *tstr;
+	zend_string *name, *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *cacheId, *modelClass, *tstr;
 	zend_class_entry *ce;
 	azalea_model_t *instance = NULL, rv = {{0}};
 	zval *conf, *field, *arg1 = NULL;
@@ -155,7 +156,19 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	zend_string_release(name);
 
 	lcClassName = zend_string_tolower(modelClass);
-	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), lcClassName);
+	if (arg1) {
+		php_serialize_data_t var_hash;
+		smart_str buf = {0};
+		PHP_VAR_SERIALIZE_INIT(var_hash);
+		php_var_serialize(&buf, arg1, &var_hash);
+		PHP_VAR_SERIALIZE_DESTROY(var_hash);
+		cacheId = strpprintf(0, "%s-%s", ZSTR_VAL(lcClassName), ZSTR_VAL(buf.s));
+		smart_str_free(&buf);
+	} else {
+		cacheId = zend_string_copy(lcClassName);
+	}
+
+	instance = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), cacheId);
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
@@ -260,11 +273,12 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);
 		}
 		// cache instance
-		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(lcClassName), ZSTR_LEN(lcClassName), instance);
+		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
 	}
 	zend_string_release(lcName);
 	zend_string_release(modelClass);
 	zend_string_release(lcClassName);
+	zend_string_release(cacheId);
 
 	RETURN_ZVAL(instance, 1, 0);
 }
