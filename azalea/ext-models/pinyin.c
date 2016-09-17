@@ -138,8 +138,9 @@ static char * getPinyinStr(int ascii)
 			"zhen", "zheng", "zhi", "zhong", "zhou", "zhu", "zhua", "zhuai", "zhuan", "zhuang", "zhui", "zhun", "zhuo", "zi",
 			"zong", "zou", "zu", "zuan", "zui", "zun", "zuo"
 	};
+	int i;
 
-	for (int i = (sizeof(pyvalues) / sizeof(pyvalues[0]) - 1); i >= 0; i--) {
+	for (i = (sizeof(pyvalues) / sizeof(pyvalues[0]) - 1); i >= 0; i--) {
 		if (pyvalues[i] <= ascii) {
 			return (char *) pystrs[i];
 		}
