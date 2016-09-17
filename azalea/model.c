@@ -141,9 +141,9 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	zend_string *name, *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *modelClass, *tstr;
 	zend_class_entry *ce;
 	azalea_model_t *instance = NULL, rv = {{0}};
-	zval *conf, *field;
+	zval *conf, *field, *arg1 = NULL;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S", &modelName) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &modelName, &arg1) == FAILURE) {
 		return;
 	}
 
@@ -257,7 +257,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		}
 		// call __init method
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
-			zend_call_method_with_0_params(instance, ce, NULL, "__init", NULL);
+			zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);
 		}
 		// cache instance
 		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(lcClassName), ZSTR_LEN(lcClassName), instance);
