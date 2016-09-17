@@ -189,6 +189,9 @@ PHP_MINFO_FUNCTION(azalea)
 	php_info_print_table_row(2, "node-beauty-email", NODE_BEAUTY_EMAIL ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-sms", NODE_BEAUTY_SMS ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-upyun", NODE_BEAUTY_UPYUN ? "yes" : "no");
+	// extend models
+	php_info_print_table_colspan_header(2, "Extend Model Support");
+	php_info_print_table_row(2, "pinyin", EXT_MODEL_PINYIN ? "yes" : "no");
 
 	php_info_print_table_end();
 

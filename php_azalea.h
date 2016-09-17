@@ -33,6 +33,8 @@ extern zend_module_entry azalea_module_entry;
 #define AZALEA_SHUTDOWN(module)				ZEND_MODULE_SHUTDOWN_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_NODE_BEAUTY_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_node_beauty_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_node_beauty_##module)
+#define AZALEA_EXT_MODEL_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_ext_model_##module)(INIT_FUNC_ARGS_PASSTHRU)
+#define AZALEA_EXT_MODEL_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_ext_model_##module)
 
 #define NODE_BEAUTY_MYSQL_NAME "mysql"
 #define NODE_BEAUTY_REDIS_NAME "redis"
@@ -53,6 +55,10 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_SMS   1
 #define NODE_BEAUTY_UPYUN 1
 #define NODE_BEAUTY_LOCATION 1
+
+#define EXT_MODEL_PINYIN_NAME "pinyin"
+
+#define EXT_MODEL_PINYIN  1
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)

@@ -29,5 +29,6 @@ if test "$PHP_AZALEA" != "no"; then
     azalea/node-beauty/es.c \
     azalea/node-beauty/upyun.c \
     azalea/node-beauty/location.c \
+    azalea/ext-models/pinyin.c \
   , $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi
