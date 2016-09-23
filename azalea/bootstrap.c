@@ -99,7 +99,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	azaleaLoadConfig(config);
 
 	zval *server, *field, *conf, iniValue;
-	zend_string *iniName;
+	zend_string *iniName, *tstr;
 
 	// load SERVER global variable
 	if (PG(auto_globals_jit)) {
@@ -158,7 +158,7 @@ PHP_METHOD(azalea_bootstrap, init)
 				break;
 			}
 			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REQUEST_URI"))) &&
-								Z_TYPE_P(field) == IS_STRING) {
+					Z_TYPE_P(field) == IS_STRING) {
 				if (strncasecmp(Z_STRVAL_P(field), "http://", sizeof("http://") - 1) &&
 						strncasecmp(Z_STRVAL_P(field), "https://", sizeof("https://") - 1)) {
 					// not http url
@@ -176,11 +176,23 @@ PHP_METHOD(azalea_bootstrap, init)
 					}
 					php_url_free(urlInfo);
 				}
+				// remove baseUri
+				if (0 == strncasecmp(ZSTR_VAL(uri), ZSTR_VAL(baseUri), ZSTR_LEN(baseUri))) {
+					tstr = uri;
+					uri = zend_string_init(ZSTR_VAL(uri) + ZSTR_LEN(baseUri), ZSTR_LEN(uri) - ZSTR_LEN(baseUri), 0);
+					zend_string_release(tstr);
+				}
 				break;
 			}
 			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("ORIG_PATH_INFO"))) &&
 					Z_TYPE_P(field) == IS_STRING) {
 				uri = zend_string_copy(Z_STR_P(field));
+				// remove baseUri
+				if (0 == strncasecmp(ZSTR_VAL(uri), ZSTR_VAL(baseUri), ZSTR_LEN(baseUri))) {
+					tstr = uri;
+					uri = zend_string_init(ZSTR_VAL(uri) + ZSTR_LEN(baseUri), ZSTR_LEN(uri) - ZSTR_LEN(baseUri), 0);
+					zend_string_release(tstr);
+				}
 				break;
 			}
 			// for CLI mode
