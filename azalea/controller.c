@@ -18,6 +18,7 @@
 #include "azalea/exception.h"
 
 #include "ext/standard/php_var.h"  // for php_var_dump
+#include "ext/standard/php_string.h"  // for php_trim
 
 zend_class_entry *azalea_controller_ce;
 
@@ -107,11 +108,12 @@ PHP_METHOD(azalea_controller, getView)
 	// environ
 	array_init(&data);
 	// environ.tpldir
+	tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
 	staticPath = azaleaConfigSubFind("path", "static");
 	if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
+		tstr = tpldir;
 		tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
-	} else {
-		tpldir = ZSTR_EMPTY_ALLOC();
+		zend_string_release(tstr);
 	}
 	themeName = azaleaConfigFind("theme");
 	if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
