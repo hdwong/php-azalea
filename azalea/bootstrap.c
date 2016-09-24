@@ -479,9 +479,9 @@ PHP_METHOD(azalea_bootstrap, getRoute)
 /* }}} */
 
 /* {{{ proto azaleaDispatch */
-zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret)
+zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zend_bool isCallback, zval *pathArgs, zval *ret)
 {
-	zend_string *name, *lcName, *controllerClass, *tstr;
+	zend_string *name, *lcName, *controllerClass, *controllerPath, *actionMethod = NULL, *tstr;
 	zend_class_entry *ce;
 	azalea_controller_t *instance = NULL, rv = {{0}};
 
@@ -507,7 +507,6 @@ zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, z
 		if (!(ce = zend_hash_find_ptr(EG(class_table), lcName))) {
 			// class not exists, load controller file
 			zval exists;
-			zend_string *controllerPath;
 			if (folderName) {
 				controllerPath = strpprintf(0, "%s%c%s%c%s.php", ZSTR_VAL(AZALEA_G(controllersPath)), DEFAULT_SLASH,
 						ZSTR_VAL(folderName), DEFAULT_SLASH, ZSTR_VAL(controllerName));
@@ -587,47 +586,72 @@ zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, z
 	zend_string_release(lcName);
 
 	// dynamic router, call __router method
-	zend_string *actionMethod = NULL;
 	name = zend_string_copy(actionName);
-	if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__router"))) {
-		zval newRouter, arg, *field;
-		array_init(&arg);
-		add_next_index_str(&arg, zend_string_copy(name));
-		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pathArgs), field) {
-			add_next_index_zval(&arg, field);
-			zval_add_ref(field);
-		} ZEND_HASH_FOREACH_END();
-		ZVAL_NULL(&newRouter);
-		zend_call_method_with_1_params(instance, ce, NULL, "__router", &newRouter, &arg);
-		zval_ptr_dtor(&arg);
-		if (Z_TYPE(newRouter) == IS_ARRAY) {
-			// only process callback OR action and arguments
-			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
-				actionMethod = zend_string_copy(Z_STR_P(field));
-			} else if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
-				zend_string_release(name);
-				name = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
+	if (!isCallback) {
+		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__router"))) {
+			zval newRouter, arg, newArguments, *field;
+			zend_string *newFolderName = NULL, *newControllerName = NULL;
+			array_init(&arg);
+			add_next_index_str(&arg, zend_string_copy(name));
+			ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(pathArgs), field) {
+				add_next_index_zval(&arg, field);
+				zval_add_ref(field);
+			} ZEND_HASH_FOREACH_END();
+			ZVAL_NULL(&newRouter);
+			zend_call_method_with_1_params(instance, ce, NULL, "__router", &newRouter, &arg);
+			zval_ptr_dtor(&arg);
+			if (Z_TYPE(newRouter) == IS_ARRAY) {
+				if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
+					actionMethod = zend_string_copy(Z_STR_P(field));
+				} else if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
+					zend_string_release(name);
+					name = zend_string_init(Z_STRVAL_P(field), Z_STRLEN_P(field), 0);
+				}
+				if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
+					zval_ptr_dtor(pathArgs);
+					array_init(&newArguments);
+					zend_hash_copy(Z_ARRVAL(newArguments), Z_ARRVAL_P(field), (copy_ctor_func_t) zval_add_ref);
+					pathArgs = &newArguments;
+				}
+				// check folder + controller is current?
+				if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("folder"))) && Z_TYPE_P(field) == IS_STRING) {
+					newFolderName = Z_STR_P(field);
+				} else if (folderName) {
+					newFolderName = folderName;
+				}
+				if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("controller"))) && Z_TYPE_P(field) == IS_STRING) {
+					newControllerName = Z_STR_P(field);
+				} else {
+					newControllerName = controllerName;
+				}
+				if (!!newFolderName != !!folderName || (newFolderName && folderName && strcasecmp(ZSTR_VAL(newFolderName), ZSTR_VAL(folderName))) ||
+						strcasecmp(ZSTR_VAL(newControllerName), ZSTR_VAL(controllerName))) {
+					// folder + controller is not current
+					zend_bool r = azaleaDispatchEx(newFolderName, newControllerName, actionMethod ? actionMethod : name, actionMethod ? 1 : 0, pathArgs, ret);
+					zval_ptr_dtor(&newRouter);
+					if (actionMethod) {
+						zend_string_release(actionMethod);
+					}
+					zend_string_release(name);
+					return r;
+				}
 			}
-			if ((field = zend_hash_str_find(Z_ARRVAL(newRouter), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
-				zval_ptr_dtor(pathArgs);
-				array_init(pathArgs);
-				zend_hash_copy(Z_ARRVAL_P(pathArgs), Z_ARRVAL_P(field), (copy_ctor_func_t) zval_add_ref);
+			zval_ptr_dtor(&newRouter);
+		}
+		// action method name
+		if (!actionMethod) {
+			if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+				// not WEB
+				actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(AZALEA_G(environ)));
+			} else {
+				// WEB
+				actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(name));
 			}
 		}
-		zval_ptr_dtor(&newRouter);
+		zend_string_release(name);
+	} else {
+		actionMethod = name;
 	}
-
-	// action method name
-	if (!actionMethod) {
-		if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
-			// not WEB
-			actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(AZALEA_G(environ)));
-		} else {
-			// WEB
-			actionMethod = strpprintf(0, "%sAction", ZSTR_VAL(name));
-		}
-	}
-	zend_string_release(name);
 
 	// check action method
 	lcName = zend_string_tolower(actionMethod);
@@ -643,11 +667,10 @@ zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, z
 	zend_string_release(actionMethod);
 
 	// execute action
-	zval functionName, *callArgs = NULL;
+	zval functionName, *callArgs = NULL, *arg;
 	uint32_t callArgsCount, current;
 	callArgsCount = zend_hash_num_elements(Z_ARRVAL_P(pathArgs));
 	if (callArgsCount) {
-		zval *arg;
 		callArgs = safe_emalloc(sizeof(zval), callArgsCount, 0);
 		for (current = 0; current < callArgsCount; ++current) {
 			arg = zend_hash_index_find(Z_ARRVAL_P(pathArgs), current);

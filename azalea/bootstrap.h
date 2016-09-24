@@ -14,6 +14,7 @@ PHP_METHOD(azalea_bootstrap, init);
 PHP_METHOD(azalea_bootstrap, run);
 PHP_METHOD(azalea_bootstrap, getRoute);
 
-zend_bool azaleaDispatch(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zval *pathArgs, zval *ret);
+#define azaleaDispatch(f,c,a,p,r) azaleaDispatchEx(f,c,a,0,p,r);
+zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName, zend_string *actionName, zend_bool isCallback, zval *pathArgs, zval *ret);
 
 #endif /* AZALEA_BOOTSTRAP_H_ */
