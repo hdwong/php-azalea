@@ -486,12 +486,12 @@ zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName,
 	azalea_controller_t *instance = NULL, rv = {{0}};
 
 	// controller name
-	name = zend_string_dup(controllerName, 0);
+	name = zend_strint_init(ZSTR_VAL(controllerName), ZSTR_LEN(controllerName), 0);
 	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
 	controllerClass = strpprintf(0, "%sController", ZSTR_VAL(name));
 	zend_string_release(name);
 	if (folderName) {
-		name = zend_string_dup(folderName, 0);
+		name = zend_string_init(ZSTR_VAL(folderName), ZSTR_LEN(folderName), 0);
 		ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);	// ucfirst
 		tstr = controllerClass;
 		controllerClass = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(controllerClass));
