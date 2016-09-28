@@ -3,4 +3,4 @@ A MVC framework extension for PHP written in C language, compatibled with [node-
 
 Welcome to join QQ group **576346826** to communicate with me.
 
-**For more detail, please redirect to http://www.jianshu.com/p/1353a12dc462**
+**For more detail, please redirect to http://azalea-doc.hdwong.com/**
