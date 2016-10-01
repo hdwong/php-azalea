@@ -19,8 +19,8 @@ zend_class_entry *azalea_ext_model_pinyin_ce;
 /* {{{ class LocationModel methods */
 static zend_function_entry azalea_ext_model_pinyin_methods[] = {
 	PHP_ME(azalea_ext_model_pinyin, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
-	PHP_ME(azalea_ext_model_pinyin, getFirst, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(azalea_ext_model_pinyin, getToken, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_pinyin, first, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_pinyin, token, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -100,8 +100,8 @@ static char * getPinyinStr(int ascii)
 			-10262, -10260, -10256, -10254
 	};
 	static const char * pystrs[] = {
-			"a", "ai", "an", "ang", "ao", "ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao",
-			"bie", "bin", "bing", "bo", "bu",
+			"a", "ai", "an", "ang", "ao",
+			"ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao", "bie", "bin", "bing", "bo", "bu",
 			"ca", "cai", "can", "cang", "cao", "ce", "ceng", "cha", "chai", "chan", "chang", "chao", "che", "chen", "cheng",
 			"chi", "chong", "chou", "chu", "chuai", "chuan", "chuang", "chui", "chun", "chuo", "ci", "cong", "cou", "cu",
 			"cuan", "cui", "cun", "cuo",
@@ -150,7 +150,7 @@ static char * getPinyinStr(int ascii)
 /* }}} */
 
 /* {{{ proto getFirst */
-PHP_METHOD(azalea_ext_model_pinyin, getFirst)
+PHP_METHOD(azalea_ext_model_pinyin, first)
 {
 	zend_string *str, *gbk;
 	char *p, *pinyin;
@@ -176,7 +176,7 @@ PHP_METHOD(azalea_ext_model_pinyin, getFirst)
 		// 双字节处理
 		ascii = *p * 256 + *(p + 1) + 256;
 		if (ascii < 0 && (pinyin = getPinyinStr(ascii))) {
-			RETVAL_STRINGL(pinyin, 1);
+			RETVAL_STRING(pinyin);
 		} else {
 			RETVAL_STRINGL("#", 1);
 		}
@@ -187,7 +187,7 @@ PHP_METHOD(azalea_ext_model_pinyin, getFirst)
 /* }}} */
 
 /* {{{ proto getToken */
-PHP_METHOD(azalea_ext_model_pinyin, getToken)
+PHP_METHOD(azalea_ext_model_pinyin, token)
 {
 	zend_string *str, *gbk;
 	char *p, *end, *ret, *pinyin;
@@ -208,6 +208,7 @@ PHP_METHOD(azalea_ext_model_pinyin, getToken)
 			// 非汉字处理
 			if ((*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z')) {
 				ret[offset] = *p;
+				zend_str_tolower(ret + offset, 1);
 				++offset;
 				isLine = 0;
 			} else if (!isLine) {
