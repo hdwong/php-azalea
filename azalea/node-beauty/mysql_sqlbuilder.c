@@ -117,13 +117,17 @@ static zend_string * mysqlGetType(zend_bool whereGroupPrefix, zval *pRec, const 
 	zend_string *type;
 	// check in whereGroupPrefix
 	if (whereGroupPrefix == 0 || zend_hash_num_elements(Z_ARRVAL_P(pRec)) == 0) {
-		type = ZSTR_EMPTY_ALLOC();
+		if (strstr(pType, "NOT")) {
+			type = zend_string_init(ZEND_STRL("NOT "), 0);
+		} else {
+			type = ZSTR_EMPTY_ALLOC();
+		}
 	} else {
 		// get type [AND, OR]
 		if (pType && 0 == strcasecmp("OR", pType)) {
 			type = zend_string_init(ZEND_STRL("OR "), 0);
-		} else if (pType && 0 == strcasecmp("NOT", pType)) {
-			type = zend_string_init(ZEND_STRL("NOT "), 0);
+		} else if (pType && 0 == strcasecmp("AND NOT", pType)) {
+			type = zend_string_init(ZEND_STRL("AND NOT "), 0);
 		} else if (pType && 0 == strcasecmp("OR NOT", pType)) {
 			type = zend_string_init(ZEND_STRL("OR NOT "), 0);
 		} else {
@@ -374,7 +378,7 @@ PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, orWhereGroupStart)
 /* {{{ proto notWhereGroupStart */
 PHP_METHOD(azalea_node_beauty_mysql_sqlbuilder, notWhereGroupStart)
 {
-	mysqlWhereGroupStart(getThis(), "NOT");
+	mysqlWhereGroupStart(getThis(), "AND NOT");
 	RETURN_ZVAL(getThis(), 1, 0);
 }
 /* }}} */
