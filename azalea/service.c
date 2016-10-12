@@ -105,8 +105,14 @@ AZALEA_STARTUP_FUNCTION(service)
 static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long method, zend_string *serviceUrl, zval *arguments,
 		zval *reqHeaders, zend_bool returnRawContent, zval *return_value)
 {
-	// curl open once
+	zend_bool error = 1;
+	zend_long retryCount = 0;
+	zval *retry;
+	zend_string *serviceMethod, *tstr;
+	zend_long statusCode;
 	void *cp;
+
+	// curl open once
 	if (!AZALEA_G(curlHandle)) {
 		cp = azaleaCurlOpen();
 		if (!cp) {
@@ -127,7 +133,6 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 	} else {
 		serviceUrl = zend_string_init(ZSTR_VAL(serviceUrl), ZSTR_LEN(serviceUrl), 0);
 	}
-	zend_string *serviceMethod;
 	switch (method) {
 		case AZALEA_SERVICE_METHOD_GET:
 			serviceMethod = zend_string_init(ZEND_STRL("GET"), 0);
@@ -146,9 +151,7 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 	}
 
 	// curl exec
-	zend_bool error = 1;
-	zend_long retryCount = 0;
-	zval *retry = azaleaConfigSubFind("service", "retry");
+	retry = azaleaConfigSubFind("service", "retry");
 	if (retry) {
 		convert_to_long(retry);
 		if (Z_LVAL_P(retry) > 0) {
@@ -156,14 +159,16 @@ static inline void azaleaServiceRequest(azalea_model_t *instance, zend_long meth
 		}
 	}
 	do {
-		zend_long statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
+		statusCode = azaleaCurlExec(cp, method, &serviceUrl, &arguments, reqHeaders, return_value);
 		if (statusCode == 0) {
 			if (retryCount-- > 0) {
 				// retry
 				continue;
 			}
 			AZALEA_G(hasServiceException) = 1;
-			throw500Str(ZEND_STRL("Service response is invalid."), serviceMethod, serviceUrl, arguments);
+			tstr = strpprintf(0, "Service [%s] response is invalid.", ZSTR_VAL(serviceUrl));
+			throw500Str(ZSTR_VAL(tstr), ZSTR_LEN(tstr), serviceMethod, serviceUrl, arguments);
+			zend_string_release(tstr);
 			break;
 		}
 		if (statusCode == 200) {
