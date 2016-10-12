@@ -70,8 +70,14 @@ zend_string * azaleaGetUri(void)
 zend_string * azaleaGetRequestUri(void)
 {
 	zval *field;
+	zend_string *p = NULL;
 	field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REQUEST_URI"));
-	return field ? zend_string_copy(Z_STR_P(field)) : NULL;
+	if (field) {
+		p = zend_string_copy(Z_STR_P(field));
+	} else if (AZALEA_G(baseUri) && AZALEA_G(uri)) {
+		p = strpprintf(0, "%s%s", ZSTR_VAL(AZALEA_G(baseUri)), ZSTR_VAL(AZALEA_G(uri)));
+	}
+	return p;
 }
 /* }}} */
 

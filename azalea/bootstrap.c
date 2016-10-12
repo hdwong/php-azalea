@@ -140,16 +140,19 @@ PHP_METHOD(azalea_bootstrap, init)
 			baseUri = zend_string_dup(Z_STR_P(field), 0);
 			// dirname
 			size_t len;
-			len = ZSTR_LEN(baseUri) = zend_dirname(ZSTR_VAL(baseUri), ZSTR_LEN(baseUri));
+			len = zend_dirname(ZSTR_VAL(baseUri), ZSTR_LEN(baseUri));
+			tstr = baseUri;
 			if (len > 1) {
 				// add '/'
-				zend_string *t = zend_string_alloc(len + 1, 0);
-				memcpy(ZSTR_VAL(t), ZSTR_VAL(baseUri), len);
-				ZSTR_VAL(t)[len] = DEFAULT_SLASH;
-				ZSTR_VAL(t)[len + 1] = '\0';
-				zend_string_release(baseUri);
-				baseUri = t;
+				baseUri = zend_string_alloc(len + 1, 0);
+				memcpy(ZSTR_VAL(baseUri), ZSTR_VAL(tstr), len);
+				ZSTR_VAL(baseUri)[len] = DEFAULT_SLASH;
+				ZSTR_VAL(baseUri)[len + 1] = '\0';
+			} else {
+				// empty
+				baseUri = zend_string_init(ZEND_STRL("/"), 0);
 			}
+			zend_string_release(tstr);
 		}
 		do {
 			if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("PATH_INFO"))) &&
