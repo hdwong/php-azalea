@@ -297,8 +297,50 @@ PHP_METHOD(azalea_bootstrap, run)
 	zend_string *uri, *controllersPath, *modelsPath, *viewsPath, *basePath, *tstr;
 	zval *conf, *field, *paths;
 
-	// request uri & get paths
+	// request uri
 	uri = AZALEA_G(uri);
+	// static router
+	field = azaleaConfigFind("router");
+	if (ZSTR_LEN(uri) > 0 && field && Z_TYPE_P(field) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(field)) > 0) {
+		// check static router
+		zend_string *key, *tstr;
+		zval *pData;
+		char *p;
+		size_t len = ZSTR_LEN(uri);
+		zend_bool matched = 0;
+		do {
+			tstr = zend_string_init(ZSTR_VAL(uri), len, 0);
+			ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(field), key, pData) {
+				if (0 == strcasecmp(ZSTR_VAL(key), ZSTR_VAL(tstr))) {
+					// first match
+					matched = 1;
+					break;
+				}
+			} ZEND_HASH_FOREACH_END();
+			zend_string_release(tstr);
+			if (matched) {
+				// update uri
+				if (len == ZSTR_LEN(uri)) {
+					uri = zend_string_copy(Z_STR_P(pData));
+				} else {
+					uri = strpprintf(0, "%s%s", Z_STRVAL_P(pData), ZSTR_VAL(uri) + len);
+				}
+				zend_string_release(AZALEA_G(uri));
+				AZALEA_G(uri) = uri;
+				break;
+			}
+			// check closest path length
+			do {
+				--len;
+				p = ZSTR_VAL(uri) + len;
+				if (*p == '/') {
+					break;
+				}
+			} while (p > ZSTR_VAL(uri));
+		} while (len);
+	}
+
+	// get paths
 	paths = &AZALEA_G(paths);
 	if (ZSTR_LEN(uri)) {
 		zend_string *delim = zend_string_init(ZEND_STRL("/"), 0);
