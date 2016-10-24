@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #else
 #include <sys/time.h>
+#endif
 
 #include "ext/standard/php_var.h"	// for php_var_dump function
 #include "ext/standard/php_string.h"  // for php_trim function
