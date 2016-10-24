@@ -20,8 +20,6 @@
 #include <sys/time.h>
 #else
 #include <sys/time.h>
-#endif
-#define MICRO_IN_SEC 1000000.00
 
 #include "ext/standard/php_var.h"	// for php_var_dump function
 #include "ext/standard/php_string.h"  // for php_trim function
@@ -262,13 +260,23 @@ zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
 /* }}} */
 
 /* {{{ proto azaleaSetHeaderStr */
-void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode)
+int azaleaSetHeaderStr(char *line, size_t len)
+{
+	sapi_header_line ctr = {0};
+	ctr.line = line;
+	ctr.line_len = len;
+	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto azaleaSetHeaderStrWithCode */
+int azaleaSetHeaderStrWithCode(char *line, size_t len, zend_long httpCode)
 {
 	sapi_header_line ctr = {0};
 	ctr.line = line;
 	ctr.line_len = len;
 	ctr.response_code = httpCode;
-	sapi_header_op(SAPI_HEADER_REPLACE, &ctr);
+	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
 }
 /* }}} */
 
@@ -277,8 +285,8 @@ double azaleaGetMicrotime()
 {
 	struct timeval tp = {0};
 	if (gettimeofday(&tp, NULL)) {
-		return 0;
+		return (double)time(0);
 	}
-	return (double)(tp.tv_sec + tp.tv_usec / MICRO_IN_SEC);
+	return (double)(tp.tv_sec + tp.tv_usec / 1000000.00);
 }
 /* }}} */

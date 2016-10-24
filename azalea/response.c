@@ -25,6 +25,7 @@ static zend_function_entry azalea_response_methods[] = {
 	PHP_ME(azalea_response, gotoUrl, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, reload, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, gotoRoute, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_response, setHeader, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setCookie, NULL, ZEND_ACC_PUBLIC)
@@ -71,7 +72,7 @@ PHP_METHOD(azalea_response, gotoUrl)
 	}
 	zend_string *ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
 	zend_string_release(url);
-	azaleaSetHeader(ctrLine, httpCode);
+	azaleaSetHeaderStrWithCode(ZSTR_VAL(ctrLine), ZSTR_LEN(ctrLine), httpCode);
 	zend_string_release(ctrLine);
 	// exit()
 	zend_bailout();
@@ -91,7 +92,7 @@ PHP_METHOD(azalea_response, reload)
 		return;
 	}
 	zend_string *ctrLine = strpprintf(0, "Location: %s", Z_STRVAL_P(field));
-	azaleaSetHeader(ctrLine, 302);
+	azaleaSetHeaderStrWithCode(ZSTR_VAL(ctrLine), ZSTR_LEN(ctrLine), 302);
 	zend_string_release(ctrLine);
 	// exit()
 	zend_bailout();
@@ -156,6 +157,27 @@ PHP_METHOD(azalea_response, gotoRoute)
 	zend_string_release(controllerName);
 	zend_string_release(actionName);
 	zval_ptr_dtor(&pathArgs);
+}
+/* }}} */
+
+/* {{{ proto string setHeader(string key, string value) */
+PHP_METHOD(azalea_response, setHeader)
+{
+	zend_string *header, *value;
+	int result;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|S", &header, &value) == FAILURE) {
+		return;
+	}
+
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+		// not WEB
+		return;
+	}
+	zend_string *ctrLine = strpprintf(0, "%s: %s", ZSTR_VAL(header), ZSTR_VAL(value));
+	result = azaleaSetHeaderStr(ZSTR_VAL(ctrLine), ZSTR_LEN(ctrLine));
+	zend_string_release(ctrLine);
+	RETURN_BOOL(result);
 }
 /* }}} */
 

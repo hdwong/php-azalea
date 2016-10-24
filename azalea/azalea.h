@@ -21,7 +21,7 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
 zend_string * azaleaRequestIp();
 zval * azaleaGlobalsFind(uint type, zend_string *name);
 zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
-void azaleaSetHeaderStr(char *line, size_t len, zend_long httpCode);
-#define azaleaSetHeader(string, httpCode) azaleaSetHeaderStr((string)->val, (string)->len, httpCode)
+int azaleaSetHeaderStr(char *line, size_t len);
+int azaleaSetHeaderStrWithCode(char *line, size_t len, zend_long httpCode);
 
 #endif

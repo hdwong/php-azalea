@@ -13,6 +13,7 @@ PHP_METHOD(azalea_response, __construct);
 PHP_METHOD(azalea_response, gotoUrl);
 PHP_METHOD(azalea_response, reload);
 PHP_METHOD(azalea_response, gotoRoute);
+PHP_METHOD(azalea_response, setHeader);
 PHP_METHOD(azalea_response, getBody);
 PHP_METHOD(azalea_response, setBody);
 PHP_METHOD(azalea_response, setCookie);
