@@ -139,17 +139,123 @@ static int checkValidVarName(char *varName, int len) /* {{{ */
 }
 /* }}} */
 
+/* {{{ proto buildSymbolTable */
+static zend_array * buildSymbolTable()
+{
+	zend_array *symbolTable;
+	symbolTable = emalloc(sizeof(zend_array));
+	zend_hash_init(symbolTable, 8, NULL, ZVAL_PTR_DTOR, 0);
+	zend_hash_real_init(symbolTable, 0);
+
+	return symbolTable;
+}
+/* }}} */
+
+/* {{{ proto appendToSymbolTable */
+static void appendToSymbolTable(zend_array *symbolTable, zval *vars)
+{
+	zend_string *key;
+	zval *pData;
+#if PHP_VERSION_ID < 70100
+	zend_class_entry *scope = EG(scope);
+#else
+	zend_class_entry *scope = zend_get_executed_scope();
+#endif
+
+	if (symbolTable && vars && Z_TYPE_P(vars) == IS_ARRAY) {
+		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(vars), key, pData) {
+			if (!key) {
+				continue;
+			}
+			if (zend_string_equals_literal(key, "GLOBALS")) {
+				continue;
+			}
+			if (zend_string_equals_literal(key, "this") && scope && ZSTR_LEN(scope->name) != 0) {
+				continue;
+			}
+			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
+					EXPECTED(zend_hash_add_new(symbolTable, key, pData))) {
+				Z_TRY_ADDREF_P(pData);
+			}
+		} ZEND_HASH_FOREACH_END();
+	}
+}
+/* }}} */
+
+/* {{{ proto destroySymbolTable */
+static void destroySymbolTable(zend_array *symbolTable)
+{
+	zend_array_destroy(symbolTable);
+}
+/* }}} */
+
 /* {{{ proto __construct */
 PHP_METHOD(azalea_view, __construct) {}
+/* }}} */
+
+/* {{{ int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, zend_string *filename, zval *ret) */
+static int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, zend_string *filename, zval *ret)
+{
+	int status = 0;
+	zend_file_handle file_handle;
+	zend_op_array *op_array;
+	zend_execute_data *call;
+	zval result;
+	char realpath[MAXPATHLEN];
+
+	if (!VCWD_REALPATH(ZSTR_VAL(filename), realpath)) {
+		return 0;
+	}
+
+	file_handle.filename = realpath;
+	file_handle.free_filename = 0;
+	file_handle.type = ZEND_HANDLE_FILENAME;
+	file_handle.opened_path = NULL;
+	file_handle.handle.fp = NULL;
+	op_array = zend_compile_file(&file_handle, ZEND_INCLUDE);
+
+	if (op_array) {
+		if (file_handle.handle.stream.handle) {
+			if (!file_handle.opened_path) {
+				file_handle.opened_path = zend_string_copy(filename);
+			}
+			zend_hash_add_empty_element(&EG(included_files), file_handle.opened_path);
+		}
+		// execute template file
+
+		ZVAL_UNDEF(&result);
+		op_array->scope = Z_OBJCE_P(instance);
+		call = zend_vm_stack_push_call_frame(ZEND_CALL_NESTED_CODE
+#if PHP_VERSION_ID >= 70100
+				| ZEND_CALL_HAS_SYMBOL_TABLE
+#endif
+				,
+				(zend_function*)op_array, 0, op_array->scope, Z_OBJ_P(instance));
+		call->symbol_table = symbolTable;
+		zend_init_execute_data(call, op_array, &result);
+		ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
+		zend_execute_ex(call);
+		zend_vm_stack_free_call_frame(call);
+		zval_ptr_dtor(&result);
+		if (EXPECTED(EG(exception) == NULL)) {
+			status = 1;
+		}
+		destroy_op_array(op_array);
+		efree_size(op_array, sizeof(zend_op_array));
+	}
+	zend_destroy_file_handle(&file_handle);
+
+	return status;
+}
 /* }}} */
 
 /* {{{ proto string render(string $tplname, array $data = null) */
 PHP_METHOD(azalea_view, render)
 {
-	zend_string *tplname, *key, *viewsPath, *tplPath;
-	zval *vars = NULL, exists, *pVal, *environVars, *data;
+	zend_string *tplname, *viewsPath, *tplPath;
+	zval *vars = NULL, exists, *environVars;
 	azalea_view_t *instance = getThis();
-	zend_class_entry *oldScope;
+	zend_array *symbolTable;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|z", &tplname, &vars) == FAILURE) {
 		return;
@@ -166,60 +272,39 @@ PHP_METHOD(azalea_view, render)
 		RETURN_FALSE;
 	}
 
+	// build a new symbol table
+	symbolTable = buildSymbolTable();
+
 	// extract environ vars
 	if ((environVars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_environ"), 0, NULL)) &&
 			Z_TYPE_P(environVars) == IS_ARRAY) {
-		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(environVars), key, pVal) {
-			if (!key) {
-				continue;
-			}
-			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
-					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
-				Z_TRY_ADDREF_P(pVal);
-			}
-		} ZEND_HASH_FOREACH_END();
+		appendToSymbolTable(symbolTable, environVars);
 	}
 	// extract vars
 	if (vars) {
 		assignToDataHt(instance, Z_ARRVAL_P(vars));
 	}
-	oldScope = EG(scope);
-	EG(scope) = azalea_view_ce;
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
-			Z_TYPE_P(data) == IS_ARRAY) {
-		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(data), key, pVal) {
-			if (!key) {
-				continue;
-			}
-			if (zend_string_equals_literal(key, "GLOBALS")) {
-				continue;
-			}
-			if (zend_string_equals_literal(key, "this") && EG(scope) && ZSTR_LEN(EG(scope)->name) != 0) {
-				continue;
-			}
-			if (checkValidVarName(ZSTR_VAL(key), ZSTR_LEN(key)) &&
-					EXPECTED(zend_set_local_var(key, pVal, 1) == SUCCESS)) {
-				Z_TRY_ADDREF_P(pVal);
-			}
-		} ZEND_HASH_FOREACH_END();
+	if ((vars = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(vars) == IS_ARRAY) {
+		appendToSymbolTable(symbolTable, vars);
 	}
 	// start render
 	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
 	azaleaRegisterTemplateFunctions();
-	if (!azaleaRequire(ZSTR_VAL(tplPath), 0)) {
+	if (!renderTemplateFile(instance, symbolTable, tplPath, NULL)) {
 		azaleaUnregisterTemplateFunctions(0);
-		zend_string *message = strpprintf(0, "Failed to open template file `%s.phtml`.", ZSTR_VAL(tplname));
+		destroySymbolTable(symbolTable);
+		zend_string *message = strpprintf(0, "Failed to render template file `%s.phtml`.", ZSTR_VAL(tplname));
 		throw404(message);
 		zend_string_release(tplPath);
 		zend_string_release(message);
-		EG(scope) = oldScope;
 		RETURN_FALSE;
 	}
 	azaleaUnregisterTemplateFunctions(0);
+	destroySymbolTable(symbolTable);
 	php_output_get_contents(return_value);
 	php_output_discard();
 	zend_string_release(tplPath);
-	EG(scope) = oldScope;
 }
 /* }}} */
 

@@ -60,7 +60,6 @@ int azaleaRequire(char *filename, zend_bool once)
 	zend_file_handle file_handle;
 	zend_op_array *op_array;
 	zend_string *path;
-
 	char realpath[MAXPATHLEN];
 
 	if (!VCWD_REALPATH(filename, realpath)) {
