@@ -26,6 +26,7 @@ static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, append, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_view, clean, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -49,7 +50,8 @@ AZALEA_STARTUP_FUNCTION(view)
 static void assignToData(azalea_view_t *instance, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(data) == IS_ARRAY) {
 		if (zend_hash_update(Z_ARRVAL_P(data), name, value) != NULL) {
 			Z_TRY_ADDREF_P(value);
 		}
@@ -61,7 +63,8 @@ static void assignToData(azalea_view_t *instance, zend_string *name, zval *value
 static void assignToDataHt(azalea_view_t *instance, zend_array *ht)
 {
 	zval *data;
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_hash_copy(Z_ARRVAL_P(data), ht, (copy_ctor_func_t) zval_add_ref);
 	}
 }
@@ -71,7 +74,8 @@ static void assignToDataHt(azalea_view_t *instance, zend_array *ht)
 static void appendToData(azalea_view_t *instance, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL))) {
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_array *htData = Z_ARRVAL_P(data);
 		zval dummy, *field = zend_hash_find(htData, name);
 		if (field) {
@@ -258,5 +262,17 @@ PHP_METHOD(azalea_view, append)
 		php_error_docref(NULL, E_WARNING, "The second argument must be a stirng or an array");
 	}
 	RETURN_ZVAL(instance, 1, 0);
+}
+/* }}} */
+
+/* {{{ proto mixed clean() */
+PHP_METHOD(azalea_view, clean)
+{
+	azalea_view_t *instance = getThis();
+	zval *data;
+	if ((data = zend_read_property(azalea_view_ce, instance, ZEND_STRL("_data"), 0, NULL)) &&
+			Z_TYPE_P(data) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(data))) {
+		zend_hash_clean(Z_ARRVAL_P(data));
+	}
 }
 /* }}} */
