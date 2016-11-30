@@ -79,22 +79,22 @@ AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(mysql)
 	zend_class_entry ce, resultCe, queryResultCe, executeResultCe;
 
 	// MysqlModel
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(MysqlModel), azalea_node_beauty_mysql_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBMysqlModel), azalea_node_beauty_mysql_methods);
 	azalea_node_beauty_mysql_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_mysql_ce->ce_flags |= ZEND_ACC_FINAL;
 	zend_declare_property_null(azalea_node_beauty_mysql_ce, ZEND_STRL("_queries"), ZEND_ACC_PRIVATE);
 	// MysqlResult
-	INIT_CLASS_ENTRY(resultCe, AZALEA_NS_NAME(MysqlResult), azalea_node_beauty_mysql_result_methods);
+	INIT_CLASS_ENTRY(resultCe, AZALEA_NS_NAME(NBMysqlResult), azalea_node_beauty_mysql_result_methods);
 	mysqlResultCe = zend_register_internal_class(&resultCe);
 	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_error"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_sql"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_timer"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_result"), ZEND_ACC_PRIVATE);
 	// MysqlQueryResult
-	INIT_CLASS_ENTRY(queryResultCe, AZALEA_NS_NAME(MysqlQueryResult), azalea_node_beauty_mysql_query_methods);
+	INIT_CLASS_ENTRY(queryResultCe, AZALEA_NS_NAME(NBMysqlQueryResult), azalea_node_beauty_mysql_query_methods);
 	mysqlQueryResultCe = zend_register_internal_class_ex(&queryResultCe, mysqlResultCe);
 	// MysqlExecuteResult
-	INIT_CLASS_ENTRY(executeResultCe, AZALEA_NS_NAME(MysqlExecuteResult), azalea_node_beauty_mysql_execute_methods);
+	INIT_CLASS_ENTRY(executeResultCe, AZALEA_NS_NAME(NBMysqlExecuteResult), azalea_node_beauty_mysql_execute_methods);
 	mysqlExecuteResultCe = zend_register_internal_class_ex(&executeResultCe, mysqlResultCe);
 
 	mysqlSqlBuilderStartup();

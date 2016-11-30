@@ -37,7 +37,7 @@ static zend_function_entry azalea_node_beauty_redis_methods[] = {
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(redis)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(RedisModel), azalea_node_beauty_redis_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBRedisModel), azalea_node_beauty_redis_methods);
 	azalea_node_beauty_redis_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_redis_ce->ce_flags |= ZEND_ACC_FINAL;
 

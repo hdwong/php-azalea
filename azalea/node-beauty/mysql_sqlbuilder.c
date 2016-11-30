@@ -50,7 +50,7 @@ void mysqlSqlBuilderStartup()
 {
 	zend_class_entry ce;
 
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(MysqlSqlBuilder), azalea_node_beauty_mysql_sqlbuilder_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBMysqlSqlBuilder), azalea_node_beauty_mysql_sqlbuilder_methods);
 	mysqlSqlBuilderCe = zend_register_internal_class(&ce);
 	mysqlSqlBuilderCe->ce_flags |= ZEND_ACC_FINAL;
 	zend_declare_property_null(mysqlSqlBuilderCe, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);

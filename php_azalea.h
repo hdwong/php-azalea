@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.0.10"
+#define PHP_AZALEA_VERSION "1.1.0"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
@@ -36,15 +36,15 @@ extern zend_module_entry azalea_module_entry;
 #define AZALEA_EXT_MODEL_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_ext_model_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_EXT_MODEL_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_ext_model_##module)
 
-#define NODE_BEAUTY_MYSQL_NAME "mysql"
-#define NODE_BEAUTY_REDIS_NAME "redis"
-#define NODE_BEAUTY_MONGO_NAME "mongo"
-#define NODE_BEAUTY_SOLR_NAME  "solr"
-#define NODE_BEAUTY_ES_NAME    "elasticsearch"
-#define NODE_BEAUTY_EMAIL_NAME "email"
-#define NODE_BEAUTY_SMS_NAME   "sms"
-#define NODE_BEAUTY_UPYUN_NAME "upyun"
-#define NODE_BEAUTY_LOCATION_NAME "location"
+#define NODE_BEAUTY_MYSQL_NAME "nb-mysql"
+#define NODE_BEAUTY_REDIS_NAME "nb-redis"
+#define NODE_BEAUTY_MONGO_NAME "nb-mongo"
+#define NODE_BEAUTY_SOLR_NAME  "nb-solr"
+#define NODE_BEAUTY_ES_NAME    "nb-elasticsearch"
+#define NODE_BEAUTY_EMAIL_NAME "nb-email"
+#define NODE_BEAUTY_SMS_NAME   "nb-sms"
+#define NODE_BEAUTY_UPYUN_NAME "nb-upyun"
+#define NODE_BEAUTY_LOCATION_NAME "nb-location"
 
 #define NODE_BEAUTY_MYSQL 1
 #define NODE_BEAUTY_REDIS 1
@@ -57,8 +57,12 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_LOCATION 1
 
 #define EXT_MODEL_PINYIN_NAME "pinyin"
+#define EXT_MODEL_REDIS_NAME  "redis"
+#define EXT_MODEL_MYSQL_NAME  "mysql"
 
 #define EXT_MODEL_PINYIN  1
+#define EXT_MODEL_MYSQL   1
+#define EXT_MODEL_REDIS   0
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)

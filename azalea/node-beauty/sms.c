@@ -29,7 +29,7 @@ static zend_function_entry azalea_node_beauty_sms_methods[] = {
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(sms)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(SmsModel), azalea_node_beauty_sms_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBSmsModel), azalea_node_beauty_sms_methods);
 	azalea_node_beauty_sms_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_sms_ce->ce_flags |= ZEND_ACC_FINAL;
 

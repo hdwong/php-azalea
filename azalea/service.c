@@ -251,11 +251,11 @@ PHP_METHOD(azalea_service, request)
 	zval *arguments = NULL, *reqHeaders = NULL;
 	zend_bool returnRawContent = 0;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "lS|azb", &method, &serviceUrl, &arguments, &reqHeaders, &returnRawContent) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "lS|zzb", &method, &serviceUrl, &arguments, &reqHeaders, &returnRawContent) == FAILURE) {
 		return;
 	}
 
-	azaleaServiceRequest(getThis(), method, serviceUrl, arguments, Z_TYPE_P(reqHeaders) == IS_ARRAY ? reqHeaders : NULL,
+	azaleaServiceRequest(getThis(), method, serviceUrl, arguments, reqHeaders && Z_TYPE_P(reqHeaders) == IS_ARRAY ? reqHeaders : NULL,
 			returnRawContent, return_value);
 }
 /* }}} */

@@ -29,7 +29,7 @@ static zend_function_entry azalea_node_beauty_email_methods[] = {
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(email)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(EmailModel), azalea_node_beauty_email_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBEmailModel), azalea_node_beauty_email_methods);
 	azalea_node_beauty_email_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_email_ce->ce_flags |= ZEND_ACC_FINAL;
 

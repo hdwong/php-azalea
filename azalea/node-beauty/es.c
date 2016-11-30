@@ -38,7 +38,7 @@ static zend_function_entry azalea_node_beauty_es_methods[] = {
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(es)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(ElasticSearchModel), azalea_node_beauty_es_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBElasticSearchModel), azalea_node_beauty_es_methods);
 	azalea_node_beauty_es_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_es_ce->ce_flags |= ZEND_ACC_FINAL;
 	zend_declare_property_null(azalea_node_beauty_es_ce, ZEND_STRL("_indexes"), ZEND_ACC_PRIVATE);

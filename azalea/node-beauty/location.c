@@ -30,7 +30,7 @@ static zend_function_entry azalea_node_beauty_location_methods[] = {
 AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(location)
 {
 	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(LocationModel), azalea_node_beauty_location_methods);
+	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(NBLocationModel), azalea_node_beauty_location_methods);
 	azalea_node_beauty_location_ce = zend_register_internal_class_ex(&ce, azalea_service_ce);
 	azalea_node_beauty_location_ce->ce_flags |= ZEND_ACC_FINAL;
 
