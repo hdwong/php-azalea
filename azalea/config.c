@@ -272,6 +272,10 @@ void azaleaLoadConfig(zval *val)
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("static"))) {
 		add_assoc_null_ex(found, ZEND_STRL("static"));
 	}
+	// config.path.static_host
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("static_host"))) {
+		add_assoc_null_ex(found, ZEND_STRL("static_host"));
+	}
 	// ---------- sub of config.service ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("service"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {

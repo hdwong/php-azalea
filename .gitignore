@@ -22,3 +22,5 @@ tmp-php.ini
 *.loT
 .cproject
 .project
+
+dump.rdb

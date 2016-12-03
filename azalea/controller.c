@@ -95,7 +95,7 @@ PHP_METHOD(azalea_controller, getView)
 		RETURN_ZVAL(instance, 1, 0);
 	}
 	azalea_view_t rv = {{0}};
-	zval data, *staticPath, *themeName;
+	zval data, *staticHost, *staticPath, *themeName;
 	zend_string *tpldir, *tstr;
 	// new instance
 	instance = &rv;
@@ -109,6 +109,12 @@ PHP_METHOD(azalea_controller, getView)
 	array_init(&data);
 	// environ.tpldir
 	tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
+	staticHost = azaleaConfigSubFind("path", "static_host");
+	if (staticHost && Z_TYPE_P(staticHost) != IS_NULL && Z_STRLEN_P(staticHost)) {
+		tstr = tpldir;
+		tpldir = strpprintf(0, "%s%s", Z_STRVAL_P(staticHost), ZSTR_VAL(tpldir));
+		zend_string_release(tstr);
+	}
 	staticPath = azaleaConfigSubFind("path", "static");
 	if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
 		tstr = tpldir;
