@@ -169,10 +169,18 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 	headers = curl_slist_append(headers, "Keep-Alive: 300");
 	// custom request headers
 	if (reqHeaders && Z_TYPE_P(reqHeaders) == IS_ARRAY) {
+		zend_ulong h;
+		zend_string *key, *tstr;
 		zval *headerValue;
-		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(reqHeaders), headerValue) {
+		ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(reqHeaders), h, key, headerValue) {
 			if (Z_TYPE_P(headerValue) == IS_STRING) {
-				headers = curl_slist_append(headers, Z_STRVAL_P(headerValue));
+				if (key) {
+					tstr = strpprintf(0, "%s: %s", ZSTR_VAL(key), Z_STRVAL_P(headerValue));
+					headers = curl_slist_append(headers, ZSTR_VAL(tstr));
+					zend_string_release(tstr);
+				} else {
+					headers = curl_slist_append(headers, Z_STRVAL_P(headerValue));
+				}
 			}
 		} ZEND_HASH_FOREACH_END();
 	}
