@@ -219,7 +219,11 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 	// method and query
 	if (*arguments && Z_TYPE_P(*arguments) == IS_ARRAY) {
 		smart_str formstr = {0};
-		if (php_url_encode_hash_ex(Z_ARRVAL_P(*arguments), &formstr, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738) != FAILURE) {
+		zval args;
+		array_init(&args);
+		// make a copy for url_encode
+		zend_hash_copy(Z_ARRVAL(args), Z_ARRVAL_P(*arguments), (copy_ctor_func_t) zval_add_ref);
+		if (php_url_encode_hash_ex(Z_ARRVAL(args), &formstr, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, PHP_QUERY_RFC1738) != FAILURE) {
 			if (formstr.a > 0) {
 				smart_str_0(&formstr);
 				// preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($params)
@@ -255,6 +259,7 @@ zend_long azaleaCurlExec(void *cp, zend_long method, zend_string **url, zval **a
 			}
 		}
 		smart_str_free(&formstr);
+		zval_ptr_dtor(&args);
 	}
 	if (method == AZALEA_SERVICE_METHOD_GET) {
 		curl_easy_setopt(cp, CURLOPT_HTTPGET, 1);
