@@ -179,7 +179,7 @@ PHP_MINFO_FUNCTION(azalea)
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
 	// node-beauty models
-	php_info_print_table_colspan_header(2, "<a href=\"https://www.npmjs.com/package/node-beauty\" target=\"_blank\" style=\"background:none\">Node-Beauty</a> Model Support");
+	php_info_print_table_colspan_header(2, "Node-Beauty Model Support");
 	php_info_print_table_row(2, "node-beauty-mysql", NODE_BEAUTY_MYSQL ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-redis", NODE_BEAUTY_REDIS ? "yes" : "no");
 	php_info_print_table_row(2, "node-beauty-mongo", NODE_BEAUTY_MONGO ? "yes" : "no");
@@ -192,6 +192,8 @@ PHP_MINFO_FUNCTION(azalea)
 	// extend models
 	php_info_print_table_colspan_header(2, "Extend Model Support");
 	php_info_print_table_row(2, "pinyin", EXT_MODEL_PINYIN ? "yes" : "no");
+	php_info_print_table_row(2, "mysql", EXT_MODEL_MYSQL ? "yes" : "no");
+	php_info_print_table_row(2, "redis", EXT_MODEL_REDIS ? "yes" : "no");
 
 	php_info_print_table_end();
 

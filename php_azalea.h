@@ -57,11 +57,11 @@ extern zend_module_entry azalea_module_entry;
 #define NODE_BEAUTY_LOCATION 1
 
 #define EXT_MODEL_PINYIN_NAME "pinyin"
-#define EXT_MODEL_REDIS_NAME  "redis"
 #define EXT_MODEL_MYSQL_NAME  "mysql"
+#define EXT_MODEL_REDIS_NAME  "redis"
 
 #define EXT_MODEL_PINYIN  1
-#define EXT_MODEL_MYSQL   1
+#define EXT_MODEL_MYSQL   0
 #define EXT_MODEL_REDIS   0
 
 #ifdef PHP_WIN32

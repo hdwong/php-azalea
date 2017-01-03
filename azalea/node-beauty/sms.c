@@ -12,8 +12,9 @@
 #include "azalea/exception.h"
 #include "azalea/node-beauty/sms.h"
 
-#include "ext/standard/php_var.h"
+#include "ext/standard/php_string.h"  // for php_implode
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+#include "ext/standard/php_var.h"
 
 zend_class_entry *azalea_node_beauty_sms_ce;
 
@@ -44,23 +45,36 @@ PHP_METHOD(azalea_node_beauty_sms, __construct) {}
 /* {{{ proto send */
 PHP_METHOD(azalea_node_beauty_sms, send)
 {
-	zend_string *to, *body;
-	zval ret, arg1, arg2, *pError;
+	zend_string *body, *delim;
+	zval *to, tos, ret, arg1, arg2, *pError;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SS", &to, &body) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zS", &to, &body) == FAILURE) {
 		return;
+	}
+	if (Z_TYPE_P(to) != IS_ARRAY && Z_TYPE_P(to) != IS_STRING) {
+		php_error_docref(NULL, E_ERROR, "expects parameter 1 to be string or array");
+		return;
+	}
+
+	// to list
+	if (Z_TYPE_P(to) == IS_ARRAY) {
+		delim = zend_string_init(ZEND_STRL(","), 0);
+		php_implode(delim, to, &tos);
+		zend_string_release(delim);
+		to = &tos;
+	} else {
+		zval_add_ref(to);
 	}
 
 	ZVAL_STRINGL(&arg1, "send", sizeof("send") - 1);
 	array_init(&arg2);
-	add_assoc_str_ex(&arg2, ZEND_STRL("mobile"), zend_string_copy(to));
+	add_assoc_zval_ex(&arg2, ZEND_STRL("mobile"), to);
 	add_assoc_str_ex(&arg2, ZEND_STRL("message"), zend_string_copy(body));
 	zend_call_method_with_2_params(getThis(), azalea_service_ce, NULL, "post", &ret, &arg1, &arg2);
 	zval_ptr_dtor(&arg1);
 	zval_ptr_dtor(&arg2);
 
-	if (Z_TYPE(ret) == IS_OBJECT && (pError = zend_read_property(NULL, &ret, ZEND_STRL("error"), 1, NULL)) &&
-			Z_TYPE_P(pError) == IS_LONG && Z_LVAL_P(pError) == 0) {
+	if (Z_TYPE(ret) == IS_TRUE) {
 		RETVAL_TRUE;
 	} else {
 		RETVAL_FALSE;
