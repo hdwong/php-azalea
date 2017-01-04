@@ -73,8 +73,17 @@ PHP_METHOD(azalea_session, set)
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &name, &val) == FAILURE) {
 		return;
 	}
-	zval_add_ref(val);
-	php_set_session_var(name, val, NULL);
+	if (Z_TYPE_P(val) == IS_NULL) {
+		// unset
+		zval *session;
+		session = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SESSION"));
+		if (session && Z_TYPE_P(session) == IS_REFERENCE) {
+			zend_hash_del(Z_ARRVAL_P(Z_REFVAL_P(session)), name);
+		}
+	} else {
+		php_set_session_var(name, val, NULL);
+		zval_add_ref(val);
+	}
 }
 /* }}} */
 
