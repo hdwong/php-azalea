@@ -514,6 +514,7 @@ PHP_METHOD(azalea_node_beauty_mysql, query)
 	if (binds && Z_TYPE_P(binds) != IS_ARRAY) {
 		array_init(&array);
 		add_next_index_zval(&array, binds);
+		zval_add_ref(binds);
 		binds = &array;
 	} else if (binds) {
 		zval_add_ref(binds);
