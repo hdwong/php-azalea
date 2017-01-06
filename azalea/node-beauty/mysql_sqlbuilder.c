@@ -221,6 +221,7 @@ void mysqlWhere(zval *instance, zend_long recType, zval *conditions, zval *value
 		if ((0 == strcmp(ZSTR_VAL(op), "IN") || 0 == strcmp(ZSTR_VAL(op), "NOT IN")) && Z_TYPE_P(pData) != IS_ARRAY) {
 			array_init(&array);
 			add_next_index_zval(&array, pData);
+			zval_add_ref(pData);
 			pData = &array;
 		} else {
 			zval_add_ref(pData);
