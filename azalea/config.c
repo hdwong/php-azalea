@@ -11,6 +11,7 @@
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
+#include "ext/standard/php_string.h"  // for php_explode
 
 zend_class_entry *azalea_config_ce;
 
@@ -174,7 +175,7 @@ void azaleaLoadConfig(zval *val)
 		}
 	}
 	// DEFAULTS
-	zval el, *found, *field;
+	zval elSession, elPath, elService, elDispatch, elNB, elSessionEnv, *found, *field;
 	// config.debug
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("debug")))) {
 		add_assoc_bool_ex(config, ZEND_STRL("debug"), 0);
@@ -197,28 +198,28 @@ void azaleaLoadConfig(zval *val)
 	}
 	// config.session
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("session"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("session"), &el);
+		array_init(&elSession);
+		add_assoc_zval_ex(config, ZEND_STRL("session"), &elSession);
 	}
 	// config.path
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("path"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("path"), &el);
+		array_init(&elPath);
+		add_assoc_zval_ex(config, ZEND_STRL("path"), &elPath);
 	}
 	// config.service
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("service"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("service"), &el);
+		array_init(&elService);
+		add_assoc_zval_ex(config, ZEND_STRL("service"), &elService);
 	}
 	// config.dispatch
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("dispatch"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("dispatch"), &el);
+		array_init(&elDispatch);
+		add_assoc_zval_ex(config, ZEND_STRL("dispatch"), &elDispatch);
 	}
 	// config.node-beauty
 	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("node-beauty"))) {
-		array_init(&el);
-		add_assoc_zval_ex(config, ZEND_STRL("node-beauty"), &el);
+		array_init(&elNB);
+		add_assoc_zval_ex(config, ZEND_STRL("node-beauty"), &elNB);
 	}
 	// ---------- sub of config.session ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("session"));
@@ -246,6 +247,17 @@ void azaleaLoadConfig(zval *val)
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("domain"))) {
 		add_assoc_null_ex(found, ZEND_STRL("domain"));
 	}
+	// config.session.env
+	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("env"));
+	array_init(&elSessionEnv);
+	if (!field || Z_TYPE_P(field) != IS_STRING || Z_STRLEN_P(field) == 0) {
+		add_next_index_stringl(&elSessionEnv, ZEND_STRL("WEB"));
+	} else {
+		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
+		php_explode(delim, Z_STR_P(field), &elSessionEnv, ZEND_LONG_MAX);
+		zend_string_release(delim);
+	}
+	add_assoc_zval_ex(found, ZEND_STRL("env"), &elSessionEnv);
 	// ---------- sub of config.path ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("path"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {

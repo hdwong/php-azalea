@@ -49,10 +49,13 @@ PHP_METHOD(azalea_session, get)
 	zval *def = NULL;
 	zval *val;
 
+	if (!AZALEA_G(startSession)) {
+		RETURN_NULL();
+	}
+
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &name, &def) == FAILURE) {
 		return;
 	}
-
 	val = php_get_session_var(name);
 	if (val) {
 		RETURN_ZVAL(val, 1, 0);
@@ -69,6 +72,10 @@ PHP_METHOD(azalea_session, set)
 {
 	zend_string *name;
 	zval *val;
+
+	if (!AZALEA_G(startSession)) {
+		return;
+	}
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &name, &val) == FAILURE) {
 		return;
@@ -91,6 +98,11 @@ PHP_METHOD(azalea_session, set)
 PHP_METHOD(azalea_session, clean)
 {
 	zval *session;
+
+	if (!AZALEA_G(startSession)) {
+		return;
+	}
+
 	session = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SESSION"));
 	if (session && Z_TYPE_P(session) == IS_REFERENCE) {
 		zend_hash_clean(Z_ARRVAL_P(Z_REFVAL_P(session)));

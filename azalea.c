@@ -87,6 +87,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(curlHandle) = NULL;
 	AZALEA_G(registeredTemplateFunctions) = 0;
 	AZALEA_G(hasServiceException) = 0;
+	AZALEA_G(startSession) = 0;
 	AZALEA_G(directory) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;

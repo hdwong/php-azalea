@@ -98,7 +98,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	// load config
 	azaleaLoadConfig(config);
 
-	zval *server, *field, *conf, iniValue;
+	zval *server, *field, *conf, *pData, iniValue;
 	zend_string *iniName, *tstr;
 
 	// load SERVER global variable
@@ -224,43 +224,52 @@ PHP_METHOD(azalea_bootstrap, init)
 	}
 	AZALEA_G(uri) = uri;
 
-	// set session
-	// session.name
-	iniName = zend_string_init(ZEND_STRL("session.name"), 0);
-	zend_alter_ini_entry(iniName, Z_STR_P(azaleaConfigSubFind("session", "name")),
-			PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
-	zend_string_release(iniName);
-	// session.cookie_lifetime
-	conf = azaleaConfigSubFind("session", "lifetime");
-	ZVAL_COPY(&iniValue, conf);
-	convert_to_string(&iniValue);
-	iniName = zend_string_init(ZEND_STRL("session.cookie_lifetime"), 0);
-	zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
-	zend_string_release(iniName);
-	zval_ptr_dtor(&iniValue);
-	// session.cookie_path
-	conf = azaleaConfigSubFind("session", "path");
-	ZVAL_COPY(&iniValue, conf);
-	convert_to_string(&iniValue);
-	if (!Z_STRLEN(iniValue)) {
-		// use baseUri for default path
-		zval_ptr_dtor(&iniValue);
-		ZVAL_STR(&iniValue, baseUri);
-	}
-	iniName = zend_string_init(ZEND_STRL("session.cookie_path"), 0);
-	zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
-	zend_string_release(iniName);
-	zval_ptr_dtor(&iniValue);
-	// session.cooke_domain
-	conf = azaleaConfigSubFind("session", "domain");
-	ZVAL_COPY(&iniValue, conf);
-	convert_to_string(&iniValue);
-	if (Z_STRLEN(iniValue)) {
-		iniName = zend_string_init(ZEND_STRL("session.cookie_domain"), 0);
+	// set session if in session.environ list
+	field = azaleaConfigSubFind("session", "env");
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(field), pData) {
+		if (Z_TYPE_P(pData) == IS_STRING && 0 == strcasecmp(Z_STRVAL_P(pData), ZSTR_VAL(AZALEA_G(environ)))) {
+			AZALEA_G(startSession) = 1;
+			break;
+		}
+	} ZEND_HASH_FOREACH_END();
+	if (AZALEA_G(startSession)) {
+		// session.name
+		iniName = zend_string_init(ZEND_STRL("session.name"), 0);
+		zend_alter_ini_entry(iniName, Z_STR_P(azaleaConfigSubFind("session", "name")),
+				PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
+		// session.cookie_lifetime
+		conf = azaleaConfigSubFind("session", "lifetime");
+		ZVAL_COPY(&iniValue, conf);
+		convert_to_string(&iniValue);
+		iniName = zend_string_init(ZEND_STRL("session.cookie_lifetime"), 0);
 		zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
 		zend_string_release(iniName);
+		zval_ptr_dtor(&iniValue);
+		// session.cookie_path
+		conf = azaleaConfigSubFind("session", "path");
+		ZVAL_COPY(&iniValue, conf);
+		convert_to_string(&iniValue);
+		if (!Z_STRLEN(iniValue)) {
+			// use baseUri for default path
+			zval_ptr_dtor(&iniValue);
+			ZVAL_STR(&iniValue, baseUri);
+		}
+		iniName = zend_string_init(ZEND_STRL("session.cookie_path"), 0);
+		zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
+		zval_ptr_dtor(&iniValue);
+		// session.cooke_domain
+		conf = azaleaConfigSubFind("session", "domain");
+		ZVAL_COPY(&iniValue, conf);
+		convert_to_string(&iniValue);
+		if (Z_STRLEN(iniValue)) {
+			iniName = zend_string_init(ZEND_STRL("session.cookie_domain"), 0);
+			zend_alter_ini_entry(iniName, Z_STR(iniValue), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+			zend_string_release(iniName);
+		}
+		zval_ptr_dtor(&iniValue);
 	}
-	zval_ptr_dtor(&iniValue);
 
 	// ---------- END ----------
 
@@ -445,7 +454,9 @@ PHP_METHOD(azalea_bootstrap, run)
 	}
 
 	// session start
-	php_session_start();
+	if (AZALEA_G(startSession)) {
+		php_session_start();
+	}
 
 	// start dispatch
 	zval ret;
