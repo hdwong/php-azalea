@@ -103,7 +103,7 @@ PHP_METHOD(azalea_bootstrap, init)
 
 	// load SERVER global variable
 	if (PG(auto_globals_jit)) {
-		zend_string *tstr = zend_string_init(ZEND_STRL("_SERVER"), 0);
+		tstr = zend_string_init(ZEND_STRL("_SERVER"), 0);
 		zend_is_auto_global(tstr);
 		zend_string_release(tstr);
 	}
