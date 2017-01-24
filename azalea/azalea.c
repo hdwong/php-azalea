@@ -34,6 +34,7 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
+	ZEND_NS_NAMED_FE(AZALEA_NS, debug, ZEND_FN(azalea_debug), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
@@ -225,6 +226,36 @@ zend_string * azaleaRequestIp()
 PHP_FUNCTION(azalea_ip)
 {
 	RETURN_STR_COPY(azaleaRequestIp());
+}
+/* }}} */
+
+/* {{{ proto azaleaDebugMode */
+zend_bool azaleaDebugMode()
+{
+	zval *configDebug, *configDebugKey, *debugKeyField;
+
+	configDebug = azaleaConfigFind("debug");
+	configDebugKey = azaleaConfigFind("debug_key");
+	debugKeyField = azaleaGlobalsStrFind(TRACK_VARS_GET, ZEND_STRL("_AZALEA_DEBUG_KEY_"));
+
+	if ((!configDebug || Z_TYPE_P(configDebug) != IS_TRUE) &&
+			(!configDebugKey || !debugKeyField || Z_STRLEN_P(configDebugKey) == 0 ||
+			strcmp(Z_STRVAL_P(configDebugKey), Z_STRVAL_P(debugKeyField)))) {
+		return 0;
+	}
+	return 1;
+}
+/* }}} */
+
+/* {{{ azalea_vardump */
+PHP_FUNCTION(azalea_debug)
+{
+	zval *var;
+
+	if (!azaleaDebugMode() || zend_parse_parameters(ZEND_NUM_ARGS(), "z", &var) == FAILURE) {
+		return;
+	}
+	php_var_dump(var, 0);
 }
 /* }}} */
 

@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.2.0"
+#define PHP_AZALEA_VERSION "1.2.1"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
