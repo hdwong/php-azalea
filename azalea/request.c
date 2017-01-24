@@ -29,6 +29,7 @@ static zend_function_entry azalea_request_methods[] = {
 	PHP_ME(azalea_request, getPost, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getPostTrim, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getCookie, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, getHeader, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -225,6 +226,32 @@ PHP_METHOD(azalea_request, getCookie)
 	}
 
 	val = azaleaGlobalsFind(TRACK_VARS_COOKIE, name);
+	if (val) {
+		RETURN_ZVAL(val, 1, 0);
+	}
+	if (def) {
+		RETURN_ZVAL(def, 1, 0);
+	}
+	RETURN_NULL();
+}
+/* }}} */
+
+/* {{{ proto mixed getHeader(name, default) */
+PHP_METHOD(azalea_request, getHeader)
+{
+	zend_string *name = NULL, *tstr;
+	zval *def = NULL;
+	zval *val;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &name, &def) == FAILURE) {
+		return;
+	}
+
+	name = php_string_toupper(name);
+	tstr = strpprintf(0, "HTTP_%s", ZSTR_VAL(name));
+	val = azaleaGlobalsFind(TRACK_VARS_SERVER, tstr);
+	zend_string_release(tstr);
+	zend_string_release(name);
 	if (val) {
 		RETURN_ZVAL(val, 1, 0);
 	}

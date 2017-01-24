@@ -20,6 +20,7 @@ PHP_METHOD(azalea_request, getQueryTrim);
 PHP_METHOD(azalea_request, getPost);
 PHP_METHOD(azalea_request, getPostTrim);
 PHP_METHOD(azalea_request, getCookie);
+PHP_METHOD(azalea_request, getHeader);
 
 zend_string * azaleaGetBaseUri(void);
 zend_string * azaleaGetUri(void);

@@ -240,7 +240,7 @@ zend_bool azaleaDebugMode()
 
 	configDebug = azaleaConfigFind("debug");
 	configDebugKey = azaleaConfigFind("debug_key");
-	debugKeyField = azaleaGlobalsStrFind(TRACK_VARS_GET, ZEND_STRL("_AZALEA_DEBUG_KEY_"));
+	debugKeyField = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_AZALEA_DEBUG_KEY"));
 
 	if ((!configDebug || Z_TYPE_P(configDebug) != IS_TRUE) &&
 			(!configDebugKey || !debugKeyField || Z_STRLEN_P(configDebugKey) == 0 ||
@@ -385,14 +385,10 @@ PHP_FUNCTION(azalea_isMobile)
 /* {{{ azalea_isMobile */
 PHP_FUNCTION(azalea_isWechat)
 {
-	zval *server, *field;
+	zval *field;
 	zend_string *tstr;
 
-	server = &PG(http_globals)[TRACK_VARS_SERVER];
-	if (!server || Z_TYPE_P(server) != IS_ARRAY) {
-		RETURN_FALSE;
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
 		tstr = php_string_tolower(Z_STR_P(field));
 		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("micromessenger"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
 			zend_string_release(tstr);
@@ -407,14 +403,10 @@ PHP_FUNCTION(azalea_isWechat)
 /* {{{ azalea_isQq */
 PHP_FUNCTION(azalea_isQq)
 {
-	zval *server, *field;
+	zval *field;
 	zend_string *tstr;
 
-	server = &PG(http_globals)[TRACK_VARS_SERVER];
-	if (!server || Z_TYPE_P(server) != IS_ARRAY) {
-		RETURN_FALSE;
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
 		tstr = php_string_tolower(Z_STR_P(field));
 		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("qqbrowser"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
 			zend_string_release(tstr);
@@ -429,14 +421,10 @@ PHP_FUNCTION(azalea_isQq)
 /* {{{ azalea_isIos */
 PHP_FUNCTION(azalea_isIos)
 {
-	zval *server, *field;
+	zval *field;
 	zend_string *tstr;
 
-	server = &PG(http_globals)[TRACK_VARS_SERVER];
-	if (!server || Z_TYPE_P(server) != IS_ARRAY) {
-		RETURN_FALSE;
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
 		tstr = php_string_tolower(Z_STR_P(field));
 		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("iphone"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
 				php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("ipod"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
