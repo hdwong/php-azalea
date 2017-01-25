@@ -30,6 +30,11 @@ static zend_function_entry azalea_request_methods[] = {
 	PHP_ME(azalea_request, getPostTrim, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getCookie, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getHeader, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, isMobile, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, isWechat, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, isQq, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, isIosDevice, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, isAndroidDevice, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -268,5 +273,135 @@ PHP_METHOD(azalea_request, getHeader)
 		RETURN_ZVAL(def, 1, 0);
 	}
 	RETURN_NULL();
+}
+/* }}} */
+
+
+/* {{{ proto isMobile */
+PHP_METHOD(azalea_request, isMobile)
+{
+	zval *server, *field;
+	zend_string *tstr;
+
+	server = &PG(http_globals)[TRACK_VARS_SERVER];
+	if (!server || Z_TYPE_P(server) != IS_ARRAY) {
+		RETURN_FALSE;
+	}
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
+		static const char * uastrs[] = {
+			"nokia", "sony", "ericsson", "mot",
+			"samsung", "htc", "sgh", "lg", "sharp", "sie-",
+			"philips", "panasonic", "alcatel", "lenovo", "iphone",
+			"ipod", "ipad", "blackberry", "meizu", "android",
+			"netfront", "symbian", "ucweb", "windowsce", "palm",
+			"operamini", "operamobi", "openwave", "nexusone", "cldc",
+			"midp", "wap", "mobile", "micromessenger", "qqbrowser"
+		};
+		int i;
+		tstr = php_string_tolower(Z_STR_P(field));
+		for (i = (sizeof(uastrs) / sizeof(uastrs[0]) - 1); i >= 0; i--) {
+			if (php_memnstr(ZSTR_VAL(tstr), uastrs[i], strlen(uastrs[i]), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+				zend_string_release(tstr);
+				RETURN_TRUE;
+			}
+		}
+		zend_string_release(tstr);
+	}
+	if (zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_WAP_PROFILE"))) {
+		RETURN_TRUE;
+	}
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_VIA")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		// find "wap"
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("wap"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_ACCEPT")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		// find "vnd.wap.wml"
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("vnd.wap.wml"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto isMobile */
+PHP_METHOD(azalea_request, isWechat)
+{
+	zval *field;
+	zend_string *tstr;
+
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("micromessenger"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto isQq */
+PHP_METHOD(azalea_request, isQq)
+{
+	zval *field;
+	zend_string *tstr;
+
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("qqbrowser"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto isIosDevice */
+PHP_METHOD(azalea_request, isIosDevice)
+{
+	zval *field;
+	zend_string *tstr;
+
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("iphone"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
+				php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("ipod"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
+				php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("ipad"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto isAndroidDevice */
+PHP_METHOD(azalea_request, isAndroidDevice)
+{
+	zval *field;
+	zend_string *tstr;
+
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
+		tstr = php_string_tolower(Z_STR_P(field));
+		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("android"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
+			zend_string_release(tstr);
+			RETURN_TRUE;
+		}
+		zend_string_release(tstr);
+	}
+	RETURN_FALSE;
 }
 /* }}} */

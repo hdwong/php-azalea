@@ -16,10 +16,6 @@ PHP_FUNCTION(azalea_ip);
 PHP_FUNCTION(azalea_randomString);
 PHP_FUNCTION(azalea_maskString);
 PHP_FUNCTION(azalea_debug);
-PHP_FUNCTION(azalea_isMobile);
-PHP_FUNCTION(azalea_isWechat);
-PHP_FUNCTION(azalea_isQq);
-PHP_FUNCTION(azalea_isIos);
 
 double azaleaGetMicrotime();
 zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);

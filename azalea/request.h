@@ -21,6 +21,11 @@ PHP_METHOD(azalea_request, getPost);
 PHP_METHOD(azalea_request, getPostTrim);
 PHP_METHOD(azalea_request, getCookie);
 PHP_METHOD(azalea_request, getHeader);
+PHP_METHOD(azalea_request, isMobile);
+PHP_METHOD(azalea_request, isWechat);
+PHP_METHOD(azalea_request, isQq);
+PHP_METHOD(azalea_request, isIosDevice);
+PHP_METHOD(azalea_request, isAndroidDevice);
 
 zend_string * azaleaGetBaseUri(void);
 zend_string * azaleaGetUri(void);

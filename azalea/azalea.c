@@ -35,10 +35,6 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, debug, ZEND_FN(azalea_debug), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, isMobile, ZEND_FN(azalea_isMobile), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, isWechat, ZEND_FN(azalea_isWechat), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, isQq, ZEND_FN(azalea_isQq), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, isIos, ZEND_FN(azalea_isIos), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
@@ -324,116 +320,5 @@ double azaleaGetMicrotime()
 		return (double)time(0);
 	}
 	return (double)(tp.tv_sec + tp.tv_usec / 1000000.00);
-}
-/* }}} */
-
-/* {{{ azalea_isMobile */
-PHP_FUNCTION(azalea_isMobile)
-{
-	zval *server, *field;
-	zend_string *tstr;
-
-	server = &PG(http_globals)[TRACK_VARS_SERVER];
-	if (!server || Z_TYPE_P(server) != IS_ARRAY) {
-		RETURN_FALSE;
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
-		static const char * uastrs[] = {
-			"nokia", "sony", "ericsson", "mot",
-			"samsung", "htc", "sgh", "lg", "sharp", "sie-",
-			"philips", "panasonic", "alcatel", "lenovo", "iphone",
-			"ipod", "ipad", "blackberry", "meizu", "android",
-			"netfront", "symbian", "ucweb", "windowsce", "palm",
-			"operamini", "operamobi", "openwave", "nexusone", "cldc",
-			"midp", "wap", "mobile", "micromessenger", "qqbrowser"
-		};
-		int i;
-		tstr = php_string_tolower(Z_STR_P(field));
-		for (i = (sizeof(uastrs) / sizeof(uastrs[0]) - 1); i >= 0; i--) {
-			if (php_memnstr(ZSTR_VAL(tstr), uastrs[i], strlen(uastrs[i]), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-				zend_string_release(tstr);
-				RETURN_TRUE;
-			}
-		}
-		zend_string_release(tstr);
-	}
-	if (zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_WAP_PROFILE"))) {
-		RETURN_TRUE;
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_VIA")))) {
-		tstr = php_string_tolower(Z_STR_P(field));
-		// find "wap"
-		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("wap"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-			zend_string_release(tstr);
-			RETURN_TRUE;
-		}
-		zend_string_release(tstr);
-	}
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_ACCEPT")))) {
-		tstr = php_string_tolower(Z_STR_P(field));
-		// find "vnd.wap.wml"
-		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("vnd.wap.wml"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-			zend_string_release(tstr);
-			RETURN_TRUE;
-		}
-		zend_string_release(tstr);
-	}
-	RETURN_FALSE;
-}
-/* }}} */
-
-/* {{{ azalea_isMobile */
-PHP_FUNCTION(azalea_isWechat)
-{
-	zval *field;
-	zend_string *tstr;
-
-	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
-		tstr = php_string_tolower(Z_STR_P(field));
-		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("micromessenger"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-			zend_string_release(tstr);
-			RETURN_TRUE;
-		}
-		zend_string_release(tstr);
-	}
-	RETURN_FALSE;
-}
-/* }}} */
-
-/* {{{ azalea_isQq */
-PHP_FUNCTION(azalea_isQq)
-{
-	zval *field;
-	zend_string *tstr;
-
-	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
-		tstr = php_string_tolower(Z_STR_P(field));
-		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("qqbrowser"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-			zend_string_release(tstr);
-			RETURN_TRUE;
-		}
-		zend_string_release(tstr);
-	}
-	RETURN_FALSE;
-}
-/* }}} */
-
-/* {{{ azalea_isIos */
-PHP_FUNCTION(azalea_isIos)
-{
-	zval *field;
-	zend_string *tstr;
-
-	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_USER_AGENT")))) {
-		tstr = php_string_tolower(Z_STR_P(field));
-		if (php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("iphone"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
-				php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("ipod"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr)) ||
-				php_memnstr(ZSTR_VAL(tstr), ZEND_STRL("ipad"), ZSTR_VAL(tstr) + ZSTR_LEN(tstr))) {
-			zend_string_release(tstr);
-			RETURN_TRUE;
-		}
-		zend_string_release(tstr);
-	}
-	RETURN_FALSE;
 }
 /* }}} */
