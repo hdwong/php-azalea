@@ -242,12 +242,21 @@ PHP_METHOD(azalea_request, getHeader)
 	zend_string *name = NULL, *tstr;
 	zval *def = NULL;
 	zval *val;
+	char *p, *end;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &name, &def) == FAILURE) {
 		return;
 	}
 
 	name = php_string_toupper(name);
+	p = ZSTR_VAL(name);
+	end = p + ZSTR_LEN(name);
+	while (p < end) {
+		if (*p == '-') {
+			*p = '_';
+		}
+		++p;
+	};
 	tstr = strpprintf(0, "HTTP_%s", ZSTR_VAL(name));
 	val = azaleaGlobalsFind(TRACK_VARS_SERVER, tstr);
 	zend_string_release(tstr);
