@@ -216,16 +216,16 @@ PHP_METHOD(azalea_response, setBody)
 /* {{{ proto string getBody(string key, mixed field, int expire = 0) */
 PHP_METHOD(azalea_response, setCookie)
 {
-	zend_string *name, *value = NULL;
+	zend_string *name, *value = NULL, *path = NULL;
 	zend_long expires = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|Sl", &name, &value, &expires) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|SlS", &name, &value, &expires, &path) == FAILURE) {
 		return;
 	}
 	if (expires > 0) {
 		expires += (zend_long) time(NULL);
 	}
-	if (php_setcookie(name, value, expires, NULL, NULL, 0, 1, 0) == SUCCESS) {
+	if (php_setcookie(name, value, expires, path, NULL, 0, 1, 0) == SUCCESS) {
 		RETVAL_TRUE;
 	} else {
 		RETVAL_FALSE;
