@@ -108,24 +108,23 @@ PHP_METHOD(azalea_controller, getView)
 	// environ
 	array_init(&data);
 	// environ.tpldir
-	tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
 	staticHost = azaleaConfigSubFind("path", "static_host");
 	if (staticHost && Z_TYPE_P(staticHost) != IS_NULL && Z_STRLEN_P(staticHost)) {
-		tstr = tpldir;
-		tpldir = strpprintf(0, "%s%s", Z_STRVAL_P(staticHost), ZSTR_VAL(tpldir));
-		zend_string_release(tstr);
-	}
-	staticPath = azaleaConfigSubFind("path", "static");
-	if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
-		tstr = tpldir;
-		tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
-		zend_string_release(tstr);
-	}
-	themeName = azaleaConfigFind("theme");
-	if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
-		tstr = tpldir;
-		tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(themeName));
-		zend_string_release(tstr);
+		tpldir = zend_string_copy(Z_STR_P(staticHost));
+	} else {
+		tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
+		staticPath = azaleaConfigSubFind("path", "static");
+		if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
+			tstr = tpldir;
+			tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
+			zend_string_release(tstr);
+		}
+		themeName = azaleaConfigFind("theme");
+		if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
+			tstr = tpldir;
+			tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(themeName));
+			zend_string_release(tstr);
+		}
 	}
 	add_assoc_str_ex(&data, ZEND_STRL("tpldir"), tpldir);
 	// upate environ
