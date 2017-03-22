@@ -137,10 +137,10 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 		} else {
 			hostname = zend_string_init(ZEND_STRL("http://"), 0);
 		}
-		field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
+		field = azaleaConfigFind("hostname");	// get from config
 		if (!field) {
-			// host not found, try to get from config
-			field = azaleaConfigFind("hostname");
+			// host not set, try to get from global
+			field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
 			if (!field) {
 				tstr = strpprintf(0, "%slocalhost", ZSTR_VAL(hostname));
 			} else {
