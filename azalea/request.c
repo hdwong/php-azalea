@@ -295,7 +295,7 @@ PHP_METHOD(azalea_request, isMobile)
 			"ipod", "ipad", "blackberry", "meizu", "android",
 			"netfront", "symbian", "ucweb", "windowsce", "palm",
 			"operamini", "operamobi", "openwave", "nexusone", "cldc",
-			"midp", "wap", "mobile", "micromessenger", "qqbrowser"
+			"midp", "wap", "mobile"
 		};
 		int i;
 		tstr = php_string_tolower(Z_STR_P(field));
