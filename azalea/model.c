@@ -12,7 +12,6 @@
 #include "azalea/config.h"
 #include "azalea/request.h"
 #include "azalea/model.h"
-#include "azalea/service.h"
 #include "azalea/exception.h"
 
 #include "Zend/zend_smart_str.h"  // for smart_str_*
@@ -174,19 +173,6 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	} else {
 		ce = NULL;
 		do {
-			// try to load node-beauty models
-			conf = azaleaConfigFind("node-beauty");
-			if (conf && Z_TYPE_P(conf) == IS_ARRAY && (conf = zend_hash_find(Z_ARRVAL_P(conf), lcName)) &&
-					Z_TYPE_P(conf) == IS_STRING) {
-				if (!is_numeric_string(Z_STRVAL_P(conf), Z_STRLEN_P(conf), NULL, NULL, 0)) {
-					nodeBeautyLcName = zend_string_tolower(Z_STR_P(conf));
-				} else {
-					nodeBeautyLcName = zend_string_copy(lcName);
-				}
-				ce = azaleaServiceGetNodeBeautyClassEntry(nodeBeautyLcName);
-				zend_string_release(nodeBeautyLcName);
-				break;
-			}
 			// try to load extend models
 			conf = azaleaConfigFind("ext-model");
 			if (conf && Z_TYPE_P(conf) == IS_ARRAY && (conf = zend_hash_find(Z_ARRVAL_P(conf), lcName)) &&
@@ -243,30 +229,6 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		if (!instance) {
 			throw404Str(ZEND_STRL("Model initialization is failed."));
 			RETURN_FALSE;
-		}
-		// service model construct
-		if (instanceof_function(ce, azalea_service_ce)) {
-			if ((field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("service"), 1, NULL)) &&
-					Z_TYPE_P(field) == IS_STRING) {
-				zend_string_release(lcName);
-				lcName = zend_string_copy(Z_STR_P(field));
-			}
-			if (!(field = zend_read_property(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), 0, NULL)) ||
-					Z_TYPE_P(field) != IS_STRING) {
-				// get serviceUrl from config
-				if (!(field = azaleaConfigSubFind("service", "url")) || Z_TYPE_P(field) != IS_STRING) {
-					throw404Str(ZEND_STRL("Service url not set."));
-					RETURN_FALSE;
-				}
-				zend_string *serviceUrl, *t;
-				t = zend_string_dup(Z_STR_P(field), 0);
-				tstr = php_trim(t, ZEND_STRL("/"), 2);
-				serviceUrl = strpprintf(0, "%s/%s", ZSTR_VAL(tstr), ZSTR_VAL(lcName));
-				zend_update_property_str(azalea_service_ce, instance, ZEND_STRL("serviceUrl"), serviceUrl);
-				zend_string_release(t);
-				zend_string_release(tstr);
-				zend_string_release(serviceUrl);
-			}
 		}
 		// call __init method
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {

@@ -10,7 +10,6 @@
 #include "azalea/loader.h"
 #include "azalea/config.h"
 #include "azalea/model.h"
-#include "azalea/service.h"
 #include "azalea/exception.h"
 
 #include "ext/standard/php_filestat.h"	// for php_stat

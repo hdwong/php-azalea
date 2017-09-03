@@ -2,7 +2,7 @@ dnl $Id$
 dnl config.m4 for extension azalea
 
 PHP_ARG_ENABLE(azalea, whether to enable azalea support,
-[  --enable-azalea           Enable azalea support])
+[  --enable-azalea           Enable azalea support], "yes")
 
 if test "$PHP_AZALEA" != "no"; then
   PHP_NEW_EXTENSION(azalea, \
@@ -16,19 +16,9 @@ if test "$PHP_AZALEA" != "no"; then
     azalea/response.c \
     azalea/session.c \
     azalea/model.c \
-    azalea/service.c \
     azalea/view.c \
     azalea/template.c \
     azalea/exception.c \
-    azalea/transport_curl.c \
-    azalea/node-beauty/mysql.c \
-    azalea/node-beauty/mysql_sqlbuilder.c \
-    azalea/node-beauty/redis.c \
-    azalea/node-beauty/email.c \
-    azalea/node-beauty/sms.c \
-    azalea/node-beauty/es.c \
-    azalea/node-beauty/upyun.c \
-    azalea/node-beauty/location.c \
     azalea/ext-models/pinyin.c \
   , $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi

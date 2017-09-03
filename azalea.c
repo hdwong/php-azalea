@@ -37,11 +37,9 @@
 #include "azalea/response.h"
 #include "azalea/session.h"
 #include "azalea/model.h"
-#include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
 #include "azalea/exception.h"
-#include "azalea/transport_curl.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
 
@@ -58,7 +56,6 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(response);
     AZALEA_STARTUP(session);
     AZALEA_STARTUP(model);
-    AZALEA_STARTUP(service);
     AZALEA_STARTUP(view);
     AZALEA_STARTUP(exception);
 
@@ -84,7 +81,6 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(renderLevel) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	ZVAL_UNDEF(&AZALEA_G(bootstrap));
-	AZALEA_G(curlHandle) = NULL;
 	AZALEA_G(registeredTemplateFunctions) = 0;
 	AZALEA_G(hasServiceException) = 0;
 	AZALEA_G(startSession) = 0;
@@ -122,9 +118,6 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	if (Z_TYPE(AZALEA_G(bootstrap)) != IS_UNDEF) {
 		zval_ptr_dtor(&AZALEA_G(bootstrap));
-	}
-	if (AZALEA_G(curlHandle)) {
-		azaleaCurlClose(AZALEA_G(curlHandle));
 	}
 	if (AZALEA_G(registeredTemplateFunctions)) {
 		azaleaUnregisterTemplateFunctions(1);
@@ -179,17 +172,6 @@ PHP_MINFO_FUNCTION(azalea)
 {
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
-	// node-beauty models
-	php_info_print_table_colspan_header(2, "Node-Beauty Model Support");
-	php_info_print_table_row(2, "node-beauty-mysql", NODE_BEAUTY_MYSQL ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-redis", NODE_BEAUTY_REDIS ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-mongo", NODE_BEAUTY_MONGO ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-solr", NODE_BEAUTY_SOLR ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-elasticsearch", NODE_BEAUTY_ES ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-location", NODE_BEAUTY_LOCATION ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-email", NODE_BEAUTY_EMAIL ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-sms", NODE_BEAUTY_SMS ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-upyun", NODE_BEAUTY_UPYUN ? "yes" : "no");
 	// extend models
 	php_info_print_table_colspan_header(2, "Extend Model Support");
 	php_info_print_table_row(2, "pinyin", EXT_MODEL_PINYIN ? "yes" : "no");

@@ -24,7 +24,7 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.2.2"
+#define PHP_AZALEA_VERSION "2.0.0"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
@@ -35,26 +35,6 @@ extern zend_module_entry azalea_module_entry;
 #define AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_node_beauty_##module)
 #define AZALEA_EXT_MODEL_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_ext_model_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_EXT_MODEL_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_ext_model_##module)
-
-#define NODE_BEAUTY_MYSQL_NAME "nb-mysql"
-#define NODE_BEAUTY_REDIS_NAME "nb-redis"
-#define NODE_BEAUTY_MONGO_NAME "nb-mongo"
-#define NODE_BEAUTY_SOLR_NAME  "nb-solr"
-#define NODE_BEAUTY_ES_NAME    "nb-elasticsearch"
-#define NODE_BEAUTY_EMAIL_NAME "nb-email"
-#define NODE_BEAUTY_SMS_NAME   "nb-sms"
-#define NODE_BEAUTY_UPYUN_NAME "nb-upyun"
-#define NODE_BEAUTY_LOCATION_NAME "nb-location"
-
-#define NODE_BEAUTY_MYSQL 1
-#define NODE_BEAUTY_REDIS 1
-#define NODE_BEAUTY_MONGO 0
-#define NODE_BEAUTY_SOLR  0
-#define NODE_BEAUTY_ES    1
-#define NODE_BEAUTY_EMAIL 1
-#define NODE_BEAUTY_SMS   1
-#define NODE_BEAUTY_UPYUN 1
-#define NODE_BEAUTY_LOCATION 1
 
 #define EXT_MODEL_PINYIN_NAME "pinyin"
 #define EXT_MODEL_MYSQL_NAME  "mysql"
@@ -91,7 +71,6 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_ulong renderLevel;
 	zend_string *environ;
 	azalea_bootstrap_t bootstrap;
-	void *curlHandle;
 	zend_bool registeredTemplateFunctions;
 	zend_bool hasServiceException;
 	zend_bool startSession;
