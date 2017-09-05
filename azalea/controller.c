@@ -39,7 +39,7 @@ AZALEA_STARTUP_FUNCTION(controller)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Controller), azalea_controller_methods);
-	azaleaControllerCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaControllerCe = zend_register_internal_class(&ce);
 	azaleaControllerCe->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 	zend_declare_property_null(azaleaControllerCe, ZEND_STRL("_folder"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(azaleaControllerCe, ZEND_STRL("_controller"), ZEND_ACC_PRIVATE);

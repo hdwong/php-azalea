@@ -37,7 +37,7 @@ AZALEA_STARTUP_FUNCTION(view)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(View), azalea_view_methods);
-	azaleaViewCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaViewCe = zend_register_internal_class(&ce);
 	azaleaViewCe->ce_flags |= ZEND_ACC_FINAL;
 	zend_declare_property_null(azaleaViewCe, ZEND_STRL("_environ"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(azaleaViewCe, ZEND_STRL("_data"), ZEND_ACC_PRIVATE);

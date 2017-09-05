@@ -17,6 +17,7 @@ zend_class_entry *azaleaConfigCe;
 
 /* {{{ class Azalea\Config methods */
 static zend_function_entry azalea_config_methods[] = {
+	PHP_ME(azalea_config, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, getAll, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
@@ -28,7 +29,7 @@ AZALEA_STARTUP_FUNCTION(config)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Config), azalea_config_methods);
-	azaleaConfigCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaConfigCe = zend_register_internal_class(&ce);
 	azaleaConfigCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
@@ -344,6 +345,10 @@ zval * azaleaConfigSubFindEx(const char *key, size_t lenKey, const char *subKey,
 	found = zend_hash_str_find(Z_ARRVAL_P(found), subKey, lenSubKey);
 	return found ? found : NULL;
 }
+/* }}} */
+
+/* {{{ proto __construct */
+PHP_METHOD(azalea_config, __construct) {}
 /* }}} */
 
 /* {{{ proto mixed get */

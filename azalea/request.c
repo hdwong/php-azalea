@@ -46,7 +46,7 @@ AZALEA_STARTUP_FUNCTION(request)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Request), azalea_request_methods);
-	azaleaRequestCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaRequestCe = zend_register_internal_class(&ce);
 	azaleaRequestCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;

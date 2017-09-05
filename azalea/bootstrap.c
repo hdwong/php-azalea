@@ -46,7 +46,7 @@ AZALEA_STARTUP_FUNCTION(bootstrap)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Bootstrap), azalea_bootstrap_methods);
-	azaleaBootstrapCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaBootstrapCe = zend_register_internal_class(&ce);
 	azaleaBootstrapCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;

@@ -49,7 +49,7 @@ AZALEA_STARTUP_FUNCTION(model)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Model), azalea_model_methods);
-	azaleaModelCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaModelCe = zend_register_internal_class(&ce);
 	azaleaModelCe->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 
 #ifdef WITH_PINYIN

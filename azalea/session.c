@@ -29,7 +29,7 @@ AZALEA_STARTUP_FUNCTION(session)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Session), azalea_session_methods);
-	azaleaSessionCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaSessionCe = zend_register_internal_class(&ce);
 	azaleaSessionCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;

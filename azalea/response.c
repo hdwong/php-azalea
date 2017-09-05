@@ -40,7 +40,7 @@ AZALEA_STARTUP_FUNCTION(response)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Response), azalea_response_methods);
-	azaleaResponseCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaResponseCe = zend_register_internal_class(&ce);
 	azaleaResponseCe->ce_flags |= ZEND_ACC_FINAL;
 	zend_declare_property_null(azaleaResponseCe, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 

@@ -39,6 +39,7 @@
 #include "azalea/model.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
+#include "azalea/text.h"
 #include "azalea/exception.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
@@ -59,6 +60,7 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(session);
     AZALEA_STARTUP(model);
     AZALEA_STARTUP(view);
+    AZALEA_STARTUP(text);
     AZALEA_STARTUP(exception);
 
     return SUCCESS;

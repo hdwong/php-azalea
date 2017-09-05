@@ -9,6 +9,7 @@
 
 AZALEA_STARTUP_FUNCTION(config);
 
+PHP_METHOD(azalea_config, __construct);
 PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getAll);
 

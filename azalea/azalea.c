@@ -12,7 +12,6 @@
 #include "azalea/exception.h"
 
 #include "ext/date/php_date.h"
-#include "ext/standard/php_rand.h"
 #ifdef PHP_WIN32
 #include "win32/time.h"
 #elif defined(NETWARE)
@@ -30,94 +29,9 @@ const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, timer, ZEND_FN(azalea_timer), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, debug, ZEND_FN(azalea_debug), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
-/* }}} */
-
-/* {{{ proto azalea_randomString */
-PHP_FUNCTION(azalea_randomString)
-{
-	zend_long len;
-	zend_string *mode = NULL;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|S", &len, &mode) == FAILURE) {
-		return;
-	}
-	if (len < 1) {
-		php_error_docref(NULL, E_WARNING, "String length is smaller than 1");
-		RETURN_FALSE;
-	}
-
-	static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	char *p = base;
-	size_t l = 62;
-
-	if (mode) {
-		if (strncmp(ZSTR_VAL(mode), "10", 2) == 0 || strncasecmp(ZSTR_VAL(mode), "n", 1) == 0) {
-			// [0-9]
-			l = 10;
-		} else if (strncmp(ZSTR_VAL(mode), "16", 2) == 0) {
-			// [0-9a-f]
-			l = 16;
-		} else if (strncasecmp(ZSTR_VAL(mode), "c", 1) == 0) {
-			// [a-zA-Z]
-			p += 10;
-			l = 52;
-		} else if (strncasecmp(ZSTR_VAL(mode), "ln", 2) == 0) {
-			// [0-9a-z]
-			l = 36;
-		} else if (strncasecmp(ZSTR_VAL(mode), "un", 2) == 0) {
-			// [0-9A-Z]
-			p += 36;
-			l = 36;
-		} else if (strncasecmp(ZSTR_VAL(mode), "l", 1) == 0) {
-			// [a-z]
-			p += 10;
-			l = 26;
-		} else if (strncasecmp(ZSTR_VAL(mode), "u", 1) == 0) {
-			// [A-Z]
-			p += 36;
-			l = 26;
-		}
-	}
-	char result[len];
-	zend_long i, number;
-	l -= 1; // for RAND_RANGE
-	if (!BG(mt_rand_is_seeded)) {
-		php_mt_srand(GENERATE_SEED());
-	}
-	for (i = 0; i < len; ++i) {
-		number = (zend_long) php_mt_rand() >> 1;
-		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-		result[i] = *(p + number);
-	}
-	RETURN_STRINGL(result, len);
-}
-/* }}} */
-
-/* {{{ proto azalea_maskString */
-PHP_FUNCTION(azalea_maskString)
-{
-	zend_string *string;
-	zend_bool isEmail = 0;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &string, &isEmail) == FAILURE) {
-		return;
-	}
-	// copy for change
-	string = zend_string_init(ZSTR_VAL(string), ZSTR_LEN(string), 0);
-	if (ZSTR_LEN(string) > 1) {
-		if (!isEmail) {
-			// normal string
-		} else {
-			// email
-		}
-	}
-	RETURN_STR(string);
-}
 /* }}} */
 
 /* {{{ proto azaleaUrl */

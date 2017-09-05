@@ -28,7 +28,7 @@ AZALEA_STARTUP_FUNCTION(loader)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Loader), azalea_loader_methods);
-	azaleaLoaderCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaLoaderCe = zend_register_internal_class(&ce);
 	azaleaLoaderCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;

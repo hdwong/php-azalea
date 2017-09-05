@@ -2,18 +2,18 @@ dnl $Id$
 dnl config.m4 for extension azalea
 
 PHP_ARG_ENABLE(azalea, whether to enable azalea support,
-[  --enable-azalea           Enable azalea support], yes)
+[  --enable-azalea         Enable azalea support], yes)
 
 PHP_ARG_WITH(service, for Azalea\ServiceModel support,
-[  --with-service            Include Azalea\ServiceModel support], no, no)
+[  --with-service          Include Azalea\ServiceModel support], no, no)
 
 PHP_ARG_WITH(mysqlnd, for Azalea\MysqlndModel support,
-[  --with-mysqlnd            Include Azalea\MysqlndModel support. It depends on
-                             the PHP mysqlnd extension.], no, no)
+[  --with-mysqlnd          Include Azalea\MysqlndModel support. It depends on
+                          the PHP mysqlnd extension.], no, no)
 
 PHP_ARG_WITH(sqlbuilder, for Azalea\SqlBuilder support,
-[  --with-sqlbuilder         Include Azalea\SqlBuilder support. It depends on
-                             the azalea_sqlbuilder extension.], no, no)
+[  --with-sqlbuilder       Include Azalea\SqlBuilder support. It depends on
+                          the azalea_sqlbuilder extension.], no, no)
 
 if test "$PHP_AZALEA" != "no"; then
     AC_DEFINE([WITH_PINYIN], 1, [Whether pinyin is enabled])
@@ -46,6 +46,7 @@ if test "$PHP_AZALEA" != "no"; then
         azalea/model.c \
         azalea/view.c \
         azalea/template.c \
+        azalea/text.c \
         azalea/exception.c \
         azalea/ext-models/pinyin.c \
         azalea/ext-models/mysqlnd.c \
