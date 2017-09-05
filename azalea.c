@@ -40,6 +40,9 @@
 #include "azalea/view.h"
 #include "azalea/template.h"
 #include "azalea/text.h"
+#ifdef WITH_I18N
+#include "azalea/i18n.h"
+#endif
 #include "azalea/exception.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
@@ -62,6 +65,9 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(view);
     AZALEA_STARTUP(text);
     AZALEA_STARTUP(exception);
+#ifdef WITH_I18N
+    AZALEA_STARTUP(i18n);
+#endif
 
     return SUCCESS;
 }

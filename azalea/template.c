@@ -10,6 +10,7 @@
 #include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
+#include "azalea/i18n.h"
 
 #include "ext/standard/html.h"  // for php_escape_html_entities
 #include "main/SAPI.h"  // for SG
@@ -32,6 +33,7 @@ static zend_function_entry azalea_template_functions[] = {
 	ZEND_NAMED_FE(_p, ZEND_FN(azalea_template_print), NULL)	// escape & echo
 	ZEND_NAMED_FE(_sp, ZEND_FN(azalea_template_return), NULL)	// escape & return
 	ZEND_NAMED_FE(_t, ZEND_FN(azalea_template_translate), NULL)	// translate & echo
+	ZEND_NAMED_FE(_tp, ZEND_FN(azalea_template_translatePlural), NULL)	// translatePlural & echo
 	ZEND_NAMED_FE(_url, ZEND_FN(azalea_url), NULL)	// like Azalea\url
 	ZEND_NAMED_FE(_conf, ZEND_MN(azalea_config_get), NULL)	// like Azalea\Config::get
 	ZEND_NAMED_FE(_debug, ZEND_FN(azalea_debug), NULL)	// like Azalea\debug
@@ -66,6 +68,12 @@ PHP_FUNCTION(azalea_template_return)
 
 /* {{{ proto _t */
 PHP_FUNCTION(azalea_template_translate)
+{
+}
+/* }}} */
+
+/* {{{ proto _tp */
+PHP_FUNCTION(azalea_template_translatePlural)
 {
 }
 /* }}} */

@@ -18,6 +18,6 @@ void azaleaLoadConfig(zval *);
 #define azaleaConfigSubFind(key, subKey) azaleaConfigSubFindEx(key, strlen(key), subKey, strlen(subKey))
 zval * azaleaConfigSubFindEx(const char *key, size_t lenKey, const char *subKey, size_t lenSubKey);
 
-extern zend_class_entry *azalea_config_ce;
+extern zend_class_entry *azaleaConfigCe;
 
 #endif /* AZALEA_CONFIG_H_ */

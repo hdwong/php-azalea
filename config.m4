@@ -4,8 +4,12 @@ dnl config.m4 for extension azalea
 PHP_ARG_ENABLE(azalea, whether to enable azalea support,
 [  --enable-azalea         Enable azalea support], yes)
 
+PHP_ARG_ENABLE(i18n, whether to enable Azalea\I18n support,
+[  --enable-i18n           Enable Azalea\I18n support], yes)
+
 PHP_ARG_WITH(service, for Azalea\ServiceModel support,
-[  --with-service          Include Azalea\ServiceModel support], no, no)
+[  --with-service          Include Azalea\ServiceModel support. It depends on
+                          the PHP curl extension.], no, no)
 
 PHP_ARG_WITH(mysqlnd, for Azalea\MysqlndModel support,
 [  --with-mysqlnd          Include Azalea\MysqlndModel support. It depends on
@@ -18,10 +22,14 @@ PHP_ARG_WITH(sqlbuilder, for Azalea\SqlBuilder support,
 if test "$PHP_AZALEA" != "no"; then
     AC_DEFINE([WITH_PINYIN], 1, [Whether pinyin is enabled])
 
+    if test "$PHP_I18N" != "no"; then
+        AC_DEFINE([WITH_I18N], 1, [Whether Azalea\I18n is enabled])
+    fi
+    
     if test "$PHP_SERVICE" != "no"; then
         PHP_ADD_EXTENSION_DEP(azalea, curl, true)
         AC_DEFINE([WITH_SERVICE], 1, [Whether Azalea\ServiceModel is enabled])
-    fi 
+    fi
     
     if test "$PHP_MYSQLND" != "no"; then
         PHP_ADD_EXTENSION_DEP(azalea, mysqlnd, true)
@@ -47,6 +55,7 @@ if test "$PHP_AZALEA" != "no"; then
         azalea/view.c \
         azalea/template.c \
         azalea/text.c \
+        azalea/i18n.c \
         azalea/exception.c \
         azalea/ext-models/pinyin.c \
         azalea/ext-models/mysqlnd.c \
