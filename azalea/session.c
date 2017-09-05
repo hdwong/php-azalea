@@ -12,10 +12,9 @@
 
 #include "ext/session/php_session.h"  // for php_*_session_var
 
-zend_class_entry *azalea_session_ce;
+zend_class_entry *azaleaSessionCe;
 
-/* {{{ class Azalea\Session methods
- */
+/* {{{ class Azalea\Session methods */
 static zend_function_entry azalea_session_methods[] = {
 	PHP_ME(azalea_session, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_session, get, NULL, ZEND_ACC_PUBLIC)
@@ -25,14 +24,13 @@ static zend_function_entry azalea_session_methods[] = {
 };
 /* }}} */
 
-/* {{{ AZALEA_STARTUP_FUNCTION
- */
+/* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_STARTUP_FUNCTION(session)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Session), azalea_session_methods);
-	azalea_session_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_session_ce->ce_flags |= ZEND_ACC_FINAL;
+	azaleaSessionCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaSessionCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }

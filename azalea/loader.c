@@ -14,7 +14,7 @@
 
 #include "ext/standard/php_filestat.h"	// for php_stat
 
-zend_class_entry *azalea_loader_ce;
+zend_class_entry *azaleaLoaderCe;
 
 /* {{{ class Azalea\Loader methods */
 static zend_function_entry azalea_loader_methods[] = {
@@ -28,8 +28,8 @@ AZALEA_STARTUP_FUNCTION(loader)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Loader), azalea_loader_methods);
-	azalea_loader_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_loader_ce->ce_flags |= ZEND_ACC_FINAL;
+	azaleaLoaderCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaLoaderCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }

@@ -16,7 +16,7 @@
 
 zend_class_entry *azalea_ext_model_pinyin_ce;
 
-/* {{{ class LocationModel methods */
+/* {{{ class PinyinModel methods */
 static zend_function_entry azalea_ext_model_pinyin_methods[] = {
 	PHP_ME(azalea_ext_model_pinyin, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_ext_model_pinyin, first, NULL, ZEND_ACC_PUBLIC)
@@ -30,7 +30,7 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(pinyin)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(PinyinModel), azalea_ext_model_pinyin_methods);
-	azalea_ext_model_pinyin_ce = zend_register_internal_class_ex(&ce, azalea_model_ce);
+	azalea_ext_model_pinyin_ce = zend_register_internal_class_ex(&ce, azaleaModelCe);
 	azalea_ext_model_pinyin_ce->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;

@@ -4,6 +4,10 @@
  * Created by Bun Wong on 16-7-15.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif
+
 #include "php.h"
 #include "php_azalea.h"
 #include "azalea/namespace.h"
@@ -20,11 +24,14 @@
 #include "ext/standard/php_var.h"  // for php_var_serialize
 #include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
 
-#if EXT_MODEL_PINYIN
+#ifdef WITH_PINYIN
 #include "azalea/ext-models/pinyin.h"
 #endif
+#ifdef WITH_MYSQLND
+#include "azalea/ext-models/mysqlnd.h"
+#endif
 
-zend_class_entry *azalea_model_ce;
+zend_class_entry *azaleaModelCe;
 
 /* {{{ class Azalea\Model methods
  */
@@ -42,11 +49,14 @@ AZALEA_STARTUP_FUNCTION(model)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Model), azalea_model_methods);
-	azalea_model_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_model_ce->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+	azaleaModelCe = zend_register_internal_class(&ce TSRMLS_CC);
+	azaleaModelCe->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 
-#if EXT_MODEL_PINYIN
+#ifdef WITH_PINYIN
 	AZALEA_EXT_MODEL_STARTUP(pinyin);
+#endif
+#ifdef WITH_MYSQLND
+	AZALEA_EXT_MODEL_STARTUP(mysqlnd);
 #endif
 
 	return SUCCESS;
@@ -56,7 +66,7 @@ AZALEA_STARTUP_FUNCTION(model)
 /* {{{ proto getRequest */
 PHP_METHOD(azalea_model, getRequest)
 {
-	object_init_ex(return_value, azalea_request_ce);
+	object_init_ex(return_value, azaleaRequestCe);
 }
 /* }}} */
 
@@ -125,9 +135,14 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 /* {{{ proto azaleaGetExtModelClassEntry */
 static zend_class_entry * azaleaModelGetExtModelClassEntry(zend_string *name)
 {
-#if NODE_BEAUTY_MYSQL
-	if (0 == strncmp(EXT_MODEL_PINYIN_NAME, ZSTR_VAL(name), ZSTR_LEN(name))) {
+#ifdef WITH_PINYIN
+	if (0 == strncmp("pinyin", ZSTR_VAL(name), ZSTR_LEN(name))) {
 		return azalea_ext_model_pinyin_ce;
+	}
+#endif
+#ifdef WITH_MYSQLND
+	if (0 == strncmp("mysqlnd", ZSTR_VAL(name), ZSTR_LEN(name))) {
+		return azalea_ext_model_mysqlnd_ce;
 	}
 #endif
 	return NULL;
@@ -219,7 +234,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			}
 		}
 		// check super class name
-		if (!instanceof_function(ce, azalea_model_ce)) {
+		if (!instanceof_function(ce, azaleaModelCe)) {
 			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
 			RETURN_FALSE;
 		}

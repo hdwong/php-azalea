@@ -29,17 +29,18 @@ static char *get_default_charset(void) {
 /* {{{ class Azalea\View template functions
  */
 static zend_function_entry azalea_template_functions[] = {
-	ZEND_NAMED_FE(p, ZEND_FN(azalea_template_printf), NULL)  // escape & printf
-	ZEND_NAMED_FE(t, ZEND_FN(azalea_template_sprintf), NULL)  // escape & sprintf
-	ZEND_NAMED_FE(url, ZEND_FN(azalea_url), NULL)  // url(url, includeHost)
-	ZEND_NAMED_FE(conf, ZEND_MN(azalea_config_get), NULL)  // conf(key, default)
-	ZEND_NAMED_FE(conf2, ZEND_MN(azalea_config_getSub), NULL)  // conf2(key, subkey, default)
+	ZEND_NAMED_FE(_p, ZEND_FN(azalea_template_print), NULL)	// escape & echo
+	ZEND_NAMED_FE(_sp, ZEND_FN(azalea_template_return), NULL)	// escape & return
+	ZEND_NAMED_FE(_t, ZEND_FN(azalea_template_translate), NULL)	// translate & echo
+	ZEND_NAMED_FE(_url, ZEND_FN(azalea_url), NULL)	// like Azalea\url
+	ZEND_NAMED_FE(_conf, ZEND_MN(azalea_config_get), NULL)	// like Azalea\Config::get
+	ZEND_NAMED_FE(_debug, ZEND_FN(azalea_debug), NULL)	// like Azalea\debug
 	PHP_FE_END
 };
 /* }}} */
 
-/* {{{ proto void p( string $string ) */
-PHP_FUNCTION(azalea_template_printf)
+/* {{{ proto _p */
+PHP_FUNCTION(azalea_template_print)
 {
 	zend_string *text;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
@@ -51,8 +52,8 @@ PHP_FUNCTION(azalea_template_printf)
 }
 /* }}} */
 
-/* {{{ proto string t( string $string ) */
-PHP_FUNCTION(azalea_template_sprintf)
+/* {{{ proto _sp */
+PHP_FUNCTION(azalea_template_return)
 {
 	zend_string *text;
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &text) == FAILURE) {
@@ -63,10 +64,16 @@ PHP_FUNCTION(azalea_template_sprintf)
 }
 /* }}} */
 
+/* {{{ proto _t */
+PHP_FUNCTION(azalea_template_translate)
+{
+}
+/* }}} */
+
 /* {{{ proto registerTemplateFunctions */
 void azaleaRegisterTemplateFunctions()
 {
-	if (0 == AZALEA_G(renderLevel)++) {
+	if (0 == AZALEA_G(renderDepth)++) {
 		zend_register_functions(NULL, azalea_template_functions, NULL, MODULE_TEMPORARY);
 		AZALEA_G(registeredTemplateFunctions) = 1;
 	}
@@ -76,10 +83,10 @@ void azaleaRegisterTemplateFunctions()
 /* {{{ proto unregisterTemplateFunctions */
 void azaleaUnregisterTemplateFunctions(zend_bool forced)
 {
-	if (0 == --AZALEA_G(renderLevel) || forced) {
+	if (0 == --AZALEA_G(renderDepth) || forced) {
 		zend_unregister_functions(azalea_template_functions, -1, NULL);
 		AZALEA_G(registeredTemplateFunctions) = 0;
-		AZALEA_G(renderLevel) = 0;
+		AZALEA_G(renderDepth) = 0;
 	}
 }
 /* }}} */

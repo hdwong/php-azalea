@@ -31,18 +31,8 @@ extern zend_module_entry azalea_module_entry;
 #define AZALEA_STARTUP_FUNCTION(module)		ZEND_MINIT_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN_FUNCTION(module)	ZEND_MSHUTDOWN_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN(module)				ZEND_MODULE_SHUTDOWN_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
-#define AZALEA_NODE_BEAUTY_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_node_beauty_##module)(INIT_FUNC_ARGS_PASSTHRU)
-#define AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_node_beauty_##module)
 #define AZALEA_EXT_MODEL_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_ext_model_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_EXT_MODEL_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_ext_model_##module)
-
-#define EXT_MODEL_PINYIN_NAME "pinyin"
-#define EXT_MODEL_MYSQL_NAME  "mysql"
-#define EXT_MODEL_REDIS_NAME  "redis"
-
-#define EXT_MODEL_PINYIN  1
-#define EXT_MODEL_MYSQL   0
-#define EXT_MODEL_REDIS   0
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)
@@ -67,14 +57,17 @@ extern zend_module_entry azalea_module_entry;
 #define azalea_exception_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
-	double timer;
-	zend_ulong renderLevel;
-	zend_string *environ;
-	azalea_bootstrap_t bootstrap;
-	zend_bool registeredTemplateFunctions;
-	zend_bool hasServiceException;
-	zend_bool startSession;
-	zend_string *directory;
+	int moduleNumber;				// PHP 模块序号
+	double timer;					// 计时器
+	zend_ulong renderDepth;			// 渲染嵌套层数
+	zend_string *environ;			// 运行环境
+	azalea_bootstrap_t bootstrap;	// Azalea\Bootstrap 实例变量
+	zend_bool registeredTemplateFunctions;	// 是否已注册模板函数
+	zend_bool startSession;			// 是否开启回话
+	zval instances;					// 实例缓存变量
+	zval config;					// 配置项变量
+
+	zend_string *docRoot;			// 入口文件根目录
 	zend_string *uri;
 	zend_string *baseUri;
 	zend_string *ip;
@@ -88,9 +81,6 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *controllerName;
 	zend_string *actionName;
 	zval pathArgs;
-
-	zval instances;
-	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(azalea);

@@ -48,6 +48,8 @@ PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
 
+    AZALEA_G(moduleNumber) = module_number;
+
     AZALEA_STARTUP(loader);
     AZALEA_STARTUP(bootstrap);
     AZALEA_STARTUP(config);
@@ -78,13 +80,12 @@ PHP_RINIT_FUNCTION(azalea)
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (zend_long) now, CONST_CS);
 	AZALEA_G(timer) = now;
-	AZALEA_G(renderLevel) = 0;
+	AZALEA_G(renderDepth) = 0;
 	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
 	ZVAL_UNDEF(&AZALEA_G(bootstrap));
 	AZALEA_G(registeredTemplateFunctions) = 0;
-	AZALEA_G(hasServiceException) = 0;
 	AZALEA_G(startSession) = 0;
-	AZALEA_G(directory) = NULL;
+	AZALEA_G(docRoot) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;
 	AZALEA_G(ip) = NULL;
@@ -122,8 +123,8 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(registeredTemplateFunctions)) {
 		azaleaUnregisterTemplateFunctions(1);
 	}
-	if (AZALEA_G(directory)) {
-		zend_string_release(AZALEA_G(directory));
+	if (AZALEA_G(docRoot)) {
+		zend_string_release(AZALEA_G(docRoot));
 	}
 	if (AZALEA_G(uri)) {
 		zend_string_release(AZALEA_G(uri));
@@ -172,11 +173,31 @@ PHP_MINFO_FUNCTION(azalea)
 {
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
+	// embedded classes
+	php_info_print_table_colspan_header(2, "Embedded Class Support");
+#ifdef WITH_SERVICE
+	php_info_print_table_row(2, "service",  "yes");
+#else
+	php_info_print_table_row(2, "service",  "no");
+#endif
 	// extend models
 	php_info_print_table_colspan_header(2, "Extend Model Support");
-	php_info_print_table_row(2, "pinyin", EXT_MODEL_PINYIN ? "yes" : "no");
-	php_info_print_table_row(2, "mysql", EXT_MODEL_MYSQL ? "yes" : "no");
-	php_info_print_table_row(2, "redis", EXT_MODEL_REDIS ? "yes" : "no");
+#ifdef WITH_PINYIN
+	php_info_print_table_row(2, "pinyin",  "yes");
+#else
+	php_info_print_table_row(2, "pinyin",  "no");
+#endif
+#ifdef WITH_MYSQLND
+	php_info_print_table_row(2, "mysqlnd",
+#ifdef WITH_SQLBUILDER
+			"yes (use azalea_sqlbuilder)"
+#else
+			"yes"
+#endif
+	);
+#else
+	php_info_print_table_row(2, "mysqlnd",  "no");
+#endif
 
 	php_info_print_table_end();
 
@@ -184,9 +205,22 @@ PHP_MINFO_FUNCTION(azalea)
 }
 /* }}} */
 
+/* {{{ azalea_deps[] */
+static const zend_module_dep azalea_deps[] = {
+#ifdef WITH_MYSQLND
+		ZEND_MOD_REQUIRED("mysqlnd")
+#endif
+#ifdef WITH_SQLBUILDER
+		ZEND_MOD_REQUIRED("azalea_sqlbuilder")
+#endif
+		ZEND_MOD_END
+};
+/* }}} */
+
 /* {{{ azalea_module_entry */
 zend_module_entry azalea_module_entry = {
-	STANDARD_MODULE_HEADER,
+	STANDARD_MODULE_HEADER_EX, NULL,
+	azalea_deps,
 	"azalea",
 	azalea_functions,
 	PHP_MINIT(azalea),

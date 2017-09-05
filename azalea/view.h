@@ -15,6 +15,6 @@ PHP_METHOD(azalea_view, assign);
 PHP_METHOD(azalea_view, append);
 PHP_METHOD(azalea_view, clean);
 
-extern zend_class_entry *azalea_view_ce;
+extern zend_class_entry *azaleaViewCe;
 
 #endif /* AZALEA_VIEW_H_ */

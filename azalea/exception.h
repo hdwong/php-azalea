@@ -9,7 +9,6 @@
 
 AZALEA_STARTUP_FUNCTION(exception);
 
-PHP_METHOD(azalea_exception, hasServiceException);
 PHP_METHOD(azalea_exception404, getUri);
 PHP_METHOD(azalea_exception404, getRoute);
 PHP_METHOD(azalea_exception500, getServiceInfo);
@@ -20,8 +19,8 @@ PHP_METHOD(azalea_exception500, getServiceInfo);
 void throw404Str(const char *message, size_t len);
 void throw500Str(const char *message, size_t len, zend_string *serviceMethod, zend_string *serviceUrl, zval *arguments);
 
-extern zend_class_entry *azalea_exception_ce;
-extern zend_class_entry *azalea_exception404_ce;
-extern zend_class_entry *azalea_exception500_ce;
+extern zend_class_entry *azaleaExceptionCe;
+extern zend_class_entry *azaleaException404Ce;
+extern zend_class_entry *azaleaException500Ce;
 
 #endif /* AZALEA_EXCEPTION_H_ */
