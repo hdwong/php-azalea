@@ -48,7 +48,7 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 		} else {
 			hostname = zend_string_init(ZEND_STRL("http://"), 0);
 		}
-		field = azaleaConfigFind("hostname");	// get from config
+		field = azaleaConfigSubFindEx(ZEND_STRL("hostname"), NULL, 0);	// get from config
 		if (!field) {
 			// host not set, try to get from global
 			field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_HOST"));
@@ -107,8 +107,8 @@ zend_bool azaleaDebugMode()
 {
 	zval *configDebug, *configDebugKey, *debugKeyField;
 
-	configDebug = azaleaConfigFind("debug");
-	configDebugKey = azaleaConfigFind("debug_key");
+	configDebug = azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0);
+	configDebugKey = azaleaConfigSubFindEx(ZEND_STRL("debug_key"), NULL, 0);
 	debugKeyField = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_AZALEA_DEBUG_KEY"));
 
 	if ((!configDebug || Z_TYPE_P(configDebug) != IS_TRUE) &&

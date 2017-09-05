@@ -151,14 +151,14 @@ PHP_METHOD(azalea_response, gotoRoute)
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		controllerName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaConfigSubFind("dispatch", "default_controller"))) {
+	} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_controller")))) {
 		// default controller
 		controllerName = zend_string_copy(Z_STR_P(field));
 	}
 	// action
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
 		actionName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaConfigSubFind("dispatch", "default_action"))) {
+	} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_action")))) {
 		// default action
 		actionName = zend_string_copy(Z_STR_P(field));
 	}

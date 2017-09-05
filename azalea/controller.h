@@ -13,8 +13,9 @@ PHP_METHOD(azalea_controller, __construct);
 PHP_METHOD(azalea_controller, getSession);
 PHP_METHOD(azalea_controller, loadModel);
 PHP_METHOD(azalea_controller, getModel);
-PHP_METHOD(azalea_controller, getView);
 PHP_METHOD(azalea_controller, notFound);
+
+void azaleaControllerInit(zval *this, zend_class_entry *ce, zend_string *folderName, zend_string *controllerName);
 
 extern zend_class_entry *azaleaControllerCe;
 

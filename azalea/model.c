@@ -189,7 +189,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 		ce = NULL;
 		do {
 			// try to load extend models
-			conf = azaleaConfigFind("ext-model");
+			conf = azaleaConfigSubFindEx(ZEND_STRL("ext-model"), NULL, 0);
 			if (conf && Z_TYPE_P(conf) == IS_ARRAY && (conf = zend_hash_find(Z_ARRVAL_P(conf), lcName)) &&
 					Z_TYPE_P(conf) == IS_STRING) {
 				if (!is_numeric_string(Z_STRVAL_P(conf), Z_STRLEN_P(conf), NULL, NULL, 0)) {
