@@ -182,7 +182,7 @@ static zend_bool azaleaI18nInit(zval **translation, zend_string *locale)
 	return 1;
 }
 
-static void azaleaI18nTranslate(zval *return_value, zend_string *message, zval *values, zval *translation, zend_string *textDomain, zend_string *locale)
+static void azaleaI18nTranslateMessage(zval *return_value, zend_string *message, zval *values, zval *translation, zend_string *textDomain, zend_string *locale)
 {
 	zval *pTextDomain, *pMessage;
 
@@ -244,6 +244,11 @@ PHP_METHOD(azalea_i18n, addTranslationFile)
 /* {{{ proto translate */
 PHP_METHOD(azalea_i18n, translate)
 {
+	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void azaleaI18nTranslate(INTERNAL_FUNCTION_PARAMETERS)
+{
 	zend_string *message, *textDomain = NULL, *locale = NULL;
 	zval *translation, *values = NULL;
 
@@ -260,7 +265,7 @@ PHP_METHOD(azalea_i18n, translate)
 		translation = NULL;
 	}
 
-	azaleaI18nTranslate(return_value, message, values, translation, textDomain, locale);
+	azaleaI18nTranslateMessage(return_value, message, values, translation, textDomain, locale);
 }
 /* }}} */
 
@@ -319,6 +324,11 @@ static zend_bool azaleaI18nCheckPlural(zval *translation, zval *values, zend_str
 /* {{{ proto translatePlural */
 PHP_METHOD(azalea_i18n, translatePlural)
 {
+	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+void azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAMETERS)
+{
 	zend_string *messageSingular, *messagePlural, *textDomain = NULL, *locale = NULL;
 	zval *translation, *values = NULL;
 	zend_bool isPlural;
@@ -338,6 +348,6 @@ PHP_METHOD(azalea_i18n, translatePlural)
 
 	// 检查当前 locale 配置中 _plural 的单数和复数条件，决定使用 messageSingular 或者 messagePlural
 	isPlural = azaleaI18nCheckPlural(translation, values, locale);
-	azaleaI18nTranslate(return_value, isPlural ? messagePlural : messageSingular, values, translation, textDomain, locale);
+	azaleaI18nTranslateMessage(return_value, isPlural ? messagePlural : messageSingular, values, translation, textDomain, locale);
 }
 /* }}} */

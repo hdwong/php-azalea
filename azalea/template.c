@@ -15,8 +15,7 @@
 #include "ext/standard/html.h"  // for php_escape_html_entities
 #include "main/SAPI.h"  // for SG
 
-/* {{{ get_default_charset
- */
+/* {{{ get_default_charset */
 static char *get_default_charset(void) {
 	if (PG(internal_encoding) && PG(internal_encoding)[0]) {
 		return PG(internal_encoding);
@@ -27,8 +26,7 @@ static char *get_default_charset(void) {
 }
 /* }}} */
 
-/* {{{ class Azalea\View template functions
- */
+/* {{{ class Azalea\View template functions */
 static zend_function_entry azalea_template_functions[] = {
 	ZEND_NAMED_FE(_p, ZEND_FN(azalea_template_print), NULL)	// escape & echo
 	ZEND_NAMED_FE(_sp, ZEND_FN(azalea_template_return), NULL)	// escape & return
@@ -69,12 +67,18 @@ PHP_FUNCTION(azalea_template_return)
 /* {{{ proto _t */
 PHP_FUNCTION(azalea_template_translate)
 {
+	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	zval_ptr_dtor(return_value);
 }
 /* }}} */
 
 /* {{{ proto _tp */
 PHP_FUNCTION(azalea_template_translatePlural)
 {
+	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	zval_ptr_dtor(return_value);
 }
 /* }}} */
 

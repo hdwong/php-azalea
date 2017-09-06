@@ -16,6 +16,9 @@ PHP_METHOD(azalea_i18n, addTranslationFile);
 PHP_METHOD(azalea_i18n, translate);
 PHP_METHOD(azalea_i18n, translatePlural);
 
+void azaleaI18nTranslate(INTERNAL_FUNCTION_PARAMETERS);
+void azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAMETERS);
+
 extern zend_class_entry *azaleaI18nCe;
 
 #endif /* AZALEA_I18N_H_ */
