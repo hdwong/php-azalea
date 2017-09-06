@@ -10,6 +10,7 @@
 AZALEA_STARTUP_FUNCTION(i18n);
 
 PHP_METHOD(azalea_i18n, __construct);
+PHP_METHOD(azalea_i18n, getLocale);
 PHP_METHOD(azalea_i18n, setLocale);
 PHP_METHOD(azalea_i18n, addTranslationFile);
 PHP_METHOD(azalea_i18n, translate);

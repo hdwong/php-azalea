@@ -98,7 +98,7 @@ PHP_FUNCTION(azalea_url)
 /* {{{ azalea_env */
 PHP_FUNCTION(azalea_env)
 {
-	RETURN_STR(zend_string_copy(AZALEA_G(environ)));
+	RETURN_STR_COPY(AZALEA_G(environ));
 }
 /* }}} */
 

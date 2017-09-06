@@ -83,12 +83,12 @@ PHP_METHOD(azalea_response, gotoUrl)
 		return;
 	}
 
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}
-	if (strncasecmp(ZSTR_VAL(url), "http://", sizeof("http://") - 1) &&
-			strncasecmp(ZSTR_VAL(url), "https://", sizeof("https://") - 1)) {
+	if (strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) &&
+			strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
 		// add url prefix
 		url = azaleaUrl(url, 0);
 	}
@@ -104,7 +104,7 @@ PHP_METHOD(azalea_response, gotoUrl)
 /* {{{ proto void reload(void) */
 PHP_METHOD(azalea_response, reload)
 {
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}
@@ -192,7 +192,7 @@ PHP_METHOD(azalea_response, setHeader)
 		return;
 	}
 
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}

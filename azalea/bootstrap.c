@@ -126,7 +126,7 @@ PHP_METHOD(azalea_bootstrap, init)
 		ZSTR_VAL(docRoot)[len] = DEFAULT_SLASH;
 		ZSTR_VAL(docRoot)[len + 1] = '\0';
 	} else {
-		docRoot = zend_string_init(ZEND_STRL("/"), 0);
+		docRoot = AG(stringSlash);
 	}
 	AZALEA_G(docRoot) = docRoot;
 
@@ -151,12 +151,12 @@ PHP_METHOD(azalea_bootstrap, init)
 			ZSTR_VAL(baseUri)[len + 1] = '\0';
 		} else {
 			// empty
-			baseUri = zend_string_init(ZEND_STRL("/"), 0);
+			baseUri = AG(stringSlash);
 		}
 		zend_string_release(tstr);
 	} else {
 		// empty
-		baseUri = zend_string_init(ZEND_STRL("/"), 0);
+		baseUri = AG(stringSlash);
 	}
 	do {
 		if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("PATH_INFO"))) &&
@@ -166,8 +166,8 @@ PHP_METHOD(azalea_bootstrap, init)
 		}
 		if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REQUEST_URI"))) &&
 				Z_TYPE_P(field) == IS_STRING) {
-			if (strncasecmp(Z_STRVAL_P(field), "http://", sizeof("http://") - 1) &&
-					strncasecmp(Z_STRVAL_P(field), "https://", sizeof("https://") - 1)) {
+			if (strncasecmp(Z_STRVAL_P(field), ZEND_STRL("http://")) &&
+					strncasecmp(Z_STRVAL_P(field), ZEND_STRL("https://"))) {
 				// not http url
 				char *pos = strstr(Z_STRVAL_P(field), "?");
 				if (pos) {
@@ -212,7 +212,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	} while (0);
 
 	if (!baseUri) {
-		baseUri = zend_string_init(ZEND_STRL("/"), 0);
+		baseUri = AG(stringSlash);
 	}
 	AZALEA_G(baseUri) = baseUri;
 
@@ -226,7 +226,7 @@ PHP_METHOD(azalea_bootstrap, init)
 	AZALEA_G(uri) = uri;
 
 	// define AZALEA magic const
-	module_number = AZALEA_G(moduleNumber);
+	module_number = AG(moduleNumber);
 	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "DOCROOT", ZSTR_VAL(docRoot), ZSTR_LEN(docRoot), CONST_CS);
 	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "BASEPATH", ZSTR_VAL(baseUri), ZSTR_LEN(baseUri), CONST_CS);
 
@@ -348,7 +348,7 @@ PHP_METHOD(azalea_bootstrap, run)
 			do {
 				--len;
 				p = ZSTR_VAL(uri) + len;
-				if (*p == '/') {
+				if (*p == DEFAULT_SLASH) {
 					break;
 				}
 			} while (p > ZSTR_VAL(uri));
@@ -358,9 +358,7 @@ PHP_METHOD(azalea_bootstrap, run)
 	// get paths
 	paths = &AZALEA_G(paths);
 	if (ZSTR_LEN(uri)) {
-		zend_string *delim = zend_string_init(ZEND_STRL("/"), 0);
-		php_explode(delim, uri, paths, ZEND_LONG_MAX);
-		zend_string_release(delim);
+		php_explode(AG(stringSlash), uri, paths, ZEND_LONG_MAX);
 	}
 	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("controllers"));
 	controllersPath = zend_string_dup(Z_STR_P(conf), 0);
@@ -378,24 +376,30 @@ PHP_METHOD(azalea_bootstrap, run)
 	if (!appRoot) {
 		appRoot = zend_string_copy(AZALEA_G(docRoot));
 	}
-	if (ZSTR_VAL(appRoot)[ZSTR_LEN(appRoot) - 1] != DEFAULT_SLASH) {
+	if (!IS_SLASH(ZSTR_VAL(appRoot)[ZSTR_LEN(appRoot) - 1])) {
 		tstr = appRoot;
 		appRoot = strpprintf(0, "%s%c", ZSTR_VAL(appRoot), DEFAULT_SLASH);
 		zend_string_release(tstr);
 	}
-	if (ZSTR_VAL(controllersPath)[0] != DEFAULT_SLASH) {
+
+	// define AZALEA magic const
+	module_number = AG(moduleNumber);
+	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "APPROOT", ZSTR_VAL(appRoot), ZSTR_LEN(appRoot), CONST_CS);
+	AZALEA_G(appRoot) = appRoot;
+
+	if (!IS_SLASH_P(ZSTR_VAL(controllersPath))) {
 		// relative path
 		tstr = controllersPath;
 		controllersPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(controllersPath));
 		zend_string_release(tstr);
 	}
-	if (ZSTR_VAL(modelsPath)[0] != DEFAULT_SLASH) {
+	if (!IS_SLASH_P(ZSTR_VAL(modelsPath))) {
 		// relative path
 		tstr = modelsPath;
 		modelsPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(modelsPath));
 		zend_string_release(tstr);
 	}
-	if (ZSTR_VAL(viewsPath)[0] != DEFAULT_SLASH) {
+	if (!IS_SLASH_P(ZSTR_VAL(viewsPath))) {
 		// relative path
 		tstr = viewsPath;
 		viewsPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(viewsPath));
@@ -411,11 +415,6 @@ PHP_METHOD(azalea_bootstrap, run)
 	AZALEA_G(controllersPath) = controllersPath;
 	AZALEA_G(modelsPath) = modelsPath;
 	AZALEA_G(viewsPath) = viewsPath;
-
-	// define AZALEA magic const
-	module_number = AZALEA_G(moduleNumber);
-	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "APPROOT", ZSTR_VAL(appRoot), ZSTR_LEN(appRoot), CONST_CS);
-	zend_string_release(appRoot);
 
 	// get folder / controller / action / arguments
 	zend_ulong pathsOffset = 0;
@@ -601,9 +600,7 @@ zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName,
 				// require controller file
 				int status = azaleaRequire(ZSTR_VAL(controllerPath), 1);
 				if (!status) {
-					tstr = strpprintf(0, "Controller file `%s` compile error.", ZSTR_VAL(controllerPath));
-					throw404(tstr);
-					zend_string_release(tstr);
+					// 保持 Exception throws
 					break;
 				}
 				// check controller class again
@@ -704,7 +701,7 @@ zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName,
 		}
 		// action method name
 		if (!actionMethod) {
-			if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+			if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 				// not WEB
 				actionMethod = strpprintf(0, "%s%s", ZSTR_VAL(name), ZSTR_VAL(AZALEA_G(environ)));
 			} else {

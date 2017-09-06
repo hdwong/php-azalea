@@ -46,13 +46,17 @@
 #include "azalea/exception.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
+ZEND_DECLARE_MODULE_GLOBALS(azalea_internal);
 
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
 
-    AZALEA_G(moduleNumber) = module_number;
+    AG(moduleNumber) = module_number;
+    AG(stringWeb) = zend_new_interned_string(zend_string_init(ZEND_STRL("WEB"), 1));
+    AG(stringEn) = zend_new_interned_string(zend_string_init(ZEND_STRL("en_US"), 1));
+    AG(stringSlash) = zend_new_interned_string(zend_string_init(ZEND_STRL("/"), 1));
 
     AZALEA_STARTUP(loader);
     AZALEA_STARTUP(bootstrap);
@@ -89,11 +93,13 @@ PHP_RINIT_FUNCTION(azalea)
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (zend_long) now, CONST_CS);
 	AZALEA_G(timer) = now;
 	AZALEA_G(renderDepth) = 0;
-	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
+	AZALEA_G(environ) = AG(stringWeb);
+	AZALEA_G(locale) = AG(stringEn);	// 默认 en_US
 	ZVAL_UNDEF(&AZALEA_G(bootstrap));
 	AZALEA_G(registeredTemplateFunctions) = 0;
 	AZALEA_G(startSession) = 0;
 	AZALEA_G(docRoot) = NULL;
+	AZALEA_G(appRoot) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;
 	AZALEA_G(ip) = NULL;
@@ -101,16 +107,16 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(controllersPath) = NULL;
 	AZALEA_G(modelsPath) = NULL;
 	AZALEA_G(viewsPath) = NULL;
-
 	array_init(&AZALEA_G(paths));
 	AZALEA_G(folderName) = NULL;
 	AZALEA_G(controllerName) = NULL;
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
-
 	array_init(&AZALEA_G(instances));
-
 	array_init(&AZALEA_G(config));
+#ifdef WITH_I18N
+	array_init(&AZALEA_G(translations));
+#endif
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
@@ -125,6 +131,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(environ)) {
 		zend_string_release(AZALEA_G(environ));
 	}
+	if (AZALEA_G(locale)) {
+		zend_string_release(AZALEA_G(locale));
+	}
 	if (Z_TYPE(AZALEA_G(bootstrap)) != IS_UNDEF) {
 		zval_ptr_dtor(&AZALEA_G(bootstrap));
 	}
@@ -133,6 +142,9 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	if (AZALEA_G(docRoot)) {
 		zend_string_release(AZALEA_G(docRoot));
+	}
+	if (AZALEA_G(appRoot)) {
+		zend_string_release(AZALEA_G(appRoot));
 	}
 	if (AZALEA_G(uri)) {
 		zend_string_release(AZALEA_G(uri));
@@ -155,7 +167,6 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(viewsPath)) {
 		zend_string_release(AZALEA_G(viewsPath));
 	}
-
 	zval_ptr_dtor(&AZALEA_G(paths));
 	if (AZALEA_G(folderName)) {
 		zend_string_release(AZALEA_G(folderName));
@@ -167,10 +178,11 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(actionName));
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
-
 	zval_ptr_dtor(&AZALEA_G(instances));
-
 	zval_ptr_dtor(&AZALEA_G(config));
+#ifdef WITH_I18N
+	zval_ptr_dtor(&AZALEA_G(translations));
+#endif
 
 	return SUCCESS;
 }

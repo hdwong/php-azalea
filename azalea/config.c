@@ -243,7 +243,7 @@ void azaleaLoadConfig(zval *val)
 	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("env"));
 	array_init(&elSessionEnv);
 	if (!field || Z_TYPE_P(field) != IS_STRING || Z_STRLEN_P(field) == 0) {
-		add_next_index_stringl(&elSessionEnv, ZEND_STRL("WEB"));
+		add_next_index_str(&elSessionEnv, AG(stringWeb));
 	} else {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
 		php_explode(delim, Z_STR_P(field), &elSessionEnv, ZEND_LONG_MAX);

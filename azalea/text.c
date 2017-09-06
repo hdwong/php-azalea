@@ -59,39 +59,39 @@ PHP_METHOD(azalea_text, random)
 
 	if (mode) {
 		pMode = ZSTR_VAL(mode);
-		if (strncmp(pMode, "9", 1) == 0) {
+		if (0 == strcmp(pMode, "9")) {
 			// [1-9]
 			p += 1;
 			l = 9;
-		} else if (strncmp(pMode, "10", 2) == 0 || strncasecmp(pMode, "n", 1) == 0) {
+		} else if (0 == strcmp(pMode, "10") || 0 == strcasecmp(pMode, "n")) {
 			// [0-9]
 			l = 10;
-		} else if (strncmp(pMode, "16", 2) == 0) {
+		} else if (0 == strcmp(pMode, "16")) {
 			// [0-9a-f]
 			l = 16;
-		} else if (strncasecmp(pMode, "code", 4) == 0) {
-			// 增加用于生成验证码的模式 (避免 1 I l 0 O o 影响识别的字符)
-			p = code;
-			l = 56;
-		} else if (strncasecmp(pMode, "c", 1) == 0) {
+		} else if (0 == strcasecmp(pMode, "c")) {
 			// [a-zA-Z]
 			p += 10;
 			l = 52;
-		} else if (strncasecmp(pMode, "ln", 2) == 0) {
+		} else if (0 == strcasecmp(pMode, "ln")) {
 			// [0-9a-z]
 			l = 36;
-		} else if (strncasecmp(pMode, "un", 2) == 0) {
+		} else if (0 == strcasecmp(pMode, "un")) {
 			// [0-9A-Z]
 			p += 36;
 			l = 36;
-		} else if (strncasecmp(pMode, "l", 1) == 0) {
+		} else if (0 == strcasecmp(pMode, "l")) {
 			// [a-z]
 			p += 10;
 			l = 26;
-		} else if (strncasecmp(pMode, "u", 1) == 0) {
+		} else if (0 == strcasecmp(pMode, "u")) {
 			// [A-Z]
 			p += 36;
 			l = 26;
+		} else if (0 == strcasecmp(pMode, "code")) {
+			// 增加用于生成验证码的模式 (避免 1 I l 0 O o 影响识别的字符)
+			p = code;
+			l = 56;
 		}
 		// TODO 考虑增加产生不重复字符的模式
 	}

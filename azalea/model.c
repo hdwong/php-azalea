@@ -88,20 +88,19 @@ PHP_METHOD(azalea_model, getModel)
 void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 {
 	zval *models;
+	zend_string *filename, *lcName, *tstr;
 	int argc, offset = 0;
-	zend_bool hasError = 1;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "+", &models, &argc) == FAILURE) {
 		return;
 	}
 
-	zend_string *filename, *tstr;
 	do {
 		if (Z_TYPE_P(models + offset) != IS_STRING) {
 			continue;
 		}
 		zval exists;
-		zend_string *lcName = zend_string_init(Z_STRVAL_P(models + offset), Z_STRLEN_P(models + offset), 0);
+		lcName = zend_string_init(Z_STRVAL_P(models + offset), Z_STRLEN_P(models + offset), 0);
 		zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
 		// load model file
 		filename = strpprintf(0, "%s%c%s.php", ZSTR_VAL(AZALEA_G(modelsPath)), DEFAULT_SLASH, ZSTR_VAL(lcName));
@@ -111,23 +110,19 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 		if (Z_TYPE(exists) == IS_FALSE) {
 			tstr = strpprintf(0, "Model file `%s` not found.", ZSTR_VAL(filename));
 			throw404(tstr);
-			break;
+			zend_string_release(tstr);
+			zend_string_release(filename);
+			RETURN_FALSE;
 		}
 		// require model file
 		if (!azaleaRequire(ZSTR_VAL(filename), 1)) {
-			tstr = strpprintf(0, "Model file `%s` compile error.", ZSTR_VAL(filename));
-			throw404(tstr);
-			break;
+			// 保持 Exception throws
+			zend_string_release(filename);
+			RETURN_FALSE;
 		}
 		zend_string_release(filename);
-		hasError = 0;
 	} while (++offset < argc);
 
-	if (hasError) {
-		zend_string_release(filename);
-		zend_string_release(tstr);
-		RETURN_FALSE;
-	}
 	RETURN_TRUE;
 }
 /* }}} */
@@ -136,12 +131,12 @@ void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
 static zend_class_entry * azaleaModelGetExtModelClassEntry(zend_string *name)
 {
 #ifdef WITH_PINYIN
-	if (0 == strncmp("pinyin", ZSTR_VAL(name), ZSTR_LEN(name))) {
+	if (0 == strcmp("pinyin", ZSTR_VAL(name))) {
 		return azalea_ext_model_pinyin_ce;
 	}
 #endif
 #ifdef WITH_MYSQLND
-	if (0 == strncmp("mysqlnd", ZSTR_VAL(name), ZSTR_LEN(name))) {
+	if (0 == strcmp("mysqlnd", ZSTR_VAL(name))) {
 		return azalea_ext_model_mysqlnd_ce;
 	}
 #endif
@@ -219,9 +214,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			}
 			// require model file
 			if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
-				tstr = strpprintf(0, "Model file `%s` compile error.", Z_STRVAL(modelPath));
-				throw404(tstr);
-				zend_string_release(tstr);
+				// 保持 Exception throws
 				RETURN_FALSE;
 			}
 			zval_ptr_dtor(&modelPath);
