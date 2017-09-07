@@ -12,8 +12,8 @@
 #include "azalea/template.h"
 #include "azalea/i18n.h"
 
-#include "ext/standard/html.h"  // for php_escape_html_entities
-#include "main/SAPI.h"  // for SG
+#include "ext/standard/html.h"	// for php_escape_html_entities
+#include "main/SAPI.h"	// for SG
 
 /* {{{ get_default_charset */
 static char *get_default_charset(void) {

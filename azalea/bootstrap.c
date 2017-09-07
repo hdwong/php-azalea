@@ -14,16 +14,16 @@
 #include "azalea/controller.h"
 #include "azalea/exception.h"
 
-#include "Zend/zend_exceptions.h"  // for zend_throw_exception
-#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
-#include "Zend/zend_smart_str.h"  // for smart_str
-#include "ext/standard/url.h"  // for php_url_*
-#include "ext/standard/php_var.h"  // for php_var_dump
-#include "ext/standard/php_string.h"  // for php_trim
-#include "ext/standard/php_filestat.h"  // for php_stat
-#include "ext/session/php_session.h"  // for php_session_start
-#include "ext/json/php_json.h"  // for php_json_encode
-#include "main/SAPI.h"  // for sapi_header_op
+#include "Zend/zend_exceptions.h"	// for zend_throw_exception
+#include "Zend/zend_interfaces.h"	// for zend_call_method_with_*
+#include "Zend/zend_smart_str.h"	// for smart_str
+#include "ext/standard/url.h"	// for php_url_*
+#include "ext/standard/php_var.h"	// for php_var_dump
+#include "ext/standard/php_string.h"	// for php_trim
+#include "ext/standard/php_filestat.h"	// for php_stat
+#include "ext/session/php_session.h"	// for php_session_start
+#include "ext/json/php_json.h"	// for php_json_encode
+#include "main/SAPI.h"	// for sapi_header_op
 
 zend_class_entry *azaleaBootstrapCe;
 
@@ -446,11 +446,11 @@ PHP_METHOD(azalea_bootstrap, run)
 
 				// arguments
 				uint32_t num = zend_hash_num_elements(Z_ARRVAL_P(paths));
-				if (num - pathsOffset > 0) {  // has arguments
+				if (num - pathsOffset > 0) {	// has arguments
 					zval *args = &AZALEA_G(pathArgs);
 					while ((field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset++))) {
 						zend_hash_next_index_insert_new(Z_ARRVAL_P(args), field);
-						zval_add_ref(field);  // release for AZALEA_G(pathArgs)
+						zval_add_ref(field);	// release for AZALEA_G(pathArgs)
 					}
 				}
 			}
@@ -461,13 +461,13 @@ PHP_METHOD(azalea_bootstrap, run)
 		// default controller
 		conf = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_controller"));
 		AZALEA_G(controllerName) = Z_STR_P(conf);
-		zval_add_ref(conf);  // release for AZALEA_G(controllerName)
+		zval_add_ref(conf);	// release for AZALEA_G(controllerName)
 	}
 	if (!AZALEA_G(actionName)) {
 		// default controller
 		conf = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_action"));
 		AZALEA_G(actionName) = Z_STR_P(conf);
-		zval_add_ref(conf);  // release for AZALEA_G(actionName)
+		zval_add_ref(conf);	// release for AZALEA_G(actionName)
 	}
 
 	// session start
@@ -560,7 +560,7 @@ zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName,
 
 	// controller name
 	name = zend_string_init(ZSTR_VAL(controllerName), ZSTR_LEN(controllerName), 0);
-	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
+	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);	// ucfirst
 	controllerClass = strpprintf(0, "%sController", ZSTR_VAL(name));
 	zend_string_release(name);
 	if (folderName) {

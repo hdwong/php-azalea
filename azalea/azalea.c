@@ -22,7 +22,7 @@
 #endif
 
 #include "ext/standard/php_var.h"	// for php_var_dump function
-#include "ext/standard/php_string.h"  // for php_trim function
+#include "ext/standard/php_string.h"	// for php_trim function
 
 /* {{{ azalea_functions[] */
 const zend_function_entry azalea_functions[] = {

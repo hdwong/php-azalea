@@ -10,7 +10,7 @@
 #include "azalea/namespace.h"
 #include "azalea/exception.h"
 
-#include "Zend/zend_exceptions.h"  // for zend_ce_exception
+#include "Zend/zend_exceptions.h"	// for zend_ce_exception
 
 zend_class_entry *azaleaExceptionCe;
 zend_class_entry *azaleaException404Ce;
@@ -35,7 +35,6 @@ static zend_function_entry azalea_e404exception_methods[] = {
 /* {{{ class Azalea\Exception methods
  */
 static zend_function_entry azalea_e500exception_methods[] = {
-	PHP_ME(azalea_exception500, getServiceInfo, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -59,9 +58,6 @@ AZALEA_STARTUP_FUNCTION(exception)
 
 	INIT_CLASS_ENTRY(e500_ce, AZALEA_NS_NAME(E500Exception), azalea_e500exception_methods);
 	azaleaException500Ce = zend_register_internal_class_ex(&e500_ce, azaleaExceptionCe);
-	zend_declare_property_null(azaleaException500Ce, ZEND_STRL("_method"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(azaleaException500Ce, ZEND_STRL("_url"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(azaleaException500Ce, ZEND_STRL("_arguments"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }
@@ -90,23 +86,6 @@ PHP_METHOD(azalea_exception404, getRoute)
 		RETURN_NULL();
 	}
 	RETURN_ZVAL(route, 1, 0);
-}
-/* }}} */
-
-/* {{{ proto string getServiceUri(void) */
-PHP_METHOD(azalea_exception500, getServiceInfo)
-{
-	zval *method, *url, *arguments;
-	azalea_exception_t *instance = getThis();
-
-	method = zend_read_property(azaleaException500Ce, instance, ZEND_STRL("_method"), 0, NULL);
-	url = zend_read_property(azaleaException500Ce, instance, ZEND_STRL("_url"), 0, NULL);
-	arguments = zend_read_property(azaleaException500Ce, instance, ZEND_STRL("_arguments"), 0, NULL);
-
-	array_init(return_value);
-	add_assoc_zval_ex(return_value, ZEND_STRL("method"), method);
-	add_assoc_zval_ex(return_value, ZEND_STRL("url"), url);
-	add_assoc_zval_ex(return_value, ZEND_STRL("arguments"), arguments);
 }
 /* }}} */
 
@@ -140,7 +119,7 @@ void throw404Str(const char *message, size_t len)
 /* }}} */
 
 /* {{{ proto throw500Str */
-void throw500Str(const char *message, size_t len, zend_string *serverMethod, zend_string *serviceUrl, zval *arguments)
+void throw500Str(const char *message, size_t len)
 {
 	azalea_exception_t rv = {{0}}, *exception = &rv;
 
@@ -148,22 +127,6 @@ void throw500Str(const char *message, size_t len, zend_string *serverMethod, zen
 	// message
 	zend_update_property_stringl(zend_ce_exception, exception, ZEND_STRL("message"), message, len);
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 500);
-	// serviceMethod
-	if (serverMethod) {
-		zend_update_property_str(azaleaException500Ce, exception, ZEND_STRL("_method"), serverMethod);
-	} else {
-		zend_update_property_null(azaleaException500Ce, exception, ZEND_STRL("_method"));
-	}
-	// serviceUrl
-	if (serviceUrl) {
-		zend_update_property_str(azaleaException500Ce, exception, ZEND_STRL("_url"), serviceUrl);
-	} else {
-		zend_update_property_null(azaleaException500Ce, exception, ZEND_STRL("_url"));
-	}
-	// serviceArguments
-	if (arguments) {
-		zend_update_property(azaleaException500Ce, exception, ZEND_STRL("_arguments"), arguments);
-	}
 	zend_throw_exception_object(exception);
 }
 /* }}} */

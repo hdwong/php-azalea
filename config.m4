@@ -37,7 +37,7 @@ if test "$PHP_AZALEA" != "no"; then
     fi
     
     if test "$PHP_SQLBUILDER" != "no"; then
-        PHP_ADD_EXTENSION_DEP(azalea, azalea_sqlbuilder)
+        PHP_ADD_EXTENSION_DEP(azalea, azalea_sqlbuilder, true)
         AC_DEFINE([WITH_SQLBUILDER], 1, [Whether Azalea\SqlBuilder is enabled])
     fi
     

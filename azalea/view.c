@@ -14,8 +14,8 @@
 #include "azalea/template.h"
 #include "azalea/exception.h"
 
-#include "ext/standard/php_var.h"  // for php_var_dump
-#include "ext/standard/php_filestat.h"  // for php_stat
+#include "ext/standard/php_var.h"	// for php_var_dump
+#include "ext/standard/php_filestat.h"	// for php_stat
 
 zend_class_entry *azaleaViewCe;
 
@@ -118,19 +118,21 @@ static int checkValidVarName(char *varName, int len) /* {{{ */
 	}
 	/* These are allowed as first char: [a-zA-Z_\x7f-\xff] */
 	ch = (int)((unsigned char *)varName)[0];
-	if (varName[0] != '_' && (ch < 65  /* A    */ || /* Z    */ ch > 90)  &&
-			(ch < 97  /* a    */ || /* z    */ ch > 122) &&
-			(ch < 127 /* 0x7f */ || /* 0xff */ ch > 255)) {
+	if (varName[0] != '_' &&
+			(ch < 65 || ch > 90) &&	// [!A-Z]
+			(ch < 97 || ch > 122) &&	// [!a-z]
+			(ch < 0x7f || ch > 0xff)) {
 		return 0;
 	}
 	/* And these as the rest: [a-zA-Z0-9_\x7f-\xff] */
 	if (len > 1) {
 		for (i = 1; i < len; i++) {
 			ch = (int)((unsigned char *)varName)[i];
-			if (varName[i] != '_' && (ch < 48  /* 0    */ || /* 9    */ ch > 57)  &&
-					(ch < 65  /* A    */ || /* Z    */ ch > 90)  &&
-					(ch < 97  /* a    */ || /* z    */ ch > 122) &&
-					(ch < 127 /* 0x7f */ || /* 0xff */ ch > 255)) {
+			if (varName[i] != '_' &&
+					(ch < 48 || ch > 57) &&	// [!0-9]
+					(ch < 65 || ch > 90) &&	// [!A-Z]
+					(ch < 97 || ch > 122) &&	// [!a-z]
+					(ch < 0x7f || ch > 0xff)) {
 				return 0;
 			}
 		}

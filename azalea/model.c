@@ -18,11 +18,11 @@
 #include "azalea/model.h"
 #include "azalea/exception.h"
 
-#include "Zend/zend_smart_str.h"  // for smart_str_*
-#include "ext/standard/php_string.h"  // for php_trim function
+#include "Zend/zend_smart_str.h"	// for smart_str_*
+#include "ext/standard/php_string.h"	// for php_trim function
 #include "ext/standard/php_filestat.h"	// for php_stat
-#include "ext/standard/php_var.h"  // for php_var_serialize
-#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+#include "ext/standard/php_var.h"	// for php_var_serialize
+#include "Zend/zend_interfaces.h"	// for zend_call_method_with_*
 
 #ifdef WITH_PINYIN
 #include "azalea/ext-models/pinyin.h"
@@ -36,6 +36,7 @@ zend_class_entry *azaleaModelCe;
 /* {{{ class Azalea\Model methods
  */
 static zend_function_entry azalea_model_methods[] = {
+	PHP_ME(azalea_model, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_model, getRequest, NULL, ZEND_ACC_PROTECTED | ZEND_ACC_FINAL)
 	PHP_ME(azalea_model, loadModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
 	PHP_ME(azalea_model, getModel, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC | ZEND_ACC_FINAL)
@@ -51,6 +52,7 @@ AZALEA_STARTUP_FUNCTION(model)
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Model), azalea_model_methods);
 	azaleaModelCe = zend_register_internal_class(&ce);
 	azaleaModelCe->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+	zend_declare_property_null(azaleaModelCe, ZEND_STRL("_modelname"), ZEND_ACC_PRIVATE);
 
 #ifdef WITH_PINYIN
 	AZALEA_EXT_MODEL_STARTUP(pinyin);
@@ -63,10 +65,23 @@ AZALEA_STARTUP_FUNCTION(model)
 }
 /* }}} */
 
+/* {{{ proto __construct */
+PHP_METHOD(azalea_model, __construct) {}
+/* }}} */
+
 /* {{{ proto getRequest */
 PHP_METHOD(azalea_model, getRequest)
 {
-	object_init_ex(return_value, azaleaRequestCe);
+	zval *pReq;
+
+	if (!(pReq = zend_hash_str_find(Z_ARRVAL(AZALEA_G(instances)), ZEND_STRL("_request")))) {
+		azalea_request_t req = {{0}};
+		pReq = &req;
+		object_init_ex(pReq, azaleaRequestCe);
+		add_assoc_zval_ex(&AZALEA_G(instances), ZEND_STRL("_request"), pReq);
+	}
+
+	RETURN_ZVAL(pReq, 1, 0);
 }
 /* }}} */
 
@@ -160,12 +175,12 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 	lcName = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
 	zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
 	name = zend_string_dup(lcName, 0);
-	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);  // ucfirst
+	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);	// ucfirst
 	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));
 	zend_string_release(name);
 
 	lcClassName = zend_string_tolower(modelClass);
-	if (arg1) {
+	if (arg1) {	// 生成 Model Cache Id
 		php_serialize_data_t var_hash;
 		smart_str buf = {0};
 		PHP_VAR_SERIALIZE_INIT(var_hash);
@@ -238,6 +253,8 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
 			throw404Str(ZEND_STRL("Model initialization is failed."));
 			RETURN_FALSE;
 		}
+		// save lcName to property
+		zend_update_property_str(azaleaModelCe, instance, ZEND_STRL("_modelname"), lcName);
 		// call __init method
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
 			zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);

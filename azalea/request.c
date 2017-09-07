@@ -10,8 +10,8 @@
 #include "azalea/namespace.h"
 #include "azalea/request.h"
 
-#include "ext/standard/php_string.h"  // for php_trim
-#include "main/SAPI.h"  // for request_info
+#include "ext/standard/php_string.h"	// for php_trim
+#include "main/SAPI.h"	// for request_info
 
 zend_class_entry *azaleaRequestCe;
 

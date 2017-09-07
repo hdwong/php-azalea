@@ -13,9 +13,9 @@
 #include "azalea/controller.h"
 #include "azalea/response.h"
 
-#include "ext/standard/head.h"  // for php_setcookie
-#include "ext/standard/php_var.h"  // for php_var_dump
-#include "main/SAPI.h"  // for sapi_header_op
+#include "ext/standard/head.h"	// for php_setcookie
+#include "ext/standard/php_var.h"	// for php_var_dump
+#include "main/SAPI.h"	// for sapi_header_op
 
 zend_class_entry *azaleaResponseCe;
 

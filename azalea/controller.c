@@ -17,9 +17,9 @@
 #include "azalea/view.h"
 #include "azalea/exception.h"
 
-#include "ext/standard/php_var.h"  // for php_var_dump
-#include "ext/standard/php_string.h"  // for php_trim
-#include "Zend/zend_interfaces.h"  // for zend_call_method_with_*
+#include "ext/standard/php_var.h"	// for php_var_dump
+#include "ext/standard/php_string.h"	// for php_trim
+#include "Zend/zend_interfaces.h"	// for zend_call_method_with_*
 
 zend_class_entry *azaleaControllerCe;
 

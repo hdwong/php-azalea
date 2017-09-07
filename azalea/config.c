@@ -11,7 +11,7 @@
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
-#include "ext/standard/php_string.h"  // for php_explode
+#include "ext/standard/php_string.h"	// for php_explode
 
 zend_class_entry *azaleaConfigCe;
 

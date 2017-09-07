@@ -10,7 +10,7 @@
 #include "azalea/namespace.h"
 #include "azalea/session.h"
 
-#include "ext/session/php_session.h"  // for php_*_session_var
+#include "ext/session/php_session.h"	// for php_*_session_var
 
 zend_class_entry *azaleaSessionCe;
 

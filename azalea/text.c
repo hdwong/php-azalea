@@ -96,7 +96,7 @@ PHP_METHOD(azalea_text, random)
 		// TODO 考虑增加产生不重复字符的模式
 	}
 	char result[len];
-	l -= 1; // for RAND_RANGE
+	l -= 1;	// for RAND_RANGE
 	if (!BG(mt_rand_is_seeded)) {
 		php_mt_srand(GENERATE_SEED());
 	}

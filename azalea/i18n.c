@@ -12,7 +12,7 @@
 
 #include "ext/standard/php_string.h"
 #include "ext/standard/php_var.h"
-#include "ext/json/php_json.h"  // for php_json_decode
+#include "ext/json/php_json.h"	// for php_json_decode
 
 zend_class_entry *azaleaI18nCe;
 
@@ -210,7 +210,7 @@ static void azaleaI18nTranslateMessage(zval *return_value, zend_string *message,
 		array_init(&callFuncParams[1]);
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(values), key, pData) {
 			if (!key || (Z_TYPE_P(pData) != IS_LONG &&
-					Z_TYPE(pData) != IS_DOUBLE && Z_TYPE_P(pData) != IS_STRING)) {
+					Z_TYPE_P(pData) != IS_DOUBLE && Z_TYPE_P(pData) != IS_STRING)) {
 				continue;
 			}
 			key = strpprintf(0, ":%s", ZSTR_VAL(key));
