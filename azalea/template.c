@@ -70,6 +70,7 @@ PHP_FUNCTION(azalea_template_translate)
 	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	zval_ptr_dtor(return_value);
+	RETURN_NULL();
 }
 /* }}} */
 
@@ -79,6 +80,7 @@ PHP_FUNCTION(azalea_template_translatePlural)
 	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	zval_ptr_dtor(return_value);
+	RETURN_NULL();
 }
 /* }}} */
 

@@ -139,9 +139,10 @@ static zend_bool azaleaI18nLoadFile(zend_string *filename, zend_string *textDoma
 		return 0;
 	}
 	if ((contents = php_stream_copy_to_mem(stream, maxlen, 0)) != NULL) {
+		JSON_G(error_code) = PHP_JSON_ERROR_NONE;
 		php_json_decode(&jsonResult, ZSTR_VAL(contents), ZSTR_LEN(contents), 1, 0);
 		zend_string_release(contents);
-		if (Z_TYPE(jsonResult) == IS_ARRAY) {
+		if (JSON_G(error_code) == PHP_JSON_ERROR_NONE && Z_TYPE(jsonResult) == IS_ARRAY) {
 			// json 解析成功
 			azaleaI18nAddToTranslation(translation, textDomain, &jsonResult);
 			returnValue = 1;
@@ -208,7 +209,8 @@ static void azaleaI18nTranslateMessage(zval *return_value, zend_string *message,
 		ZVAL_STR(callFuncParams, message);
 		array_init(&callFuncParams[1]);
 		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(values), key, pData) {
-			if (!key || Z_TYPE_P(pData) < IS_LONG || Z_TYPE_P(pData) > IS_STRING) {
+			if (!key || (Z_TYPE_P(pData) != IS_LONG &&
+					Z_TYPE(pData) != IS_DOUBLE && Z_TYPE_P(pData) != IS_STRING)) {
 				continue;
 			}
 			key = strpprintf(0, ":%s", ZSTR_VAL(key));
@@ -280,7 +282,7 @@ static zend_bool azaleaI18nCheckPlural(zval *translation, zval *values, zend_str
 		return 0;
 	}
 	if (!(pNum = zend_hash_str_find(Z_ARRVAL_P(values), ZEND_STRL("num"))) ||
-			Z_TYPE_P(pNum) < IS_LONG || Z_TYPE_P(pNum) > IS_STRING) {
+			(Z_TYPE_P(pNum) != IS_LONG && Z_TYPE_P(pNum) != IS_DOUBLE && Z_TYPE_P(pNum) != IS_STRING)) {
 		//	找不到数量设置
 		return 0;
 	}
