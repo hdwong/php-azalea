@@ -24,9 +24,9 @@
 #include "ext/mysqlnd/mysqlnd.h"	// for mysqlnd
 
 zend_class_entry *azalea_ext_model_mysqlnd_ce;
-zend_class_entry *mysqlResultCe;
-zend_class_entry *mysqlQueryResultCe;
-zend_class_entry *mysqlExecuteResultCe;
+zend_class_entry *mysqlndResultCe;
+zend_class_entry *mysqlndQueryResultCe;
+zend_class_entry *mysqlndExecuteResultCe;
 
 #ifdef WITH_SQLBUILDER
 zend_class_entry *sqlBuilderCe;
@@ -48,39 +48,39 @@ static zend_function_entry azalea_ext_model_mysqlnd_methods[] = {
 };
 /* }}} */
 
-/* {{{ class MysqlModel methods */
+/* {{{ class MysqlndResult methods */
 static zend_function_entry azalea_ext_model_mysqlnd_result_methods[] = {
-//	PHP_ME(azalea_ext_model_mysqlnd_result, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
-//	PHP_ME(azalea_ext_model_mysqlnd_result, getSql, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_result, getError, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_result, getTimer, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_result, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_ext_model_mysqlnd_result, getSql, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_result, getTimer, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
 
-/* {{{ class MysqlModel methods */
+/* {{{ class MysqlndQueryResult methods */
 static zend_function_entry azalea_ext_model_mysqlnd_query_methods[] = {
-//	PHP_ME(azalea_ext_model_mysqlnd_query, all, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, allWithKey, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, column, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, columnWithKey, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, row, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, field, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_query, fields, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, count, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, all, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, allWithKey, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, column, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, columnWithKey, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, row, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, field, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_query, fields, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
 
-/* {{{ class MysqlModel methods */
+/* {{{ class MysqlndExecuteResult methods */
 static zend_function_entry azalea_ext_model_mysqlnd_execute_methods[] = {
-//	PHP_ME(azalea_ext_model_mysqlnd_execute, insertId, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_execute, affected, NULL, ZEND_ACC_PUBLIC)
-//	PHP_ME(azalea_ext_model_mysqlnd_execute, changed, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_execute, insertId, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd_execute, affectedRows, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
 
 /* {{{ 资源 dtor */
+// Connection
 static int ldConnection;
 ZEND_RSRC_DTOR_FUNC(rsrcConnectionDtor)
 {
@@ -89,13 +89,23 @@ ZEND_RSRC_DTOR_FUNC(rsrcConnectionDtor)
 		mysqlnd_close(mysql, MYSQLND_CLOSE_DISCONNECTED);
 	}
 }
+// Query result
+static int ldQueryResult;
+ZEND_RSRC_DTOR_FUNC(rsrcQueryResultDtor)
+{
+	if (res->ptr) {
+		MYSQLND_RES *result = (MYSQLND_RES *) res->ptr;
+		mysqlnd_free_result(result, 0);
+	}
+}
 /* }}} */
 
 /* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd)
 {
 	// 定义资源类型
-	ldConnection = zend_register_list_destructors_ex(rsrcConnectionDtor, NULL, "Azalea\\Mysqlnd connection", module_number);
+	ldConnection = zend_register_list_destructors_ex(rsrcConnectionDtor, NULL, AZALEA_NS_NAME(MysqlndConnectionRes), module_number);
+	ldQueryResult = zend_register_list_destructors_ex(rsrcQueryResultDtor, NULL, AZALEA_NS_NAME(MysqlndQueryResultRes), module_number);
 
 #ifdef WITH_SQLBUILDER
 	// 获取 sqlBuilder ce
@@ -117,19 +127,29 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd)
 	zend_declare_property_null(azalea_ext_model_mysqlnd_ce, ZEND_STRL("_queries"), ZEND_ACC_PRIVATE);
 	// MysqlResult
 	INIT_CLASS_ENTRY(resultCe, AZALEA_NS_NAME(MysqlndResult), azalea_ext_model_mysqlnd_result_methods);
-	mysqlResultCe = zend_register_internal_class(&resultCe);
-	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_error"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_sql"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_timer"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(mysqlResultCe, ZEND_STRL("_result"), ZEND_ACC_PRIVATE);
+	mysqlndResultCe = zend_register_internal_class(&resultCe);
+	mysqlndResultCe->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+	zend_declare_property_null(mysqlndResultCe, ZEND_STRL("_sql"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(mysqlndResultCe, ZEND_STRL("_timer"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(mysqlndResultCe, ZEND_STRL("_result"), ZEND_ACC_PRIVATE);
 	// MysqlQueryResult
 	INIT_CLASS_ENTRY(queryResultCe, AZALEA_NS_NAME(MysqlndQueryResult), azalea_ext_model_mysqlnd_query_methods);
-	mysqlQueryResultCe = zend_register_internal_class_ex(&queryResultCe, mysqlResultCe);
+	mysqlndQueryResultCe = zend_register_internal_class_ex(&queryResultCe, mysqlndResultCe);
 	// MysqlExecuteResult
 	INIT_CLASS_ENTRY(executeResultCe, AZALEA_NS_NAME(MysqlndExecuteResult), azalea_ext_model_mysqlnd_execute_methods);
-	mysqlExecuteResultCe = zend_register_internal_class_ex(&executeResultCe, mysqlResultCe);
+	mysqlndExecuteResultCe = zend_register_internal_class_ex(&executeResultCe, mysqlndResultCe);
 
 	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ throwMysqlError */
+static void azaleaMysqndThrowError(MYSQLND *mysql, const char *str)
+{
+	zend_string *message;
+	message = strpprintf(0, "%s [%d, %s]", str, mysqlnd_errno(mysql), mysqlnd_error(mysql));
+	throw500Str(ZSTR_VAL(message), ZSTR_LEN(message));
+	zend_string_release(message);
 }
 /* }}} */
 
@@ -182,14 +202,13 @@ PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 			ZSTR_LEN(passwd), ZSTR_VAL(dbname), ZSTR_LEN(dbname), port, NULL, flags,
 			MYSQLND_CLIENT_KNOWS_RSET_COPY_DATA) == NULL) {
 		// throws exception
-		tstr = strpprintf(0, "Mysql connect error [%d, %s]", mysqlnd_errno(mysql), mysqlnd_error(mysql));
-		throw500Str(ZSTR_VAL(tstr), ZSTR_LEN(tstr));
-		zend_string_release(tstr);
+		azaleaMysqndThrowError(mysql, "Mysql connect error");
 		// free mysql structure
 		mysqlnd_close(mysql, MYSQLND_CLOSE_DISCONNECTED);
 		goto end;
 	}
 	mysqlnd_options(mysql, MYSQL_OPT_LOCAL_INFILE, (char *)&allowLocalInfile);
+	mysqlnd_set_server_option(mysql, MYSQL_OPTION_MULTI_STATEMENTS_OFF);
 	mysqlnd_set_character_set(mysql, ZSTR_VAL(charset));
 	// 定义为资源属性
 	ZVAL_RES(&rsrc, zend_register_resource(mysql, ldConnection));
@@ -239,10 +258,58 @@ PHP_METHOD(azalea_ext_model_mysqlnd, escape)
 }
 /* }}} */
 
+/* {{{ proto azaleaMysqlndInitExecuteResult */
+static void azaleaMysqlndInitExecuteResult(zval *return_value, MYSQLND *mysql, zend_string *sql, double timeSpent)
+{
+	zval result;
+	uint64_t rc;
+	zend_long affectedRows;
+
+	array_init(&result);
+	// affected
+	rc = mysqlnd_affected_rows(mysql);
+	if (rc == (uint64_t) -1) {
+		affectedRows = -1;
+	} else {
+		affectedRows = (zend_long) rc;
+	}
+	add_assoc_long_ex(&result, ZEND_STRL("affectedRows"), affectedRows);
+	// insertId
+	add_assoc_long_ex(&result, ZEND_STRL("insertId"), (zend_long) mysqlnd_insert_id(mysql));
+	// init object
+	object_init_ex(return_value, mysqlndExecuteResultCe);
+	zend_update_property_double(mysqlndResultCe, return_value, ZEND_STRL("_timer"), timeSpent);
+	zend_update_property_str(mysqlndResultCe, return_value, ZEND_STRL("_sql"), sql);
+	zend_update_property(mysqlndResultCe, return_value, ZEND_STRL("_result"), &result);
+	zval_ptr_dtor(&result);
+}
+/* }}} */
+
+/* {{{ proto azaleaMysqlndInitQueryResult */
+static void azaleaMysqlndInitQueryResult(zval *return_value, MYSQLND *mysql, zend_string *sql, double timeSpent)
+{
+	zval result;
+
+	ZVAL_RES(&result, zend_register_resource(mysqlnd_store_result(mysql), ldQueryResult));
+
+	// init object
+	object_init_ex(return_value, mysqlndQueryResultCe);
+	zend_update_property_double(mysqlndResultCe, return_value, ZEND_STRL("_timer"), timeSpent);
+	zend_update_property_str(mysqlndResultCe, return_value, ZEND_STRL("_sql"), sql);
+	zend_update_property(mysqlndResultCe, return_value, ZEND_STRL("_result"), &result);
+	zval_ptr_dtor(&result);
+}
+/* }}} */
+
 /* {{{ proto query */
 PHP_METHOD(azalea_ext_model_mysqlnd, query)
 {
+	zval *this = getThis(), *queries;
 	zend_string *sql;
+	MYSQLND *mysql;
+	double timeQueryStart, timeSpent;
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_CONN(mysql, this);
 
 #ifdef WITH_SQLBUILDER
 	zval *binds = NULL, array;
@@ -252,7 +319,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, query)
 	}
 
 	if (binds && Z_TYPE_P(binds) > IS_ARRAY) {
-		php_error_docref(NULL, E_WARNING, "expects parameter 2 to be array");
+		php_error_docref(NULL, E_WARNING, "Expects parameter 2 to be array");
 		binds = NULL;
 	}
 	// convert binds to array
@@ -282,10 +349,30 @@ PHP_METHOD(azalea_ext_model_mysqlnd, query)
 	zend_string_addref(sql);
 #endif
 
-	php_printf(">%s<", ZSTR_VAL(sql));
-//	mysqlQuery(getThis(), return_value, sql, throwsException);
+	if (!ZSTR_LEN(sql)) {
+		zend_string_release(sql);
+		php_error_docref(NULL, E_WARNING, "Empty query");
+		RETURN_FALSE;
+	}
+	// 执行查询
+	timeQueryStart = azaleaGetMicrotime();
+	if (mysqlnd_query(mysql, ZSTR_VAL(sql), ZSTR_LEN(sql))) {
+		azaleaMysqndThrowError(mysql, "Mysql query error");
+		zend_string_release(sql);
+		RETURN_FALSE;
+	}
+	timeSpent = azaleaGetMicrotime() - timeQueryStart;	// 查询消耗的时间
+	queries = zend_read_property(azalea_ext_model_mysqlnd_ce, this, ZEND_STRL("_queries"), 1, NULL);
+	add_next_index_str(queries, sql);	// sql 加入了 queries 数组，就不需要再 release 了
 
-	zend_string_release(sql);
+	// 检查结果
+	if (!mysqlnd_field_count(mysql)) {
+		// 无结果集, 生成 MysqlndExecuteResult
+		azaleaMysqlndInitExecuteResult(return_value, mysql, sql, timeSpent);
+	} else {
+		// 查询结果集, 生成 MysqlndQueryResult
+		azaleaMysqlndInitQueryResult(return_value, mysql, sql, timeSpent);
+	}
 }
 /* }}} */
 
@@ -322,4 +409,322 @@ PHP_METHOD(azalea_ext_model_mysqlnd, getSqlBuilder)
 }
 /* }}} */
 
+/* ----- Azalea\MysqlndResult ----- */
+/* {{{ proto getSql */
+PHP_METHOD(azalea_ext_model_mysqlnd_result, __construct) {}
+/* }}} */
+
+/* {{{ proto getSql */
+PHP_METHOD(azalea_ext_model_mysqlnd_result, getSql)
+{
+	zval *value = zend_read_property(mysqlndResultCe, getThis(), ZEND_STRL("_sql"), 1, NULL);
+	if (value && Z_TYPE_P(value) == IS_STRING) {
+		RETURN_ZVAL(value, 1, 0);
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto getTimer */
+PHP_METHOD(azalea_ext_model_mysqlnd_result, getTimer)
+{
+	zval *value = zend_read_property(mysqlndResultCe, getThis(), ZEND_STRL("_timer"), 1, NULL);
+	if (value && Z_TYPE_P(value) == IS_DOUBLE) {
+		RETURN_DOUBLE(Z_DVAL_P(value));
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* ----- Azalea\MysqlndQueryResult ----- */
+/* {{{ proto all*/
+PHP_METHOD(azalea_ext_model_mysqlnd_query, count)
+{
+	MYSQLND_RES *result;
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	MYSQLND_RETURN_LONG(mysqlnd_num_rows(result));
+}
+/* }}} */
+
+/* {{{ proto azaleaMysqlndFindName */
+static zend_string * azaleaMysqlndFindFieldName(MYSQLND_RES *result, zval *index)
+{
+	int i;
+	for (i = 0; i < mysqlnd_num_fields(result); ++i) {
+		const MYSQLND_FIELD *field = mysqlnd_fetch_field_direct(result, i);
+		if ((Z_TYPE_P(index) == IS_LONG && Z_LVAL_P(index) == i) ||
+				(Z_TYPE_P(index) == IS_STRING && 0 == strcasecmp(field->name, Z_STRVAL_P(index)))) {
+			return field->sname;
+		}
+	}
+	return NULL;
+}
+/* }}} */
+
+/* {{{ proto azaleaMysqlndFetchRow */
+static zend_bool azaleaMysqlndFetchRow(zval *return_value, MYSQLND_RES *result, zend_class_entry *ce, zend_bool isObject)
+{
+	zval dataset;
+	mysqlnd_fetch_into(result, MYSQLND_FETCH_ASSOC, &dataset, MYSQLND_MYSQL);
+	if (Z_TYPE(dataset) != IS_ARRAY) {
+		return 0;
+	}
+	if (ce && isObject) {
+		object_and_properties_init(return_value, ce, NULL);
+		if (!ce->default_properties_count && !ce->__set) {
+			Z_OBJ_P(return_value)->properties = Z_ARR(dataset);
+		} else {
+			zend_merge_properties(return_value, Z_ARRVAL(dataset));
+			zval_ptr_dtor(&dataset);
+		}
+	} else {
+		ZVAL_ZVAL(return_value, &dataset, 0, 0);
+	}
+	return 1;
+}
+/* }}} */
+
+/* {{{ proto all */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, all)
+{
+	MYSQLND_RES *result;
+	zend_class_entry *ce;
+	zend_bool hasNext;
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	ce = zend_standard_class_def;
+	array_init(return_value);	// make sure return_value is an array
+	do {
+		zval dummy;
+		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, ce, 1))) {
+			add_next_index_zval(return_value, &dummy);
+		}
+	} while (hasNext);
+}
+/* }}} */
+
+/* {{{ proto allWithKey */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, allWithKey)
+{
+	zval *key;
+	MYSQLND_RES *result;
+	zend_string *keyField;
+	zend_class_entry *ce;
+	zend_bool hasNext;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &key) == FAILURE) {
+		return;
+	}
+	if (Z_TYPE_P(key) != IS_STRING && Z_TYPE_P(key) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "Expects parameter 1 to be string or numeric value");
+		return;
+	}
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	ce = zend_standard_class_def;
+	keyField = azaleaMysqlndFindFieldName(result, key);
+	if (!keyField) {
+		// 找不到字段
+		php_error_docref(NULL, E_NOTICE, "Key not found");
+		RETURN_FALSE;
+	}
+	array_init(return_value);
+	do {
+		zval dummy;
+		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, ce, 1))) {
+			key = zend_read_property(ce, &dummy, ZSTR_VAL(keyField), ZSTR_LEN(keyField), 1, NULL);
+			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), &dummy);
+		}
+	} while (hasNext);
+}
+/* }}} */
+
+/* {{{ proto column */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, column)
+{
+	zval dummy, *value, *index = NULL;
+	MYSQLND_RES *result;
+	zend_string *keyValue;
+	zend_bool hasNext;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &index) == FAILURE) {
+		return;
+	}
+	if (index == NULL) {
+		index = &dummy;
+		ZVAL_LONG(index, 0);
+	} else if (Z_TYPE_P(index) != IS_STRING && Z_TYPE_P(index) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "Expects parameter 1 to be string or numeric value");
+		return;
+	}
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	keyValue = azaleaMysqlndFindFieldName(result, index);
+	if (!keyValue) {
+		// 找不到字段
+		php_error_docref(NULL, E_NOTICE, "Field index not found");
+		RETURN_FALSE;
+	}
+	array_init(return_value);	// make sure return_value is an array
+	do {
+		zval dummy;
+		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
+			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
+			add_next_index_zval(return_value, value);
+			zval_ptr_dtor(&dummy);
+		}
+	} while (hasNext);
+}
+/* }}} */
+
+/* {{{ proto columnWithKey */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, columnWithKey)
+{
+	zval dummy, *key, *value, *index = NULL;
+	MYSQLND_RES *result;
+	zend_string *keyField, *keyValue;
+	zend_bool hasNext;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|z", &key, &index) == FAILURE) {
+		return;
+	}
+	if (Z_TYPE_P(key) != IS_STRING && Z_TYPE_P(key) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "Expects parameter 1 to be string or numeric value");
+		return;
+	}
+	if (index == NULL) {
+		index = &dummy;
+		ZVAL_LONG(index, 0);
+	} else if (Z_TYPE_P(index) != IS_STRING && Z_TYPE_P(index) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "Expects parameter 2 to be string or numeric value");
+		return;
+	}
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	keyField = azaleaMysqlndFindFieldName(result, key);
+	if (!keyField) {
+		// 找不到字段
+		php_error_docref(NULL, E_NOTICE, "Key not found");
+		RETURN_FALSE;
+	}
+	keyValue = azaleaMysqlndFindFieldName(result, index);
+	if (!keyValue) {
+		// 找不到字段
+		php_error_docref(NULL, E_NOTICE, "Field index not found");
+		RETURN_FALSE;
+	}
+	array_init(return_value);	// make sure return_value is an array
+	do {
+		zval dummy;
+		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
+			key = zend_hash_find(Z_ARRVAL(dummy), keyField);
+			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
+			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), value);
+			zval_ptr_dtor(&dummy);
+		}
+	} while (hasNext);
+}
+/* }}} */
+
+/* {{{ proto row */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, row)
+{
+	MYSQLND_RES *result;
+	zend_class_entry *ce;
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	ce = zend_standard_class_def;
+	{
+		zval dummy;
+		if ((azaleaMysqlndFetchRow(&dummy, result, ce, 1))) {
+			RETVAL_ZVAL(&dummy, 1, 0);
+			zval_ptr_dtor(&dummy);
+		}
+	}
+}
+/* }}} */
+
+/* {{{ proto field */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, field)
+{
+	zval dummy, *value, *index = NULL;
+	MYSQLND_RES *result;
+	zend_string *keyValue;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &index) == FAILURE) {
+		return;
+	}
+	if (index == NULL) {
+		index = &dummy;
+		ZVAL_LONG(index, 0);
+	} else if (Z_TYPE_P(index) != IS_STRING && Z_TYPE_P(index) != IS_LONG) {
+		php_error_docref(NULL, E_ERROR, "Expects parameter 1 to be string or numeric value");
+		return;
+	}
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	keyValue = azaleaMysqlndFindFieldName(result, index);
+	if (!keyValue) {
+		// 找不到字段
+		php_error_docref(NULL, E_NOTICE, "Field index not found");
+		RETURN_FALSE;
+	}
+	{
+		zval dummy;
+		if ((azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
+			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
+			RETVAL_ZVAL(value, 1, 0);
+			zval_ptr_dtor(&dummy);
+		}
+	}
+}
+/* }}} */
+
+/* {{{ proto fields */
+PHP_METHOD(azalea_ext_model_mysqlnd_query, fields)
+{
+	MYSQLND_RES *result;
+	int i;
+
+	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
+	array_init(return_value);
+	for (i = 0; i < mysqlnd_num_fields(result); ++i) {
+		const MYSQLND_FIELD *field = mysqlnd_fetch_field_direct(result, i);
+		add_index_str(return_value, i, zend_string_copy(field->sname));
+	}
+}
+
+/* ----- Azalea\MysqlndExecuteResult ----- */
+/* {{{ proto insertId */
+PHP_METHOD(azalea_ext_model_mysqlnd_execute, insertId)
+{
+	zval *result, *insertId;
+
+	result = zend_read_property(mysqlndResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	if (Z_TYPE_P(result) == IS_ARRAY) {
+		insertId = zend_hash_str_find(Z_ARRVAL_P(result), ZEND_STRL("insertId"));
+		if (insertId && Z_TYPE_P(insertId) == IS_LONG) {
+			MYSQLND_RETURN_LONG(Z_LVAL_P(insertId));
+		}
+	}
+	RETURN_FALSE;
+}
+/* }}} */
+
+/* {{{ proto affectedRows */
+PHP_METHOD(azalea_ext_model_mysqlnd_execute, affectedRows)
+{
+	zval *result, *affectedRows;
+
+	result = zend_read_property(mysqlndResultCe, getThis(), ZEND_STRL("_result"), 1, NULL);
+	if (Z_TYPE_P(result) == IS_ARRAY) {
+		affectedRows = zend_hash_str_find(Z_ARRVAL_P(result), ZEND_STRL("affectedRows"));
+		if (affectedRows && Z_TYPE_P(affectedRows) == IS_LONG) {
+			MYSQLND_RETURN_LONG(Z_LVAL_P(affectedRows));
+		}
+	}
+	RETURN_FALSE;
+}
+/* }}} */
 //#endif
