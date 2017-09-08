@@ -80,9 +80,23 @@ static zend_function_entry azalea_ext_model_mysqlnd_execute_methods[] = {
 };
 /* }}} */
 
+/* {{{ 资源 dtor */
+static int ldConnection;
+ZEND_RSRC_DTOR_FUNC(rsrcConnectionDtor)
+{
+	if (res->ptr) {
+		MYSQLND *mysql = (MYSQLND *) res->ptr;
+		mysqlnd_close(mysql, MYSQLND_CLOSE_DISCONNECTED);
+	}
+}
+/* }}} */
+
 /* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd)
 {
+	// 定义资源类型
+	ldConnection = zend_register_list_destructors_ex(rsrcConnectionDtor, NULL, "Azalea\\Mysqlnd connection", module_number);
+
 #ifdef WITH_SQLBUILDER
 	// 获取 sqlBuilder ce
 	sqlBuilderCe = azaleaSqlBuilderGetCe();
@@ -99,6 +113,7 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd)
 	}
 #endif
 	azalea_ext_model_mysqlnd_ce->ce_flags |= ZEND_ACC_FINAL;
+	zend_declare_property_null(azalea_ext_model_mysqlnd_ce, ZEND_STRL("_connection"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(azalea_ext_model_mysqlnd_ce, ZEND_STRL("_queries"), ZEND_ACC_PRIVATE);
 	// MysqlResult
 	INIT_CLASS_ENTRY(resultCe, AZALEA_NS_NAME(MysqlndResult), azalea_ext_model_mysqlnd_result_methods);
@@ -122,19 +137,20 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd)
 PHP_METHOD(azalea_ext_model_mysqlnd, __construct) {}
 PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 {
-	zval queries, *mysqlConfig, *lcName, *found;
+	zval dummy, rsrc, *this = getThis(), *mysqlConfig, *lcName;
 	zval *pHost, *pPort, *pUsername, *pPasswd, *pDbname, *pCharset;
 	zend_string *host, *username, *passwd, *dbname, *charset, *tstr;
 	zend_long port, flags = 0, allowLocalInfile = 1;
 	zend_bool persistent = 0;
 	MYSQLND *mysql;
 
-	array_init(&queries);
-	zend_update_property(azalea_ext_model_mysqlnd_ce, getThis(), ZEND_STRL("_queries"), &queries);
-	zval_ptr_dtor(&queries);
+	// init _queries array
+	array_init(&dummy);
+	zend_update_property(azalea_ext_model_mysqlnd_ce, this, ZEND_STRL("_queries"), &dummy);
+	zval_ptr_dtor(&dummy);
 
-	// mysql init
-	if ((lcName = zend_read_property(azaleaModelCe, getThis(), ZEND_STRL("_modelname"), 1, NULL)) &&
+	// init mysql connection
+	if ((lcName = zend_read_property(azaleaModelCe, this, ZEND_STRL("_modelname"), 1, NULL)) &&
 			(mysqlConfig = azaleaConfigSubFindEx(Z_STRVAL_P(lcName), Z_STRLEN_P(lcName), NULL, 0))) {
 		pHost = zend_hash_str_find(Z_ARRVAL_P(mysqlConfig), ZEND_STRL("host"));
 		pPort = zend_hash_str_find(Z_ARRVAL_P(mysqlConfig), ZEND_STRL("port"));
@@ -150,7 +166,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 		charset = pCharset ? zend_string_copy(Z_STR_P(pCharset)) : zend_string_init(ZEND_STRL("utf8"), 0);
 		flags |= CLIENT_MULTI_RESULTS;
 	} else {
-		// 找不到设置未初始化连接
+		// 找不到设置或未初始化连接
 		if (!lcName) {
 			php_error_docref(NULL, E_ERROR, "Model name not found");
 		} else {
@@ -175,6 +191,11 @@ PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 	}
 	mysqlnd_options(mysql, MYSQL_OPT_LOCAL_INFILE, (char *)&allowLocalInfile);
 	mysqlnd_set_character_set(mysql, ZSTR_VAL(charset));
+	// 定义为资源属性
+	ZVAL_RES(&rsrc, zend_register_resource(mysql, ldConnection));
+	zend_update_property(azalea_ext_model_mysqlnd_ce, this, ZEND_STRL("_connection"), &rsrc);
+	zval_ptr_dtor(&rsrc);
+
 end:
 	zend_string_release(host);
 	zend_string_release(username);
