@@ -410,7 +410,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, getSqlBuilder)
 /* }}} */
 
 /* ----- Azalea\MysqlndResult ----- */
-/* {{{ proto getSql */
+/* {{{ proto __construct */
 PHP_METHOD(azalea_ext_model_mysqlnd_result, __construct) {}
 /* }}} */
 
@@ -437,7 +437,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd_result, getTimer)
 /* }}} */
 
 /* ----- Azalea\MysqlndQueryResult ----- */
-/* {{{ proto all*/
+/* {{{ proto count*/
 PHP_METHOD(azalea_ext_model_mysqlnd_query, count)
 {
 	MYSQLND_RES *result;
@@ -489,11 +489,24 @@ static zend_bool azaleaMysqlndFetchRow(zval *return_value, MYSQLND_RES *result, 
 PHP_METHOD(azalea_ext_model_mysqlnd_query, all)
 {
 	MYSQLND_RES *result;
+	zend_string *className = NULL;
 	zend_class_entry *ce;
 	zend_bool hasNext;
 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S", &className) == FAILURE) {
+		return;
+	}
+	if (className == NULL) {
+		ce = zend_standard_class_def;
+	} else {
+		ce = zend_fetch_class(className, ZEND_FETCH_CLASS_AUTO);
+	}
+	if (!ce) {
+		php_error_docref(NULL, E_WARNING, "Could not find class `%s`", ZSTR_VAL(className));
+		return;
+	}
+
 	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
-	ce = zend_standard_class_def;
 	array_init(return_value);	// make sure return_value is an array
 	do {
 		zval dummy;
@@ -509,20 +522,28 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, allWithKey)
 {
 	zval *key;
 	MYSQLND_RES *result;
-	zend_string *keyField;
+	zend_string *className = NULL, *keyField;
 	zend_class_entry *ce;
 	zend_bool hasNext;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &key) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|S", &key, &className) == FAILURE) {
 		return;
 	}
 	if (Z_TYPE_P(key) != IS_STRING && Z_TYPE_P(key) != IS_LONG) {
 		php_error_docref(NULL, E_ERROR, "Expects parameter 1 to be string or numeric value");
 		return;
 	}
+	if (className == NULL) {
+		ce = zend_standard_class_def;
+	} else {
+		ce = zend_fetch_class(className, ZEND_FETCH_CLASS_AUTO);
+	}
+	if (!ce) {
+		php_error_docref(NULL, E_WARNING, "Could not find class `%s`", ZSTR_VAL(className));
+		return;
+	}
 
 	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
-	ce = zend_standard_class_def;
 	keyField = azaleaMysqlndFindFieldName(result, key);
 	if (!keyField) {
 		// 找不到字段
@@ -631,10 +652,23 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, columnWithKey)
 PHP_METHOD(azalea_ext_model_mysqlnd_query, row)
 {
 	MYSQLND_RES *result;
+	zend_string *className = NULL;
 	zend_class_entry *ce;
 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S", &className) == FAILURE) {
+		return;
+	}
+	if (className == NULL) {
+		ce = zend_standard_class_def;
+	} else {
+		ce = zend_fetch_class(className, ZEND_FETCH_CLASS_AUTO);
+	}
+	if (!ce) {
+		php_error_docref(NULL, E_WARNING, "Could not find class `%s`", ZSTR_VAL(className));
+		return;
+	}
+
 	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
-	ce = zend_standard_class_def;
 	{
 		zval dummy;
 		if ((azaleaMysqlndFetchRow(&dummy, result, ce, 1))) {
