@@ -1,5 +1,5 @@
-# AZALEA
-A MVC framework extension for PHP written in C language, compatibled with [node-beauty](https://github.com/hdwong/node-beauty) service module.
+# AZALEA 2.0
+A MVC framework extension for PHP written in C language.
 
 Welcome to join QQ group **576346826** to communicate with me.
 
