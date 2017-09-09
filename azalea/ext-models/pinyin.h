@@ -9,7 +9,6 @@
 
 AZALEA_EXT_MODEL_STARTUP_FUNCTION(pinyin);
 
-PHP_METHOD(azalea_ext_model_pinyin, __construct);
 PHP_METHOD(azalea_ext_model_pinyin, first);
 PHP_METHOD(azalea_ext_model_pinyin, token);
 

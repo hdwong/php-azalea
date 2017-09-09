@@ -7,8 +7,10 @@
 #ifndef AZALEA_TEMPLATE_H_
 #define AZALEA_TEMPLATE_H_
 
-PHP_FUNCTION(azalea_template_printf);
-PHP_FUNCTION(azalea_template_sprintf);
+PHP_FUNCTION(azalea_template_print);
+PHP_FUNCTION(azalea_template_return);
+PHP_FUNCTION(azalea_template_translate);
+PHP_FUNCTION(azalea_template_translatePlural);
 
 void azaleaRegisterTemplateFunctions();
 void azaleaUnregisterTemplateFunctions(zend_bool forced);

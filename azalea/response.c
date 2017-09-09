@@ -13,10 +13,11 @@
 #include "azalea/controller.h"
 #include "azalea/response.h"
 
-#include "ext/standard/head.h"  // for php_setcookie
-#include "ext/standard/php_var.h"  // for php_var_dump
+#include "ext/standard/head.h"	// for php_setcookie
+#include "ext/standard/php_var.h"	// for php_var_dump
+#include "main/SAPI.h"	// for sapi_header_op
 
-zend_class_entry *azalea_response_ce;
+zend_class_entry *azaleaResponseCe;
 
 /* {{{ class Azalea\Response methods
  */
@@ -39,9 +40,9 @@ AZALEA_STARTUP_FUNCTION(response)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Response), azalea_response_methods);
-	azalea_response_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_response_ce->ce_flags |= ZEND_ACC_FINAL;
-	zend_declare_property_null(azalea_response_ce, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
+	azaleaResponseCe = zend_register_internal_class(&ce);
+	azaleaResponseCe->ce_flags |= ZEND_ACC_FINAL;
+	zend_declare_property_null(azaleaResponseCe, ZEND_STRL("_instance"), ZEND_ACC_PRIVATE);
 
 	return SUCCESS;
 }
@@ -49,6 +50,27 @@ AZALEA_STARTUP_FUNCTION(response)
 
 /* {{{ proto __construct */
 PHP_METHOD(azalea_response, __construct) {}
+/* }}} */
+
+/* {{{ proto azaleaSetHeaderStr */
+static int azaleaSetHeaderStr(char *line, size_t len)
+{
+	sapi_header_line ctr = {0};
+	ctr.line = line;
+	ctr.line_len = len;
+	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
+}
+/* }}} */
+
+/* {{{ proto azaleaSetHeaderStrWithCode */
+static int azaleaSetHeaderStrWithCode(char *line, size_t len, zend_long httpCode)
+{
+	sapi_header_line ctr = {0};
+	ctr.line = line;
+	ctr.line_len = len;
+	ctr.response_code = httpCode;
+	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
+}
 /* }}} */
 
 /* {{{ proto void gotoUrl(string url, int httpCode) */
@@ -61,12 +83,12 @@ PHP_METHOD(azalea_response, gotoUrl)
 		return;
 	}
 
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}
-	if (strncasecmp(ZSTR_VAL(url), "http://", sizeof("http://") - 1) &&
-			strncasecmp(ZSTR_VAL(url), "https://", sizeof("https://") - 1)) {
+	if (strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) &&
+			strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
 		// add url prefix
 		url = azaleaUrl(url, 0);
 	}
@@ -82,7 +104,7 @@ PHP_METHOD(azalea_response, gotoUrl)
 /* {{{ proto void reload(void) */
 PHP_METHOD(azalea_response, reload)
 {
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}
@@ -110,14 +132,14 @@ PHP_METHOD(azalea_response, gotoRoute)
 		return;
 	}
 
-	controller = zend_read_property(azalea_response_ce, getThis(), ZEND_STRL("_instance"), 0, NULL);
+	controller = zend_read_property(azaleaResponseCe, getThis(), ZEND_STRL("_instance"), 0, NULL);
 	if (!controller) {
 		RETURN_FALSE;
 	}
 	// folder
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("folder"))) && Z_TYPE_P(field) == IS_STRING) {
 		folderName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = zend_read_property(azalea_controller_ce, controller, ZEND_STRL("_folderName"), 0, NULL))
+	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_folder"), 0, NULL))
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		folderName = zend_string_copy(Z_STR_P(field));
@@ -125,18 +147,18 @@ PHP_METHOD(azalea_response, gotoRoute)
 	// controller
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("controller"))) && Z_TYPE_P(field) == IS_STRING) {
 		controllerName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = zend_read_property(azalea_controller_ce, controller, ZEND_STRL("_controllerName"), 0, NULL))
+	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_controller"), 0, NULL))
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		controllerName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaConfigSubFind("dispatch", "default_controller"))) {
+	} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_controller")))) {
 		// default controller
 		controllerName = zend_string_copy(Z_STR_P(field));
 	}
 	// action
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
 		actionName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaConfigSubFind("dispatch", "default_action"))) {
+	} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_action")))) {
 		// default action
 		actionName = zend_string_copy(Z_STR_P(field));
 	}
@@ -170,7 +192,7 @@ PHP_METHOD(azalea_response, setHeader)
 		return;
 	}
 
-	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), "WEB")) {
+	if (strcmp(ZSTR_VAL(AZALEA_G(environ)), ZSTR_VAL(AG(stringWeb)))) {
 		// not WEB
 		return;
 	}

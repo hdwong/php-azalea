@@ -16,9 +16,8 @@
 
 zend_class_entry *azalea_ext_model_pinyin_ce;
 
-/* {{{ class LocationModel methods */
+/* {{{ class PinyinModel methods */
 static zend_function_entry azalea_ext_model_pinyin_methods[] = {
-	PHP_ME(azalea_ext_model_pinyin, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_ext_model_pinyin, first, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_ext_model_pinyin, token, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
@@ -30,15 +29,11 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(pinyin)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(PinyinModel), azalea_ext_model_pinyin_methods);
-	azalea_ext_model_pinyin_ce = zend_register_internal_class_ex(&ce, azalea_model_ce);
+	azalea_ext_model_pinyin_ce = zend_register_internal_class_ex(&ce, azaleaModelCe);
 	azalea_ext_model_pinyin_ce->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }
-/* }}} */
-
-/* {{{ proto __construct */
-PHP_METHOD(azalea_ext_model_pinyin, __construct) {}
 /* }}} */
 
 /* {{{ proto convertUtf8ToGbk */
@@ -201,7 +196,7 @@ PHP_METHOD(azalea_ext_model_pinyin, token)
 	gbk = convertUtf8ToGbk(str);
 	p = ZSTR_VAL(gbk);
 	end = p + ZSTR_LEN(gbk);
-	ret = ecalloc(1, ZSTR_LEN(str) * 6);  // 最长拼音为 6 字符
+	ret = ecalloc(1, ZSTR_LEN(str) * 6);	// 最长拼音为 6 字符
 	while (p < end) {
 		if (*p >= 0) {
 			// 非汉字处理

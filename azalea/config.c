@@ -11,28 +11,26 @@
 #include "azalea/config.h"
 
 #include "ext/standard/php_var.h"
-#include "ext/standard/php_string.h"  // for php_explode
+#include "ext/standard/php_string.h"	// for php_explode
 
-zend_class_entry *azalea_config_ce;
+zend_class_entry *azaleaConfigCe;
 
-/* {{{ class Azalea\Config methods
- */
+/* {{{ class Azalea\Config methods */
 static zend_function_entry azalea_config_methods[] = {
+	PHP_ME(azalea_config, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	PHP_ME(azalea_config, getSub, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, getAll, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
 
-/* {{{ AZALEA_STARTUP_FUNCTION
- */
+/* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_STARTUP_FUNCTION(config)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Config), azalea_config_methods);
-	azalea_config_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_config_ce->ce_flags |= ZEND_ACC_FINAL;
+	azaleaConfigCe = zend_register_internal_class(&ce);
+	azaleaConfigCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }
@@ -105,8 +103,7 @@ static void php_ini_parser_cb_with_sections(zval *arg1, zval *arg2, zval *arg3, 
 }
 /* }}} */
 
-/** {{{ proto azaleaDeepCopy(zval *dst, zval *src)
- */
+/** {{{ proto azaleaDeepCopy(zval *dst, zval *src) */
 static void azaleaDeepCopy(zval *dst, zval *src) {
 	zval *pzval, *dstpzval, value;
 	zend_ulong idx;
@@ -175,7 +172,7 @@ void azaleaLoadConfig(zval *val)
 		}
 	}
 	// DEFAULTS
-	zval elSession, elPath, elService, elDispatch, elNB, elSessionEnv, *found, *field;
+	zval elSession, elPath, elService, elDispatch, elSessionEnv, *found, *field;
 	// config.debug
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("debug")))) {
 		add_assoc_bool_ex(config, ZEND_STRL("debug"), 0);
@@ -216,11 +213,6 @@ void azaleaLoadConfig(zval *val)
 		array_init(&elDispatch);
 		add_assoc_zval_ex(config, ZEND_STRL("dispatch"), &elDispatch);
 	}
-	// config.node-beauty
-	if (!zend_hash_str_exists(Z_ARRVAL_P(config), ZEND_STRL("node-beauty"))) {
-		array_init(&elNB);
-		add_assoc_zval_ex(config, ZEND_STRL("node-beauty"), &elNB);
-	}
 	// ---------- sub of config.session ----------
 	found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("session"));
 	if (Z_TYPE_P(found) != IS_ARRAY) {
@@ -251,7 +243,7 @@ void azaleaLoadConfig(zval *val)
 	field = zend_hash_str_find(Z_ARRVAL_P(found), ZEND_STRL("env"));
 	array_init(&elSessionEnv);
 	if (!field || Z_TYPE_P(field) != IS_STRING || Z_STRLEN_P(field) == 0) {
-		add_next_index_stringl(&elSessionEnv, ZEND_STRL("WEB"));
+		add_next_index_str(&elSessionEnv, AG(stringWeb));
 	} else {
 		zend_string *delim = zend_string_init(ZEND_STRL(","), 0);
 		php_explode(delim, Z_STR_P(field), &elSessionEnv, ZEND_LONG_MAX);
@@ -337,10 +329,10 @@ void azaleaLoadConfig(zval *val)
 }
 /* }}} */
 
-/* {{{ proto mixed azaleaConfigSubFind(string $key, string $subKey) */
-zval * azaleaConfigSubFind(const char *key, const char *subKey)
+/* {{{ proto mixed azaleaConfigSubFind */
+zval * azaleaConfigSubFindEx(const char *key, size_t lenKey, const char *subKey, size_t lenSubKey)
 {
-	zval *found = zend_hash_str_find(Z_ARRVAL(AZALEA_G(config)), key, strlen(key));
+	zval *found = zend_hash_str_find(Z_ARRVAL(AZALEA_G(config)), key, lenKey);
 	if (!found) {
 		return NULL;
 	}
@@ -350,45 +342,35 @@ zval * azaleaConfigSubFind(const char *key, const char *subKey)
 	if (Z_TYPE_P(found) != IS_ARRAY) {
 		return NULL;
 	}
-	found = zend_hash_str_find(Z_ARRVAL_P(found), subKey, strlen(subKey));
+	found = zend_hash_str_find(Z_ARRVAL_P(found), subKey, lenSubKey);
 	return found ? found : NULL;
 }
 /* }}} */
 
-/* {{{ proto mixed get(string $key = null, mixed $default = null) */
+/* {{{ proto __construct */
+PHP_METHOD(azalea_config, __construct) {}
+/* }}} */
+
+/* {{{ proto mixed get */
 PHP_METHOD(azalea_config, get)
 {
-	zend_string *key;
+	zend_string *key, *subKey;
 	zval *def = NULL;
 	zval *val;
+	char *p;
+	size_t lenKey;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &key, &def) == FAILURE) {
 		return;
 	}
 
-	val = azaleaConfigFind(ZSTR_VAL(key));
-	if (val) {
-		RETURN_ZVAL(val, 1, 0);
+	p = strchr(ZSTR_VAL(key), '.');
+	if (p) {
+		lenKey = p - ZSTR_VAL(key);
+		val = azaleaConfigSubFindEx(ZSTR_VAL(key),lenKey, p + 1, ZSTR_LEN(key) - lenKey - 1);
+	} else {
+		val = azaleaConfigSubFindEx(ZSTR_VAL(key), ZSTR_LEN(key), NULL, 0);
 	}
-	if (def) {
-		RETURN_ZVAL(def, 1, 0);
-	}
-	RETURN_NULL();
-}
-/* }}} */
-
-/* {{{ proto mixed getSub(string $key, string $subKey, mixed $default = null) */
-PHP_METHOD(azalea_config, getSub)
-{
-	zend_string *key, *subKey;
-	zval *def = NULL;
-	zval *val;
-
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|z", &key, &subKey, &def) == FAILURE) {
-		return;
-	}
-
-	val = azaleaConfigSubFind(ZSTR_VAL(key), ZSTR_VAL(subKey));
 	if (val) {
 		RETURN_ZVAL(val, 1, 0);
 	}

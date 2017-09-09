@@ -24,45 +24,15 @@
 extern zend_module_entry azalea_module_entry;
 #define phpext_azalea_ptr &azalea_module_entry
 
-#define PHP_AZALEA_VERSION "1.2.2"
+#define PHP_AZALEA_VERSION "2.0.0"
 #define PHP_AZALEA_COPYRIGHT_OUTPUT "X-Framework: Azalea/"PHP_AZALEA_VERSION
 
 #define AZALEA_STARTUP(module)				ZEND_MODULE_STARTUP_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_STARTUP_FUNCTION(module)		ZEND_MINIT_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN_FUNCTION(module)	ZEND_MSHUTDOWN_FUNCTION(azalea_##module)
 #define AZALEA_SHUTDOWN(module)				ZEND_MODULE_SHUTDOWN_N(azalea_##module)(INIT_FUNC_ARGS_PASSTHRU)
-#define AZALEA_NODE_BEAUTY_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_node_beauty_##module)(INIT_FUNC_ARGS_PASSTHRU)
-#define AZALEA_NODE_BEAUTY_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_node_beauty_##module)
 #define AZALEA_EXT_MODEL_STARTUP(module)	ZEND_MODULE_STARTUP_N(azalea_ext_model_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define AZALEA_EXT_MODEL_STARTUP_FUNCTION(module)	ZEND_MINIT_FUNCTION(azalea_ext_model_##module)
-
-#define NODE_BEAUTY_MYSQL_NAME "nb-mysql"
-#define NODE_BEAUTY_REDIS_NAME "nb-redis"
-#define NODE_BEAUTY_MONGO_NAME "nb-mongo"
-#define NODE_BEAUTY_SOLR_NAME  "nb-solr"
-#define NODE_BEAUTY_ES_NAME    "nb-elasticsearch"
-#define NODE_BEAUTY_EMAIL_NAME "nb-email"
-#define NODE_BEAUTY_SMS_NAME   "nb-sms"
-#define NODE_BEAUTY_UPYUN_NAME "nb-upyun"
-#define NODE_BEAUTY_LOCATION_NAME "nb-location"
-
-#define NODE_BEAUTY_MYSQL 1
-#define NODE_BEAUTY_REDIS 1
-#define NODE_BEAUTY_MONGO 0
-#define NODE_BEAUTY_SOLR  0
-#define NODE_BEAUTY_ES    1
-#define NODE_BEAUTY_EMAIL 1
-#define NODE_BEAUTY_SMS   1
-#define NODE_BEAUTY_UPYUN 1
-#define NODE_BEAUTY_LOCATION 1
-
-#define EXT_MODEL_PINYIN_NAME "pinyin"
-#define EXT_MODEL_MYSQL_NAME  "mysql"
-#define EXT_MODEL_REDIS_NAME  "redis"
-
-#define EXT_MODEL_PINYIN  1
-#define EXT_MODEL_MYSQL   0
-#define EXT_MODEL_REDIS   0
 
 #ifdef PHP_WIN32
 #	define PHP_AZALEA_API __declspec(dllexport)
@@ -87,15 +57,19 @@ extern zend_module_entry azalea_module_entry;
 #define azalea_exception_t zval
 
 ZEND_BEGIN_MODULE_GLOBALS(azalea)
-	double timer;
-	zend_ulong renderLevel;
-	zend_string *environ;
-	azalea_bootstrap_t bootstrap;
-	void *curlHandle;
-	zend_bool registeredTemplateFunctions;
-	zend_bool hasServiceException;
-	zend_bool startSession;
-	zend_string *directory;
+	double timer;					// 计时器
+	zend_ulong renderDepth;			// 渲染嵌套层数
+	zend_string *environ;			// 运行环境
+	zend_string *locale;			// 语言区域
+	azalea_bootstrap_t bootstrap;	// Azalea\Bootstrap 实例变量
+	zend_bool registeredTemplateFunctions;	// 是否已注册模板函数
+	zend_bool startSession;			// 是否开启回话
+	zval instances;					// 实例缓存变量
+	zval config;					// 配置项变量
+	zval translations;				// 翻译字符变量
+
+	zend_string *docRoot;			// 入口文件根目录
+	zend_string *appRoot;			// 系统文件根目录
 	zend_string *uri;
 	zend_string *baseUri;
 	zend_string *ip;
@@ -109,18 +83,18 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_string *controllerName;
 	zend_string *actionName;
 	zval pathArgs;
-
-	zval instances;
-	zval config;
 ZEND_END_MODULE_GLOBALS(azalea)
-
 extern ZEND_DECLARE_MODULE_GLOBALS(azalea);
-
-/* Always refer to the globals in your function as AZALEA_G(variable).
-   You are encouraged to rename these macros something shorter, see
-   examples in any other php module directory.
-*/
 #define AZALEA_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(azalea, v)
+
+ZEND_BEGIN_MODULE_GLOBALS(azalea_internal)
+	int moduleNumber;			// PHP 模块序号
+	zend_string *stringWeb;		// 字符串 "WEB"
+	zend_string *stringEn;		// 字符串 "en_US"
+	zend_string *stringSlash;	// 字符串 "/"
+ZEND_END_MODULE_GLOBALS(azalea_internal)
+extern ZEND_DECLARE_MODULE_GLOBALS(azalea_internal);
+#define AG(v) ZEND_MODULE_GLOBALS_ACCESSOR(azalea_internal, v)
 
 #if defined(ZTS) && defined(COMPILE_DL_AZALEA)
 ZEND_TSRMLS_CACHE_EXTERN()

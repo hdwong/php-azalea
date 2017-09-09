@@ -9,14 +9,15 @@
 
 AZALEA_STARTUP_FUNCTION(config);
 
+PHP_METHOD(azalea_config, __construct);
 PHP_METHOD(azalea_config, get);
-PHP_METHOD(azalea_config, getSub);
 PHP_METHOD(azalea_config, getAll);
 
 void azaleaLoadConfig(zval *);
-#define azaleaConfigFind(key) azaleaConfigSubFind(key, NULL)
-zval * azaleaConfigSubFind(const char *key, const char *subKey);
+#define azaleaConfigFind(key) azaleaConfigSubFindEx(key, strlen(key), NULL, 0)
+#define azaleaConfigSubFind(key, subKey) azaleaConfigSubFindEx(key, strlen(key), subKey, strlen(subKey))
+zval * azaleaConfigSubFindEx(const char *key, size_t lenKey, const char *subKey, size_t lenSubKey);
 
-extern zend_class_entry *azalea_config_ce;
+extern zend_class_entry *azaleaConfigCe;
 
 #endif /* AZALEA_CONFIG_H_ */

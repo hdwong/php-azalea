@@ -10,10 +10,10 @@
 #include "azalea/namespace.h"
 #include "azalea/request.h"
 
-#include "ext/standard/php_string.h"  // for php_trim
-#include "main/SAPI.h"  // for request_info
+#include "ext/standard/php_string.h"	// for php_trim
+#include "main/SAPI.h"	// for request_info
 
-zend_class_entry *azalea_request_ce;
+zend_class_entry *azaleaRequestCe;
 
 /* {{{ class Azalea\Request methods
  */
@@ -24,6 +24,7 @@ static zend_function_entry azalea_request_methods[] = {
 	PHP_ME(azalea_request, getRequestUri, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, isPost, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, isAjax, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_request, getIp, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getQuery, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getQueryTrim, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_request, getPost, NULL, ZEND_ACC_PUBLIC)
@@ -45,8 +46,8 @@ AZALEA_STARTUP_FUNCTION(request)
 {
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, AZALEA_NS_NAME(Request), azalea_request_methods);
-	azalea_request_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	azalea_request_ce->ce_flags |= ZEND_ACC_FINAL;
+	azaleaRequestCe = zend_register_internal_class(&ce);
+	azaleaRequestCe->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }
@@ -148,6 +149,36 @@ PHP_METHOD(azalea_request, isAjax)
 		RETURN_FALSE;
 	}
 	RETURN_BOOL(0 == strcasecmp(Z_STRVAL_P(field), "XMLHttpRequest"));
+}
+/* }}} */
+
+/* {{{ proto getIp */
+PHP_METHOD(azalea_request, getIp)
+{
+	zval *field;
+	zend_string *ip = NULL;
+
+	if (AZALEA_G(ip)) {
+		RETURN_STR_COPY(AZALEA_G(ip));	// 需要 copy 一次, 因为 AZALEA_G(ip) RSHUTDOWN 时释放
+	}
+
+	if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_CLIENT_IP"))) &&
+			Z_TYPE_P(field) == IS_STRING) {
+		ip = Z_STR_P(field);
+	} else if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_X_FORWARDED_FOR"))) &&
+			Z_TYPE_P(field) == IS_STRING) {
+		ip = Z_STR_P(field);
+	} else if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("REMOTE_ADDR"))) &&
+			Z_TYPE_P(field) == IS_STRING) {
+		ip = Z_STR_P(field);
+	}
+	if (!ip) {
+		ip = zend_string_init(ZEND_STRL("0.0.0.0"), 0);
+	} else {
+		zend_string_addref(ip);
+	}
+	AZALEA_G(ip) = ip;	// 赋值给 Azalea, 因此这里无需 zend_string_release
+	RETURN_STR_COPY(ip);
 }
 /* }}} */
 

@@ -14,6 +14,6 @@ PHP_METHOD(azalea_session, get);
 PHP_METHOD(azalea_session, set);
 PHP_METHOD(azalea_session, clean);
 
-extern zend_class_entry *azalea_session_ce;
+extern zend_class_entry *azaleaSessionCe;
 
 #endif /* AZALEA_SESSION_H_ */

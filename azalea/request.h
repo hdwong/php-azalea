@@ -15,6 +15,7 @@ PHP_METHOD(azalea_request, getRequestUri);
 PHP_METHOD(azalea_request, getBaseUri);
 PHP_METHOD(azalea_request, isPost);
 PHP_METHOD(azalea_request, isAjax);
+PHP_METHOD(azalea_request, getIp);
 PHP_METHOD(azalea_request, getQuery);
 PHP_METHOD(azalea_request, getQueryTrim);
 PHP_METHOD(azalea_request, getPost);
@@ -31,6 +32,6 @@ zend_string * azaleaGetBaseUri(void);
 zend_string * azaleaGetUri(void);
 zend_string * azaleaGetRequestUri(void);
 
-extern zend_class_entry *azalea_request_ce;
+extern zend_class_entry *azaleaRequestCe;
 
 #endif /* AZALEA_REQUEST_H_ */

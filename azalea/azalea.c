@@ -12,7 +12,6 @@
 #include "azalea/exception.h"
 
 #include "ext/date/php_date.h"
-#include "ext/standard/php_rand.h"
 #ifdef PHP_WIN32
 #include "win32/time.h"
 #elif defined(NETWARE)
@@ -23,124 +22,36 @@
 #endif
 
 #include "ext/standard/php_var.h"	// for php_var_dump function
-#include "ext/standard/php_string.h"  // for php_trim function
-#include "main/SAPI.h"  // for sapi_header_op
+#include "ext/standard/php_string.h"	// for php_trim function
 
 /* {{{ azalea_functions[] */
 const zend_function_entry azalea_functions[] = {
 	ZEND_NS_NAMED_FE(AZALEA_NS, timer, ZEND_FN(azalea_timer), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, url, ZEND_FN(azalea_url), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, env, ZEND_FN(azalea_env), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, ip, ZEND_FN(azalea_ip), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, randomString, ZEND_FN(azalea_randomString), NULL)
-	ZEND_NS_NAMED_FE(AZALEA_NS, maskString, ZEND_FN(azalea_maskString), NULL)
 	ZEND_NS_NAMED_FE(AZALEA_NS, debug, ZEND_FN(azalea_debug), NULL)
 	PHP_FE_END	/* Must be the last line in azalea_functions[] */
 };
 /* }}} */
 
-/* {{{ proto azalea_randomString */
-PHP_FUNCTION(azalea_randomString)
-{
-	zend_long len;
-	zend_string *mode = NULL;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|S", &len, &mode) == FAILURE) {
-		return;
-	}
-	if (len < 1) {
-		php_error_docref(NULL, E_WARNING, "String length is smaller than 1");
-		RETURN_FALSE;
-	}
-
-	static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	char *p = base;
-	size_t l = 62;
-
-	if (mode) {
-		if (strncmp(ZSTR_VAL(mode), "10", 2) == 0 || strncasecmp(ZSTR_VAL(mode), "n", 1) == 0) {
-			// [0-9]
-			l = 10;
-		} else if (strncmp(ZSTR_VAL(mode), "16", 2) == 0) {
-			// [0-9a-f]
-			l = 16;
-		} else if (strncasecmp(ZSTR_VAL(mode), "c", 1) == 0) {
-			// [a-zA-Z]
-			p += 10;
-			l = 52;
-		} else if (strncasecmp(ZSTR_VAL(mode), "ln", 2) == 0) {
-			// [0-9a-z]
-			l = 36;
-		} else if (strncasecmp(ZSTR_VAL(mode), "un", 2) == 0) {
-			// [0-9A-Z]
-			p += 36;
-			l = 36;
-		} else if (strncasecmp(ZSTR_VAL(mode), "l", 1) == 0) {
-			// [a-z]
-			p += 10;
-			l = 26;
-		} else if (strncasecmp(ZSTR_VAL(mode), "u", 1) == 0) {
-			// [A-Z]
-			p += 36;
-			l = 26;
-		}
-	}
-	char result[len];
-	zend_long i, number;
-	l -= 1; // for RAND_RANGE
-	if (!BG(mt_rand_is_seeded)) {
-		php_mt_srand(GENERATE_SEED());
-	}
-	for (i = 0; i < len; ++i) {
-		number = (zend_long) php_mt_rand() >> 1;
-		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-		result[i] = *(p + number);
-	}
-	RETURN_STRINGL(result, len);
-}
-/* }}} */
-
-/* {{{ proto azalea_maskString */
-PHP_FUNCTION(azalea_maskString)
-{
-	zend_string *string;
-	zend_bool isEmail = 0;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &string, &isEmail) == FAILURE) {
-		return;
-	}
-	// copy for change
-	string = zend_string_init(ZSTR_VAL(string), ZSTR_LEN(string), 0);
-	if (ZSTR_LEN(string) > 1) {
-		if (!isEmail) {
-			// normal string
-		} else {
-			// email
-		}
-	}
-	RETURN_STR(string);
-}
-/* }}} */
-
 /* {{{ proto azaleaUrl */
 zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 {
+	zval *field;
+	zend_string *hostname, *tstr, *returnUrl;
+
 	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
-		zval *server, *field;
-		zend_string *hostname, *tstr;
 
-		server = &PG(http_globals)[TRACK_VARS_SERVER];
-		if (server && Z_TYPE_P(server) == IS_ARRAY &&
-				zend_hash_str_exists(Z_ARRVAL_P(server), ZEND_STRL("HTTPS"))) {
+		if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTPS")))) {
 			hostname = zend_string_init(ZEND_STRL("https://"), 0);
 		} else {
 			hostname = zend_string_init(ZEND_STRL("http://"), 0);
 		}
-		field = azaleaConfigFind("hostname");	// get from config
+		field = azaleaConfigSubFindEx(ZEND_STRL("hostname"), NULL, 0);	// get from config
 		if (!field) {
 			// host not set, try to get from global
-			field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_HOST"));
+			field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_HOST"));
 			if (!field) {
 				tstr = strpprintf(0, "%slocalhost", ZSTR_VAL(hostname));
 			} else {
@@ -153,7 +64,6 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 		AZALEA_G(host) = tstr;
 	}
 
-	zend_string *returnUrl;
 	url = php_trim(url, ZEND_STRL("/"), 1);
 	returnUrl = strpprintf(0, "%s%s%s", includeHost ? ZSTR_VAL(AZALEA_G(host)) : "",
 			AZALEA_G(baseUri) ? ZSTR_VAL(AZALEA_G(baseUri)) : "/", ZSTR_VAL(url));
@@ -188,44 +98,7 @@ PHP_FUNCTION(azalea_url)
 /* {{{ azalea_env */
 PHP_FUNCTION(azalea_env)
 {
-	RETURN_STR(zend_string_copy(AZALEA_G(environ)));
-}
-/* }}} */
-
-/* {{{ proto azaleaRequestIp */
-zend_string * azaleaRequestIp()
-{
-	if (AZALEA_G(ip)) {
-		return AZALEA_G(ip);
-	}
-	zval *server, *field;
-	zend_string *ip = NULL;
-
-	server = &PG(http_globals)[TRACK_VARS_SERVER];
-	if (Z_TYPE_P(server) == IS_ARRAY) {
-		if ((field= zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_CLIENT_IP"))) &&
-				Z_TYPE_P(field) == IS_STRING) {
-			ip = Z_STR_P(field);
-		} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_X_FORWARDED_FOR"))) &&
-				Z_TYPE_P(field) == IS_STRING) {
-			ip = Z_STR_P(field);
-		} else if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("REMOTE_ADDR"))) &&
-				Z_TYPE_P(field) == IS_STRING) {
-			ip = Z_STR_P(field);
-		}
-	}
-	if (!ip) {
-		ip = zend_string_init(ZEND_STRL("0.0.0.0"), 0);
-	}
-	AZALEA_G(ip) = ip;
-	return ip;
-}
-/* }}} */
-
-/* {{{ azalea_ip */
-PHP_FUNCTION(azalea_ip)
-{
-	RETURN_STR_COPY(azaleaRequestIp());
+	RETURN_STR_COPY(AZALEA_G(environ));
 }
 /* }}} */
 
@@ -234,8 +107,8 @@ zend_bool azaleaDebugMode()
 {
 	zval *configDebug, *configDebugKey, *debugKeyField;
 
-	configDebug = azaleaConfigFind("debug");
-	configDebugKey = azaleaConfigFind("debug_key");
+	configDebug = azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0);
+	configDebugKey = azaleaConfigSubFindEx(ZEND_STRL("debug_key"), NULL, 0);
 	debugKeyField = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTP_AZALEA_DEBUG_KEY"));
 
 	if ((!configDebug || Z_TYPE_P(configDebug) != IS_TRUE) &&
@@ -255,7 +128,9 @@ PHP_FUNCTION(azalea_debug)
 	if (!azaleaDebugMode() || zend_parse_parameters(ZEND_NUM_ARGS(), "z", &var) == FAILURE) {
 		return;
 	}
+	php_printf("<pre dir='ltr'>\n<small>%s:%d:</small>", zend_get_executed_filename(), zend_get_executed_lineno());
 	php_var_dump(var, 0);
+	php_printf("</pre>");
 }
 /* }}} */
 
@@ -288,27 +163,6 @@ zval * azaleaGlobalsStrFind(uint type, char *name, size_t len)
 		return NULL;
 	}
 	return field;
-}
-/* }}} */
-
-/* {{{ proto azaleaSetHeaderStr */
-int azaleaSetHeaderStr(char *line, size_t len)
-{
-	sapi_header_line ctr = {0};
-	ctr.line = line;
-	ctr.line_len = len;
-	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
-}
-/* }}} */
-
-/* {{{ proto azaleaSetHeaderStrWithCode */
-int azaleaSetHeaderStrWithCode(char *line, size_t len, zend_long httpCode)
-{
-	sapi_header_line ctr = {0};
-	ctr.line = line;
-	ctr.line_len = len;
-	ctr.response_code = httpCode;
-	return sapi_header_op(SAPI_HEADER_REPLACE, &ctr) == SUCCESS;
 }
 /* }}} */
 

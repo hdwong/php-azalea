@@ -9,14 +9,14 @@
 
 AZALEA_STARTUP_FUNCTION(controller);
 
-PHP_METHOD(azalea_controller, getRequest);
-PHP_METHOD(azalea_controller, getResponse);
+PHP_METHOD(azalea_controller, __construct);
 PHP_METHOD(azalea_controller, getSession);
 PHP_METHOD(azalea_controller, loadModel);
 PHP_METHOD(azalea_controller, getModel);
-PHP_METHOD(azalea_controller, getView);
-PHP_METHOD(azalea_controller, throw404);
+PHP_METHOD(azalea_controller, notFound);
 
-extern zend_class_entry *azalea_controller_ce;
+void azaleaControllerInit(zval *this, zend_class_entry *ce, zend_string *folderName, zend_string *controllerName);
+
+extern zend_class_entry *azaleaControllerCe;
 
 #endif /* AZALEA_CONTROLLER_H_ */

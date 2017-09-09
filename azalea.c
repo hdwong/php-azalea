@@ -37,18 +37,26 @@
 #include "azalea/response.h"
 #include "azalea/session.h"
 #include "azalea/model.h"
-#include "azalea/service.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
+#include "azalea/text.h"
+#ifdef WITH_I18N
+#include "azalea/i18n.h"
+#endif
 #include "azalea/exception.h"
-#include "azalea/transport_curl.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(azalea);
+ZEND_DECLARE_MODULE_GLOBALS(azalea_internal);
 
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(azalea)
 {
     REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "VERSION", PHP_AZALEA_VERSION, sizeof(PHP_AZALEA_VERSION) - 1, CONST_CS | CONST_PERSISTENT);
+
+    AG(moduleNumber) = module_number;
+    AG(stringWeb) = zend_new_interned_string(zend_string_init(ZEND_STRL("WEB"), 1));
+    AG(stringEn) = zend_new_interned_string(zend_string_init(ZEND_STRL("en_US"), 1));
+    AG(stringSlash) = zend_new_interned_string(zend_string_init(ZEND_STRL("/"), 1));
 
     AZALEA_STARTUP(loader);
     AZALEA_STARTUP(bootstrap);
@@ -58,9 +66,12 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(response);
     AZALEA_STARTUP(session);
     AZALEA_STARTUP(model);
-    AZALEA_STARTUP(service);
     AZALEA_STARTUP(view);
+    AZALEA_STARTUP(text);
     AZALEA_STARTUP(exception);
+#ifdef WITH_I18N
+    AZALEA_STARTUP(i18n);
+#endif
 
     return SUCCESS;
 }
@@ -81,14 +92,14 @@ PHP_RINIT_FUNCTION(azalea)
 
 	REGISTER_NS_LONG_CONSTANT(AZALEA_NS, "TIME", (zend_long) now, CONST_CS);
 	AZALEA_G(timer) = now;
-	AZALEA_G(renderLevel) = 0;
-	AZALEA_G(environ) = zend_string_init(ZEND_STRL("WEB"), 0);
+	AZALEA_G(renderDepth) = 0;
+	AZALEA_G(environ) = AG(stringWeb);
+	AZALEA_G(locale) = AG(stringEn);	// 默认 en_US
 	ZVAL_UNDEF(&AZALEA_G(bootstrap));
-	AZALEA_G(curlHandle) = NULL;
 	AZALEA_G(registeredTemplateFunctions) = 0;
-	AZALEA_G(hasServiceException) = 0;
 	AZALEA_G(startSession) = 0;
-	AZALEA_G(directory) = NULL;
+	AZALEA_G(docRoot) = NULL;
+	AZALEA_G(appRoot) = NULL;
 	AZALEA_G(uri) = NULL;
 	AZALEA_G(baseUri) = NULL;
 	AZALEA_G(ip) = NULL;
@@ -96,16 +107,16 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(controllersPath) = NULL;
 	AZALEA_G(modelsPath) = NULL;
 	AZALEA_G(viewsPath) = NULL;
-
 	array_init(&AZALEA_G(paths));
 	AZALEA_G(folderName) = NULL;
 	AZALEA_G(controllerName) = NULL;
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
-
 	array_init(&AZALEA_G(instances));
-
 	array_init(&AZALEA_G(config));
+#ifdef WITH_I18N
+	array_init(&AZALEA_G(translations));
+#endif
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
@@ -120,17 +131,20 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(environ)) {
 		zend_string_release(AZALEA_G(environ));
 	}
+	if (AZALEA_G(locale)) {
+		zend_string_release(AZALEA_G(locale));
+	}
 	if (Z_TYPE(AZALEA_G(bootstrap)) != IS_UNDEF) {
 		zval_ptr_dtor(&AZALEA_G(bootstrap));
-	}
-	if (AZALEA_G(curlHandle)) {
-		azaleaCurlClose(AZALEA_G(curlHandle));
 	}
 	if (AZALEA_G(registeredTemplateFunctions)) {
 		azaleaUnregisterTemplateFunctions(1);
 	}
-	if (AZALEA_G(directory)) {
-		zend_string_release(AZALEA_G(directory));
+	if (AZALEA_G(docRoot)) {
+		zend_string_release(AZALEA_G(docRoot));
+	}
+	if (AZALEA_G(appRoot)) {
+		zend_string_release(AZALEA_G(appRoot));
 	}
 	if (AZALEA_G(uri)) {
 		zend_string_release(AZALEA_G(uri));
@@ -153,7 +167,6 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	if (AZALEA_G(viewsPath)) {
 		zend_string_release(AZALEA_G(viewsPath));
 	}
-
 	zval_ptr_dtor(&AZALEA_G(paths));
 	if (AZALEA_G(folderName)) {
 		zend_string_release(AZALEA_G(folderName));
@@ -165,10 +178,11 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 		zend_string_release(AZALEA_G(actionName));
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
-
 	zval_ptr_dtor(&AZALEA_G(instances));
-
 	zval_ptr_dtor(&AZALEA_G(config));
+#ifdef WITH_I18N
+	zval_ptr_dtor(&AZALEA_G(translations));
+#endif
 
 	return SUCCESS;
 }
@@ -179,22 +193,31 @@ PHP_MINFO_FUNCTION(azalea)
 {
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Version", PHP_AZALEA_VERSION);
-	// node-beauty models
-	php_info_print_table_colspan_header(2, "Node-Beauty Model Support");
-	php_info_print_table_row(2, "node-beauty-mysql", NODE_BEAUTY_MYSQL ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-redis", NODE_BEAUTY_REDIS ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-mongo", NODE_BEAUTY_MONGO ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-solr", NODE_BEAUTY_SOLR ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-elasticsearch", NODE_BEAUTY_ES ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-location", NODE_BEAUTY_LOCATION ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-email", NODE_BEAUTY_EMAIL ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-sms", NODE_BEAUTY_SMS ? "yes" : "no");
-	php_info_print_table_row(2, "node-beauty-upyun", NODE_BEAUTY_UPYUN ? "yes" : "no");
+	// embedded classes
+	php_info_print_table_colspan_header(2, "Embedded Class Support");
+#ifdef WITH_SERVICE
+	php_info_print_table_row(2, "service",  "yes");
+#else
+	php_info_print_table_row(2, "service",  "no");
+#endif
 	// extend models
 	php_info_print_table_colspan_header(2, "Extend Model Support");
-	php_info_print_table_row(2, "pinyin", EXT_MODEL_PINYIN ? "yes" : "no");
-	php_info_print_table_row(2, "mysql", EXT_MODEL_MYSQL ? "yes" : "no");
-	php_info_print_table_row(2, "redis", EXT_MODEL_REDIS ? "yes" : "no");
+#ifdef WITH_PINYIN
+	php_info_print_table_row(2, "pinyin",  "yes");
+#else
+	php_info_print_table_row(2, "pinyin",  "no");
+#endif
+#ifdef WITH_MYSQLND
+	php_info_print_table_row(2, "mysqlnd",
+#ifdef WITH_SQLBUILDER
+			"yes (use azalea_sqlbuilder)"
+#else
+			"yes"
+#endif
+	);
+#else
+	php_info_print_table_row(2, "mysqlnd",  "no");
+#endif
 
 	php_info_print_table_end();
 
@@ -202,9 +225,22 @@ PHP_MINFO_FUNCTION(azalea)
 }
 /* }}} */
 
+/* {{{ azalea_deps[] */
+static const zend_module_dep azalea_deps[] = {
+#ifdef WITH_MYSQLND
+		ZEND_MOD_REQUIRED("mysqlnd")
+#endif
+#ifdef WITH_SQLBUILDER
+		ZEND_MOD_REQUIRED("azalea_sqlbuilder")
+#endif
+		ZEND_MOD_END
+};
+/* }}} */
+
 /* {{{ azalea_module_entry */
 zend_module_entry azalea_module_entry = {
-	STANDARD_MODULE_HEADER,
+	STANDARD_MODULE_HEADER_EX, NULL,
+	azalea_deps,
 	"azalea",
 	azalea_functions,
 	PHP_MINIT(azalea),

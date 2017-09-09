@@ -13,6 +13,6 @@ PHP_METHOD(azalea_loader, load);
 
 int azaleaRequire(char *path, zend_bool once);
 
-extern zend_class_entry *azalea_loader_ce;
+extern zend_class_entry *azaleaLoaderCe;
 
 #endif /* AZALEA_LOADER_H_ */
