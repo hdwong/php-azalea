@@ -42,27 +42,31 @@ PHP_METHOD(azalea_text, __construct) {}
 /* {{{ proto random */
 PHP_METHOD(azalea_text, random)
 {
-	zend_long len, i, number;
+	zend_long len, len2 = 0, i, j, number;
 	zend_string *mode = NULL;
 	static char *base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";	// length 62
 	static char *code = "23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";	// length 56
-	char *p = base, *pMode;
-	size_t l = 62;
+	char *p = base, *pMode, *p2 = NULL;
+	size_t l = 62, l2 = 0;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "l|S", &len, &mode) == FAILURE) {
 		return;
 	}
-	if (len < 1) {
-		php_error_docref(NULL, E_WARNING, "String length is smaller than 1");
+	if (len < 1 || len > 1024) {
+		php_error_docref(NULL, E_WARNING, "String length must > 0 and <= 1024");
 		RETURN_FALSE;
 	}
 
 	if (mode) {
 		pMode = ZSTR_VAL(mode);
 		if (0 == strcmp(pMode, "9")) {
-			// [1-9]
-			p += 1;
+			// [1-9][0-9]+
+			p2 = base;	// [0-9]
+			l2 = 10;
+			len2 = len - 1;
+			p += 1;	// [1-9]
 			l = 9;
+			len = 1;
 		} else if (0 == strcmp(pMode, "10") || 0 == strcasecmp(pMode, "n")) {
 			// [0-9]
 			l = 10;
@@ -95,17 +99,25 @@ PHP_METHOD(azalea_text, random)
 		}
 		// TODO 考虑增加产生不重复字符的模式
 	}
-	char result[len];
-	l -= 1;	// for RAND_RANGE
+	char result[len + len2];
 	if (!BG(mt_rand_is_seeded)) {
 		php_mt_srand(GENERATE_SEED());
 	}
-	for (i = 0; i < len; ++i) {
+	l -= 1;	// for RAND_RANGE
+	l2 -= 1;	// for RAND_RANGE
+	// 生成前半部分
+	for (i = 0, j = 0; i < len; ++i, ++j) {
 		number = (zend_long) php_mt_rand() >> 1;
 		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
-		result[i] = *(p + number);
+		result[j] = *(p + number);
 	}
-	RETURN_STRINGL(result, len);
+	// 生成后半部分
+	for (i = 0; i < len2; ++i, ++j) {
+		number = (zend_long) php_mt_rand() >> 1;
+		RAND_RANGE(number, 0, l2, PHP_MT_RAND_MAX);
+		result[j] = *(p2 + number);
+	}
+	RETURN_STRINGL(result, len + len2);
 }
 /* }}} */
 
