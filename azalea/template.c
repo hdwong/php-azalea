@@ -30,6 +30,7 @@ static char *get_default_charset(void) {
 static zend_function_entry azalea_template_functions[] = {
 	ZEND_NAMED_FE(_p, ZEND_FN(azalea_template_print), NULL)	// escape & echo
 	ZEND_NAMED_FE(_sp, ZEND_FN(azalea_template_return), NULL)	// escape & return
+	ZEND_NAMED_FE(_render, ZEND_FN(azalea_template_render), NULL)	// render & echo
 	ZEND_NAMED_FE(_t, ZEND_FN(azalea_template_translate), NULL)	// translate & echo
 	ZEND_NAMED_FE(_tp, ZEND_FN(azalea_template_translatePlural), NULL)	// translatePlural & echo
 	ZEND_NAMED_FE(_url, ZEND_FN(azalea_url), NULL)	// like Azalea\url
@@ -61,6 +62,18 @@ PHP_FUNCTION(azalea_template_return)
 	}
 	text = php_escape_html_entities_ex((unsigned char *) ZSTR_VAL(text), ZSTR_LEN(text), 0, ENT_QUOTES, get_default_charset(), 1);
 	RETVAL_STR(text);
+}
+/* }}} */
+
+/* {{{ proto _render */
+PHP_FUNCTION(azalea_template_render)
+{
+	if (execute_data->prev_execute_data) {
+		azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
+		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+		zval_ptr_dtor(return_value);
+		RETURN_NULL();
+	}
 }
 /* }}} */
 

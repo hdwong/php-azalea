@@ -15,6 +15,8 @@ PHP_METHOD(azalea_view, assign);
 PHP_METHOD(azalea_view, append);
 PHP_METHOD(azalea_view, clean);
 
+void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, zval *viewInstance);
+
 extern zend_class_entry *azaleaViewCe;
 
 #endif /* AZALEA_VIEW_H_ */

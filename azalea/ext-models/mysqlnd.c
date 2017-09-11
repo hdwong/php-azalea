@@ -5,10 +5,10 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "../../config.h"
 #endif
 
-//#ifdef WITH_MYSQLND
+#ifdef WITH_MYSQLND
 
 #include "php.h"
 #include "php_azalea.h"
@@ -43,7 +43,9 @@ static zend_function_entry azalea_ext_model_mysqlnd_methods[] = {
 	PHP_ME(azalea_ext_model_mysqlnd, escape, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_ext_model_mysqlnd, query, arginfo_mysqlnd_query, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_ext_model_mysqlnd, getQueries, NULL, ZEND_ACC_PUBLIC)
+#ifdef WITH_SQLBUILDER
 	PHP_ME(azalea_ext_model_mysqlnd, getSqlBuilder, NULL, ZEND_ACC_PUBLIC)
+#endif
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -389,25 +391,20 @@ PHP_METHOD(azalea_ext_model_mysqlnd, getQueries)
 }
 /* }}} */
 
+#ifdef WITH_SQLBUILDER
 /* {{{ proto getSqlBuilder */
 PHP_METHOD(azalea_ext_model_mysqlnd, getSqlBuilder)
 {
-#ifdef WITH_SQLBUILDER
 	zval rv = {{0}};
-	if (sqlBuilderCe) {
-		object_init_ex(&rv, sqlBuilderCe);
-		// call __init method
-		if (zend_hash_str_exists(&(sqlBuilderCe->function_table), ZEND_STRL("__construct"))) {
-			zend_call_method_with_1_params(&rv, sqlBuilderCe, NULL, "__construct", NULL, getThis());
-		}
-		RETURN_ZVAL(&rv, 0, 0);
+	object_init_ex(&rv, sqlBuilderCe);
+	// call __init method
+	if (zend_hash_str_exists(&(sqlBuilderCe->function_table), ZEND_STRL("__construct"))) {
+		zend_call_method_with_1_params(&rv, sqlBuilderCe, NULL, "__construct", NULL, getThis());
 	}
-	RETURN_NULL();
-#else
-	RETURN_NULL();
-#endif
+	RETURN_ZVAL(&rv, 0, 0);
 }
 /* }}} */
+#endif
 
 /* ----- Azalea\MysqlndResult ----- */
 /* {{{ proto __construct */
@@ -761,4 +758,4 @@ PHP_METHOD(azalea_ext_model_mysqlnd_execute, affectedRows)
 	RETURN_FALSE;
 }
 /* }}} */
-//#endif
+#endif

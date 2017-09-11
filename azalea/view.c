@@ -47,10 +47,10 @@ AZALEA_STARTUP_FUNCTION(view)
 /* }}} */
 
 /* {{{ proto assignToData */
-static void assignToData(azalea_view_t *instance, zend_string *name, zval *value)
+static void assignToData(azalea_view_t *this, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		if (zend_hash_update(Z_ARRVAL_P(data), name, value) != NULL) {
 			Z_TRY_ADDREF_P(value);
@@ -60,10 +60,10 @@ static void assignToData(azalea_view_t *instance, zend_string *name, zval *value
 /* }}} */
 
 /* {{{ proto assignToDataHt */
-static void assignToDataHt(azalea_view_t *instance, zend_array *ht)
+static void assignToDataHt(azalea_view_t *this, zend_array *ht)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_hash_copy(Z_ARRVAL_P(data), ht, (copy_ctor_func_t) zval_add_ref);
 	}
@@ -71,10 +71,10 @@ static void assignToDataHt(azalea_view_t *instance, zend_array *ht)
 /* }}} */
 
 /* {{{ proto appendToDateHt */
-static void appendToData(azalea_view_t *instance, zend_string *name, zval *value)
+static void appendToData(azalea_view_t *this, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_array *htData = Z_ARRVAL_P(data);
 		zval dummy, *field = zend_hash_find(htData, name);
@@ -195,8 +195,8 @@ static void destroySymbolTable(zend_array *symbolTable)
 PHP_METHOD(azalea_view, __construct) {}
 /* }}} */
 
-/* {{{ int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, zend_string *filename, zval *ret) */
-static int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, zend_string *filename, zval *ret)
+/* {{{ int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend_string *filename, zval *ret) */
+static int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend_string *filename, zval *ret)
 {
 	int status = 0;
 	zend_file_handle file_handle;
@@ -226,13 +226,13 @@ static int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, 
 		// execute template file
 
 		ZVAL_UNDEF(&result);
-		op_array->scope = Z_OBJCE_P(instance);
+		op_array->scope = Z_OBJCE_P(this);
 		call = zend_vm_stack_push_call_frame(ZEND_CALL_NESTED_CODE
 #if PHP_VERSION_ID >= 70100
 				| ZEND_CALL_HAS_SYMBOL_TABLE
 #endif
 				,
-				(zend_function*)op_array, 0, op_array->scope, Z_OBJ_P(instance));
+				(zend_function*)op_array, 0, op_array->scope, Z_OBJ_P(this));
 		call->symbol_table = symbolTable;
 		zend_init_execute_data(call, op_array, &result);
 		ZEND_ADD_CALL_FLAG(call, ZEND_CALL_TOP);
@@ -251,12 +251,12 @@ static int renderTemplateFile(azalea_view_t *instance, zend_array *symbolTable, 
 }
 /* }}} */
 
-/* {{{ proto string render(string $tplname, array $data = null) */
-PHP_METHOD(azalea_view, render)
+/* {{{ proto azaleaViewRender */
+void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, zval *viewInstance)
 {
 	zend_string *tplname, *viewsPath, *tplPath;
 	zval *vars = NULL, exists, *environVars;
-	azalea_view_t *instance = getThis();
+	azalea_view_t *this = viewInstance ? viewInstance : getThis();
 	zend_array *symbolTable;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|z", &tplname, &vars) == FAILURE) {
@@ -278,22 +278,22 @@ PHP_METHOD(azalea_view, render)
 	symbolTable = buildSymbolTable();
 
 	// extract environ vars
-	if ((environVars = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_environ"), 0, NULL)) &&
+	if ((environVars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_environ"), 0, NULL)) &&
 			Z_TYPE_P(environVars) == IS_ARRAY) {
 		appendToSymbolTable(symbolTable, environVars);
 	}
 	// extract vars
 	if (vars) {
-		assignToDataHt(instance, Z_ARRVAL_P(vars));
+		assignToDataHt(this, Z_ARRVAL_P(vars));
 	}
-	if ((vars = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((vars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(vars) == IS_ARRAY) {
 		appendToSymbolTable(symbolTable, vars);
 	}
 	// start render
 	php_output_start_user(NULL, 0, PHP_OUTPUT_HANDLER_STDFLAGS);
 	azaleaRegisterTemplateFunctions();
-	if (!renderTemplateFile(instance, symbolTable, tplPath, NULL)) {
+	if (!renderTemplateFile(this, symbolTable, tplPath, NULL)) {
 		RETVAL_FALSE;
 	} else {
 		php_output_get_contents(return_value);
@@ -305,25 +305,32 @@ PHP_METHOD(azalea_view, render)
 }
 /* }}} */
 
+/* {{{ proto string render(string $tplname, array $data = null) */
+PHP_METHOD(azalea_view, render)
+{
+	azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, NULL);
+}
+/* }}} */
+
 /* {{{ proto mixed assign(string name, mixed $value = null) */
 PHP_METHOD(azalea_view, assign)
 {
 	zval *name, *value = NULL;
-	azalea_view_t *instance = getThis();
+	azalea_view_t *this = getThis();
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "z|z", &name, &value) == FAILURE) {
 		return;
 	}
 
 	if (Z_TYPE_P(name) == IS_ARRAY) {
-		assignToDataHt(instance, Z_ARRVAL_P(name));
+		assignToDataHt(this, Z_ARRVAL_P(name));
 	} else if (value) {
 		convert_to_string(name);
-		assignToData(instance, Z_STR_P(name), value);
+		assignToData(this, Z_STR_P(name), value);
 	} else {
 		// ERROR
 		php_error_docref(NULL, E_WARNING, "The second argument must be a valid value if the name is a string");
 	}
-	RETURN_ZVAL(instance, 1, 0);
+	RETURN_ZVAL(this, 1, 0);
 }
 /* }}} */
 
@@ -332,27 +339,27 @@ PHP_METHOD(azalea_view, append)
 {
 	zend_string *name;
 	zval *value;
-	azalea_view_t *instance = getThis();
+	azalea_view_t *this = getThis();
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &name, &value) == FAILURE) {
 		return;
 	}
 
 	if (Z_TYPE_P(value) == IS_ARRAY || Z_TYPE_P(value) == IS_STRING) {
-		appendToData(instance, name, value);
+		appendToData(this, name, value);
 	} else {
 		// ERROR
 		php_error_docref(NULL, E_WARNING, "The second argument must be a stirng or an array");
 	}
-	RETURN_ZVAL(instance, 1, 0);
+	RETURN_ZVAL(this, 1, 0);
 }
 /* }}} */
 
 /* {{{ proto mixed clean() */
 PHP_METHOD(azalea_view, clean)
 {
-	azalea_view_t *instance = getThis();
+	azalea_view_t *this = getThis();
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, instance, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(data))) {
 		zend_hash_clean(Z_ARRVAL_P(data));
 	}

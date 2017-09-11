@@ -9,6 +9,7 @@
 
 PHP_FUNCTION(azalea_template_print);
 PHP_FUNCTION(azalea_template_return);
+PHP_FUNCTION(azalea_template_render);
 PHP_FUNCTION(azalea_template_translate);
 PHP_FUNCTION(azalea_template_translatePlural);
 

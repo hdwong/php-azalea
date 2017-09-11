@@ -7,6 +7,10 @@
 #ifndef AZALEA_EXT_MODELS_MYSQLND_H_
 #define AZALEA_EXT_MODELS_MYSQLND_H_
 
+#ifdef HAVE_CONFIG_H
+#include "../../config.h"
+#endif
+
 #define AZALEA_MYSQLND_FETCH_RESOURCE_CONN(__ptr, __this) \
 { \
 	zval *res = zend_read_property(azalea_ext_model_mysqlnd_ce, __this, "_connection", sizeof("_connection") - 1, 1, NULL); \
