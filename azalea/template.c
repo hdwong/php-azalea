@@ -69,8 +69,8 @@ PHP_FUNCTION(azalea_template_return)
 /* {{{ proto _render */
 PHP_FUNCTION(azalea_template_render)
 {
-	if (execute_data->prev_execute_data && execute_data->prev_execute_data->called_scope &&
-			0 == strcmp(ZSTR_VAL(execute_data->prev_execute_data->called_scope->name), AZALEA_NS_NAME(View))) {
+	if (execute_data->prev_execute_data &&
+			instanceof_function(Z_OBJCE(execute_data->prev_execute_data->This), azaleaViewCe)) {
 		azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
 		if (Z_TYPE_P(return_value) == IS_STRING) {
 			PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
