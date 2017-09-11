@@ -69,14 +69,13 @@ PHP_METHOD(azalea_i18n, setLocale)
 static void azaleaI18nAddToTranslation(zval *translation, zend_string *textDomain, zval *result)
 {
 	zend_string *key;
-	zval *pData, *pTextDomain;
+	zval *pData, *pTextDomain, dummy;
 
 	if (textDomain == NULL) {
 		// 根 domain 赋值
 		// 获取默认 textDomain
 		pTextDomain = zend_hash_find(Z_ARRVAL_P(translation), ZSTR_EMPTY_ALLOC());
 		if (!pTextDomain) {
-			zval dummy;
 			pTextDomain = &dummy;
 			array_init(pTextDomain);
 			zend_hash_add(Z_ARRVAL_P(translation), ZSTR_EMPTY_ALLOC(), pTextDomain);
@@ -102,7 +101,6 @@ static void azaleaI18nAddToTranslation(zval *translation, zend_string *textDomai
 	} else {
 		pTextDomain = zend_hash_find(Z_ARRVAL_P(translation), textDomain);
 		if (!pTextDomain) {
-			zval dummy;
 			pTextDomain = &dummy;
 			array_init(pTextDomain);
 			zend_hash_add(Z_ARRVAL_P(translation), textDomain, pTextDomain);
@@ -121,14 +119,13 @@ static zend_bool azaleaI18nLoadFile(zend_string *filename, zend_string *textDoma
 {
 	php_stream *stream;
 	zend_long maxlen = (ssize_t) PHP_STREAM_COPY_ALL;
-	zval *translation, *pTextDomain, jsonResult;
+	zval *translation, *pTextDomain, jsonResult, dummy;
 	zend_string *contents;
 	zend_bool returnValue = 0;
 
 	translation = zend_hash_find(Z_ARRVAL(AZALEA_G(translations)), locale);
 	if (!translation) {
 		// 初始化成数组
-		zval dummy;
 		translation = &dummy;
 		array_init(translation);
 		zend_hash_add(Z_ARRVAL(AZALEA_G(translations)), locale, translation);
