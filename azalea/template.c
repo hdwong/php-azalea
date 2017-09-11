@@ -6,6 +6,7 @@
 
 #include "php.h"
 #include "php_azalea.h"
+#include "azalea/namespace.h"
 #include "azalea/azalea.h"
 #include "azalea/config.h"
 #include "azalea/view.h"
@@ -68,9 +69,12 @@ PHP_FUNCTION(azalea_template_return)
 /* {{{ proto _render */
 PHP_FUNCTION(azalea_template_render)
 {
-	if (execute_data->prev_execute_data) {
+	if (execute_data->prev_execute_data && execute_data->prev_execute_data->called_scope &&
+			0 == strcmp(ZSTR_VAL(execute_data->prev_execute_data->called_scope->name), AZALEA_NS_NAME(View))) {
 		azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
-		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+		if (Z_TYPE_P(return_value) == IS_STRING) {
+			PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+		}
 		zval_ptr_dtor(return_value);
 		RETURN_NULL();
 	}
@@ -81,7 +85,9 @@ PHP_FUNCTION(azalea_template_render)
 PHP_FUNCTION(azalea_template_translate)
 {
 	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	if (Z_TYPE_P(return_value) == IS_STRING) {
+		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	}
 	zval_ptr_dtor(return_value);
 	RETURN_NULL();
 }
@@ -91,7 +97,9 @@ PHP_FUNCTION(azalea_template_translate)
 PHP_FUNCTION(azalea_template_translatePlural)
 {
 	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
-	PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	if (Z_TYPE_P(return_value) == IS_STRING) {
+		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
+	}
 	zval_ptr_dtor(return_value);
 	RETURN_NULL();
 }

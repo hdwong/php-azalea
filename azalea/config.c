@@ -186,6 +186,13 @@ void azaleaLoadConfig(zval *val)
 		php_error_docref(NULL, E_ERROR, "Timezone must be a string");
 		return;
 	}
+	// config.locale
+	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("locale")))) {
+		add_assoc_stringl_ex(config, ZEND_STRL("locale"), ZEND_STRL("en_US"));
+	} else if (Z_TYPE_P(found) != IS_STRING) {
+		php_error_docref(NULL, E_ERROR, "Locale must be a string");
+		return;
+	}
 	// config.theme
 	if (!(found = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL("theme")))) {
 		add_assoc_null_ex(config, ZEND_STRL("theme"));
@@ -271,6 +278,10 @@ void azaleaLoadConfig(zval *val)
 	// config.path.views
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("views"))) {
 		add_assoc_stringl_ex(found, ZEND_STRL("views"), ZEND_STRL("views"));
+	}
+	// config.path.langs
+	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("langs"))) {
+		add_assoc_stringl_ex(found, ZEND_STRL("langs"), ZEND_STRL("langs"));
 	}
 	// config.path.static
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("static"))) {

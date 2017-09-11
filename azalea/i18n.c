@@ -8,6 +8,7 @@
 #include "php_azalea.h"
 #include "azalea/namespace.h"
 #include "azalea/azalea.h"
+#include "azalea/config.h"
 #include "azalea/i18n.h"
 
 #include "ext/standard/php_string.h"
@@ -157,20 +158,29 @@ static zend_bool azaleaI18nLoadFile(zend_string *filename, zend_string *textDoma
 
 static zend_bool azaleaI18nInit(zval **translation, zend_string *locale)
 {
+	zval *conf;
+	zend_string *langsPath, *filename, *tstr;
+
 	// 检查当前 locale 是否已初始化到 AZALEA_G(translations)
 	*translation = zend_hash_find(Z_ARRVAL(AZALEA_G(translations)), locale);
 	if (!*translation) {
 		// 未初始化则 azaleaI18nLoadFile
-		if (AZALEA_G(appRoot)) {
-			zend_string *filename;
-			// 默认的本地化翻译文件名
-			filename = strpprintf(0, "%slangs%c%s.json", ZSTR_VAL(AZALEA_G(appRoot)), DEFAULT_SLASH, ZSTR_VAL(locale));
-			if (!(azaleaI18nLoadFile(filename, NULL, locale))) {	// 第一次加载 locale 文件 textDomain 传入 NULL 表示解析到根 domain
-				zend_string_release(filename);
-				return 0;
-			}
-			zend_string_release(filename);
+		conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("langs"));
+		langsPath = zend_string_dup(Z_STR_P(conf), 0);
+		if (!IS_SLASH_P(ZSTR_VAL(langsPath))) {
+			// relative path
+			tstr = langsPath;
+			langsPath = strpprintf(0, "%s%s", ZSTR_VAL(AZALEA_G(appRoot)), ZSTR_VAL(langsPath));
+			zend_string_release(tstr);
 		}
+		// 默认的本地化翻译文件名
+		filename = strpprintf(0, "%s%c%s.json", ZSTR_VAL(langsPath), DEFAULT_SLASH, ZSTR_VAL(locale));
+		zend_string_release(langsPath);
+		if (!(azaleaI18nLoadFile(filename, NULL, locale))) {	// 第一次加载 locale 文件 textDomain 传入 NULL 表示解析到根 domain
+			zend_string_release(filename);
+			return 0;
+		}
+		zend_string_release(filename);
 	} else {
 		return 1;
 	}
@@ -251,11 +261,20 @@ PHP_METHOD(azalea_i18n, translate)
 
 void azaleaI18nTranslate(INTERNAL_FUNCTION_PARAMETERS)
 {
+	zval *translation, *values = NULL, *argTextDomain = NULL, *argLocale = NULL;
 	zend_string *message, *textDomain = NULL, *locale = NULL;
-	zval *translation, *values = NULL;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|zSS", &message, &values, &textDomain, &locale) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|zzz", &message, &values, &argTextDomain, &argLocale) == FAILURE) {
 		return;
+	}
+	if (values) {
+		if (Z_TYPE_P(values) == IS_STRING) {
+			textDomain = Z_STR_P(values);
+			locale = argTextDomain && Z_TYPE_P(argTextDomain) == IS_STRING ? Z_STR_P(argTextDomain) : NULL;
+		} else {
+			textDomain = argTextDomain ? Z_STR_P(argTextDomain) : NULL;
+			locale = argLocale && Z_TYPE_P(argLocale) == IS_STRING ? Z_STR_P(argLocale) : NULL;
+		}
 	}
 	if (textDomain == NULL) {
 		textDomain = ZSTR_EMPTY_ALLOC();
@@ -331,12 +350,21 @@ PHP_METHOD(azalea_i18n, translatePlural)
 
 void azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAMETERS)
 {
+	zval *translation, *values = NULL, *argTextDomain = NULL, *argLocale = NULL;
 	zend_string *messageSingular, *messagePlural, *textDomain = NULL, *locale = NULL;
-	zval *translation, *values = NULL;
 	zend_bool isPlural;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|zSS", &messageSingular, &messagePlural, &values, &textDomain, &locale) == FAILURE) {
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "SS|zzz", &messageSingular, &messagePlural, &values, &argTextDomain, &argLocale) == FAILURE) {
 		return;
+	}
+	if (values) {
+		if (Z_TYPE_P(values) == IS_STRING) {
+			textDomain = Z_STR_P(values);
+			locale = argTextDomain && Z_TYPE_P(argTextDomain) == IS_STRING ? Z_STR_P(argTextDomain) : NULL;
+		} else {
+			textDomain = argTextDomain ? Z_STR_P(argTextDomain) : NULL;
+			locale = argLocale && Z_TYPE_P(argLocale) == IS_STRING ? Z_STR_P(argLocale) : NULL;
+		}
 	}
 	if (textDomain == NULL) {
 		textDomain = ZSTR_EMPTY_ALLOC();

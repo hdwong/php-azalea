@@ -101,6 +101,15 @@ PHP_METHOD(azalea_bootstrap, init)
 	// load config
 	azaleaLoadConfig(config);
 
+	// set error reporting while debug is true
+	conf = azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0);
+	if (Z_TYPE_P(conf) == IS_TRUE) {
+		EG(error_reporting) = E_ALL;
+		iniName = zend_string_init(ZEND_STRL("display_errors"), 0);
+		zend_alter_ini_entry_chars(iniName, ZEND_STRL("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
+		zend_string_release(iniName);
+	}
+
 	// set timezone
 	conf = azaleaConfigSubFindEx(ZEND_STRL("timezone"), NULL, 0);
 	if (Z_STRLEN_P(conf)) {
@@ -109,13 +118,11 @@ PHP_METHOD(azalea_bootstrap, init)
 		zend_string_release(iniName);
 	}
 
-	// set error reporting while debug is true
-	conf = azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0);
-	if (Z_TYPE_P(conf) == IS_TRUE) {
-		EG(error_reporting) = E_ALL;
-		iniName = zend_string_init(ZEND_STRL("display_errors"), 0);
-		zend_alter_ini_entry_chars(iniName, ZEND_STRL("on"), PHP_INI_USER, PHP_INI_STAGE_RUNTIME);
-		zend_string_release(iniName);
+	// set locale
+	conf = azaleaConfigSubFindEx(ZEND_STRL("locale"), NULL, 0);
+	if (Z_STRLEN_P(conf)) {
+		zend_string_release(AZALEA_G(locale));
+		AZALEA_G(locale) = zend_string_copy(Z_STR_P(conf));
 	}
 
 	// set docRoot / base_uri / uri
