@@ -363,16 +363,6 @@ PHP_METHOD(azalea_bootstrap, run)
 	}
 
 	// get paths
-	paths = &AZALEA_G(paths);
-	if (ZSTR_LEN(uri)) {
-		php_explode(AG(stringSlash), uri, paths, ZEND_LONG_MAX);
-	}
-	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("controllers"));
-	controllersPath = zend_string_dup(Z_STR_P(conf), 0);
-	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("models"));
-	modelsPath = zend_string_dup(Z_STR_P(conf), 0);
-	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("views"));
-	viewsPath = zend_string_dup(Z_STR_P(conf), 0);
 	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("basepath"));
 	if (conf && Z_TYPE_P(conf) == IS_STRING) {
 		char realpath[MAXPATHLEN];
@@ -394,23 +384,44 @@ PHP_METHOD(azalea_bootstrap, run)
 	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "APPROOT", ZSTR_VAL(appRoot), ZSTR_LEN(appRoot), CONST_CS);
 	AZALEA_G(appRoot) = appRoot;
 
-	if (!IS_SLASH_P(ZSTR_VAL(controllersPath))) {
-		// relative path
-		tstr = controllersPath;
-		controllersPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(controllersPath));
-		zend_string_release(tstr);
+	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("controllers"));
+	if (conf && Z_TYPE_P(conf) == IS_STRING) {
+		char realpath[MAXPATHLEN];
+		if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
+			controllersPath = zend_string_init(realpath, strlen(realpath), 0);
+		} else {
+			goto defaultControllers;
+		}
+	} else {
+		// default controllers path
+defaultControllers:
+		controllersPath = strpprintf(0, "%scontrollers", ZSTR_VAL(appRoot));
 	}
-	if (!IS_SLASH_P(ZSTR_VAL(modelsPath))) {
-		// relative path
-		tstr = modelsPath;
-		modelsPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(modelsPath));
-		zend_string_release(tstr);
+	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("models"));
+	if (conf && Z_TYPE_P(conf) == IS_STRING) {
+		char realpath[MAXPATHLEN];
+		if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
+			modelsPath = zend_string_init(realpath, strlen(realpath), 0);
+		} else {
+			goto defaultModels;
+		}
+	} else {
+		// default models path
+defaultModels:
+		modelsPath = strpprintf(0, "%smodels", ZSTR_VAL(appRoot));
 	}
-	if (!IS_SLASH_P(ZSTR_VAL(viewsPath))) {
-		// relative path
-		tstr = viewsPath;
-		viewsPath = strpprintf(0, "%s%s", ZSTR_VAL(appRoot), ZSTR_VAL(viewsPath));
-		zend_string_release(tstr);
+	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("views"));
+	if (conf && Z_TYPE_P(conf) == IS_STRING) {
+		char realpath[MAXPATHLEN];
+		if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
+			viewsPath = zend_string_init(realpath, strlen(realpath), 0);
+		} else {
+			goto defaultViews;
+		}
+	} else {
+		// default views path
+defaultViews:
+		viewsPath = strpprintf(0, "%sviews", ZSTR_VAL(appRoot));
 	}
 	conf = azaleaConfigSubFindEx(ZEND_STRL("theme"), NULL, 0);
 	if (conf && Z_TYPE_P(conf) == IS_STRING && Z_STRLEN_P(conf)) {
@@ -425,6 +436,10 @@ PHP_METHOD(azalea_bootstrap, run)
 
 	// get folder / controller / action / arguments
 	zend_ulong pathsOffset = 0;
+	paths = &AZALEA_G(paths);
+	if (ZSTR_LEN(uri)) {
+		php_explode(AG(stringSlash), uri, paths, ZEND_LONG_MAX);
+	}
 	field = zend_hash_index_find(Z_ARRVAL_P(paths), pathsOffset);
 	if (field) {
 		zend_string *lcName, *folderPath;

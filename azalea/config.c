@@ -267,22 +267,6 @@ void azaleaLoadConfig(zval *val)
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("basepath"))) {
 		add_assoc_null_ex(found, ZEND_STRL("basepath"));
 	}
-	// config.path.controllers
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("controllers"))) {
-		add_assoc_stringl_ex(found, ZEND_STRL("controllers"), ZEND_STRL("controllers"));
-	}
-	// config.path.models
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("models"))) {
-		add_assoc_stringl_ex(found, ZEND_STRL("models"), ZEND_STRL("models"));
-	}
-	// config.path.views
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("views"))) {
-		add_assoc_stringl_ex(found, ZEND_STRL("views"), ZEND_STRL("views"));
-	}
-	// config.path.langs
-	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("langs"))) {
-		add_assoc_stringl_ex(found, ZEND_STRL("langs"), ZEND_STRL("langs"));
-	}
 	// config.path.static
 	if (!zend_hash_str_exists(Z_ARRVAL_P(found), ZEND_STRL("static"))) {
 		add_assoc_null_ex(found, ZEND_STRL("static"));

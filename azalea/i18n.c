@@ -163,12 +163,17 @@ static zend_bool azaleaI18nInit(zval **translation, zend_string *locale)
 	if (!*translation) {
 		// 未初始化则 azaleaI18nLoadFile
 		conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("langs"));
-		langsPath = zend_string_dup(Z_STR_P(conf), 0);
-		if (!IS_SLASH_P(ZSTR_VAL(langsPath))) {
-			// relative path
-			tstr = langsPath;
-			langsPath = strpprintf(0, "%s%s", ZSTR_VAL(AZALEA_G(appRoot)), ZSTR_VAL(langsPath));
-			zend_string_release(tstr);
+		if (conf && Z_TYPE_P(conf) == IS_STRING) {
+			char realpath[MAXPATHLEN];
+			if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
+				langsPath = zend_string_init(realpath, strlen(realpath), 0);
+			} else {
+				goto defaultLangs;
+			}
+		} else {
+			// default langs path
+defaultLangs:
+			langsPath = strpprintf(0, "%slangs", ZSTR_VAL(AZALEA_G(appRoot)));
 		}
 		// 默认的本地化翻译文件名
 		filename = strpprintf(0, "%s%c%s.json", ZSTR_VAL(langsPath), DEFAULT_SLASH, ZSTR_VAL(locale));
