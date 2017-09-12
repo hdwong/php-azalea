@@ -54,6 +54,7 @@ if test "$PHP_AZALEA" != "no"; then
         azalea/model.c \
         azalea/view.c \
         azalea/template.c \
+        azalea/viewtag.c \
         azalea/text.c \
         azalea/i18n.c \
         azalea/exception.c \

@@ -57,6 +57,7 @@ PHP_MINIT_FUNCTION(azalea)
     AG(stringWeb) = zend_new_interned_string(zend_string_init(ZEND_STRL("WEB"), 1));
     AG(stringEn) = zend_new_interned_string(zend_string_init(ZEND_STRL("en_US"), 1));
     AG(stringSlash) = zend_new_interned_string(zend_string_init(ZEND_STRL("/"), 1));
+    AG(viewTagFunctions) = pemalloc(sizeof(zend_array), 1);
 
     AZALEA_STARTUP(loader);
     AZALEA_STARTUP(bootstrap);
@@ -80,6 +81,10 @@ PHP_MINIT_FUNCTION(azalea)
 /* {{{ PHP_MSHUTDOWN_FUNCTION */
 PHP_MSHUTDOWN_FUNCTION(azalea)
 {
+	if (AG(viewTagFunctions)) {
+		pefree(AG(viewTagFunctions), 1);
+	}
+
 	return SUCCESS;
 }
 /* }}} */

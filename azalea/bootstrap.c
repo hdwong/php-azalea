@@ -526,9 +526,9 @@ defaultViews:
 			if (Z_TYPE_P(azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0)) == IS_TRUE) {
 				zval newException;
 				ZVAL_OBJ(&newException, EG(exception));
-				message = zval_get_string(zend_read_property(zend_ce_exception, &newException, ZEND_STRL("message"), 0, NULL));
+				message = zval_get_string(zend_read_property(zend_ce_exception, &newException, ZEND_STRL("message"), 1, NULL));
 			} else {
-				message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 0, NULL));
+				message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 1, NULL));
 			}
 			PHPWRITE(ZSTR_VAL(message), ZSTR_LEN(message));
 		}

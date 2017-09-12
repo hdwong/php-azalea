@@ -12,6 +12,7 @@
 #include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
+#include "azalea/viewtag.h"
 #include "azalea/exception.h"
 
 #include "ext/standard/php_var.h"	// for php_var_dump
@@ -19,8 +20,7 @@
 
 zend_class_entry *azaleaViewCe;
 
-/* {{{ class Azalea\View methods
- */
+/* {{{ class Azalea\View methods */
 static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
@@ -31,8 +31,7 @@ static zend_function_entry azalea_view_methods[] = {
 };
 /* }}} */
 
-/* {{{ AZALEA_STARTUP_FUNCTION
- */
+/* {{{ AZALEA_STARTUP_FUNCTION */
 AZALEA_STARTUP_FUNCTION(view)
 {
 	zend_class_entry ce;
@@ -42,6 +41,9 @@ AZALEA_STARTUP_FUNCTION(view)
 	zend_declare_property_null(azaleaViewCe, ZEND_STRL("_environ"), ZEND_ACC_PRIVATE);
 	zend_declare_property_null(azaleaViewCe, ZEND_STRL("_data"), ZEND_ACC_PRIVATE);
 
+	// init viewtag
+	AZALEA_STARTUP(viewtag);
+
 	return SUCCESS;
 }
 /* }}} */
@@ -50,7 +52,7 @@ AZALEA_STARTUP_FUNCTION(view)
 static void assignToData(azalea_view_t *this, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		if (zend_hash_update(Z_ARRVAL_P(data), name, value) != NULL) {
 			Z_TRY_ADDREF_P(value);
@@ -63,7 +65,7 @@ static void assignToData(azalea_view_t *this, zend_string *name, zval *value)
 static void assignToDataHt(azalea_view_t *this, zend_array *ht)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_hash_copy(Z_ARRVAL_P(data), ht, (copy_ctor_func_t) zval_add_ref);
 	}
@@ -74,7 +76,7 @@ static void assignToDataHt(azalea_view_t *this, zend_array *ht)
 static void appendToData(azalea_view_t *this, zend_string *name, zval *value)
 {
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY) {
 		zend_array *htData = Z_ARRVAL_P(data);
 		zval dummy, *field = zend_hash_find(htData, name);
@@ -108,6 +110,21 @@ static void appendToData(azalea_view_t *this, zend_string *name, zval *value)
 	}
 }
 /* }}} */
+
+zval * azaleaViewTpldir(zval *this)
+{
+	zval *pData;
+
+	if (!(pData = zend_read_property(azaleaViewCe, this, ZEND_STRL("_environ"), 1, NULL)) ||
+			Z_TYPE_P(pData) != IS_ARRAY) {
+		return NULL;
+	}
+	if (!(pData = zend_hash_str_find(Z_ARRVAL_P(pData), ZEND_STRL("tpldir"))) ||
+			Z_TYPE_P(pData) != IS_STRING) {
+		return NULL;
+	}
+	return pData;
+}
 
 /* {{{ proto checkValidVarName */
 static int checkValidVarName(char *varName, int len) /* {{{ */
@@ -278,7 +295,7 @@ void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, zval *viewInstance)
 	symbolTable = buildSymbolTable();
 
 	// extract environ vars
-	if ((environVars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_environ"), 0, NULL)) &&
+	if ((environVars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_environ"), 1, NULL)) &&
 			Z_TYPE_P(environVars) == IS_ARRAY) {
 		appendToSymbolTable(symbolTable, environVars);
 	}
@@ -286,7 +303,7 @@ void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, zval *viewInstance)
 	if (vars) {
 		assignToDataHt(this, Z_ARRVAL_P(vars));
 	}
-	if ((vars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((vars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
 			Z_TYPE_P(vars) == IS_ARRAY) {
 		appendToSymbolTable(symbolTable, vars);
 	}
@@ -359,7 +376,7 @@ PHP_METHOD(azalea_view, clean)
 {
 	azalea_view_t *this = getThis();
 	zval *data;
-	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 0, NULL)) &&
+	if ((data = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
 			Z_TYPE_P(data) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(data))) {
 		zend_hash_clean(Z_ARRVAL_P(data));
 	}

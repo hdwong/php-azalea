@@ -11,6 +11,7 @@
 #include "azalea/config.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
+#include "azalea/viewtag.h"
 #include "azalea/i18n.h"
 
 #include "ext/standard/html.h"	// for php_escape_html_entities
@@ -37,6 +38,7 @@ static zend_function_entry azalea_template_functions[] = {
 	ZEND_NAMED_FE(_url, ZEND_FN(azalea_url), NULL)	// like Azalea\url
 	ZEND_NAMED_FE(_conf, ZEND_MN(azalea_config_get), NULL)	// like Azalea\Config::get
 	ZEND_NAMED_FE(_debug, ZEND_FN(azalea_debug), NULL)	// like Azalea\debug
+	ZEND_NAMED_FE(_tag, azaleaViewtagCallFunction, NULL)	// output tag & echo
 	PHP_FE_END
 };
 /* }}} */
@@ -71,12 +73,13 @@ PHP_FUNCTION(azalea_template_render)
 {
 	if (execute_data->prev_execute_data &&
 			instanceof_function(Z_OBJCE(execute_data->prev_execute_data->This), azaleaViewCe)) {
+		zval retval;
+		return_value = &retval;
 		azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
 		if (Z_TYPE_P(return_value) == IS_STRING) {
 			PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 		}
 		zval_ptr_dtor(return_value);
-		RETURN_NULL();
 	}
 }
 /* }}} */
@@ -84,24 +87,26 @@ PHP_FUNCTION(azalea_template_render)
 /* {{{ proto _t */
 PHP_FUNCTION(azalea_template_translate)
 {
+	zval retval;
+	return_value = &retval;
 	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	if (Z_TYPE_P(return_value) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	}
 	zval_ptr_dtor(return_value);
-	RETURN_NULL();
 }
 /* }}} */
 
 /* {{{ proto _tp */
 PHP_FUNCTION(azalea_template_translatePlural)
 {
+	zval retval;
+	return_value = &retval;
 	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	if (Z_TYPE_P(return_value) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	}
 	zval_ptr_dtor(return_value);
-	RETURN_NULL();
 }
 /* }}} */
 
@@ -125,4 +130,3 @@ void azaleaUnregisterTemplateFunctions(zend_bool forced)
 	}
 }
 /* }}} */
-

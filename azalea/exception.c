@@ -68,7 +68,7 @@ PHP_METHOD(azalea_exception404, getUri)
 {
 	zval *uri;
 
-	uri = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_uri"), 0, NULL);
+	uri = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_uri"), 1, NULL);
 	if (!uri) {
 		RETURN_NULL();
 	}
@@ -81,7 +81,7 @@ PHP_METHOD(azalea_exception404, getRoute)
 {
 	zval *route;
 
-	route = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_route"), 0, NULL);
+	route = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_route"), 1, NULL);
 	if (!route) {
 		RETURN_NULL();
 	}

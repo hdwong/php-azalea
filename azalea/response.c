@@ -132,14 +132,14 @@ PHP_METHOD(azalea_response, gotoRoute)
 		return;
 	}
 
-	controller = zend_read_property(azaleaResponseCe, getThis(), ZEND_STRL("_instance"), 0, NULL);
+	controller = zend_read_property(azaleaResponseCe, getThis(), ZEND_STRL("_instance"), 1, NULL);
 	if (!controller) {
 		RETURN_FALSE;
 	}
 	// folder
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("folder"))) && Z_TYPE_P(field) == IS_STRING) {
 		folderName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_folder"), 0, NULL))
+	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_folder"), 1, NULL))
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		folderName = zend_string_copy(Z_STR_P(field));
@@ -147,7 +147,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 	// controller
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("controller"))) && Z_TYPE_P(field) == IS_STRING) {
 		controllerName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_controller"), 0, NULL))
+	} else if ((field = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_controller"), 1, NULL))
 			&& Z_TYPE_P(field) == IS_STRING) {
 		// from controller property
 		controllerName = zend_string_copy(Z_STR_P(field));

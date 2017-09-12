@@ -67,6 +67,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zval instances;					// 实例缓存变量
 	zval config;					// 配置项变量
 	zval translations;				// 翻译字符变量
+	zval viewTagsUser;				// 视图标签变量 (用户定义)
 
 	zend_string *docRoot;			// 入口文件根目录
 	zend_string *appRoot;			// 系统文件根目录
@@ -92,6 +93,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea_internal)
 	zend_string *stringWeb;		// 字符串 "WEB"
 	zend_string *stringEn;		// 字符串 "en_US"
 	zend_string *stringSlash;	// 字符串 "/"
+	zend_array *viewTagFunctions;	// 视图标签变量
 ZEND_END_MODULE_GLOBALS(azalea_internal)
 extern ZEND_DECLARE_MODULE_GLOBALS(azalea_internal);
 #define AG(v) ZEND_MODULE_GLOBALS_ACCESSOR(azalea_internal, v)
