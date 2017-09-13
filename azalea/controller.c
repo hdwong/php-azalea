@@ -91,47 +91,7 @@ void azaleaControllerInit(zval *this, zend_class_entry *ce, zend_string *folderN
 		zend_update_property(azaleaControllerCe, this, ZEND_STRL("res"), pRes);
 	}
 	// view
-	{
-		azalea_view_t view = {{0}};
-		zval data, env, *staticHost, *staticPath, *themeName;
-		zend_string *tpldir, *tstr;
-
-		tstr = strpprintf(0, "_view_%s", ZSTR_VAL(controllerName));
-		pView = &view;
-		object_init_ex(pView, azaleaViewCe);
-		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), pView);
-		zend_string_release(tstr);
-		zend_update_property(azaleaControllerCe, this, ZEND_STRL("view"), pView);
-		// environ
-		array_init(&env);
-		// environ.tpldir
-		staticHost = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("static_host"));
-		if (staticHost && Z_TYPE_P(staticHost) != IS_NULL && Z_STRLEN_P(staticHost)) {
-			tpldir = zend_string_copy(Z_STR_P(staticHost));
-		} else {
-			tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
-			staticPath = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("static"));
-			if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
-				tstr = tpldir;
-				tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
-				zend_string_release(tstr);
-			}
-			themeName = azaleaConfigSubFindEx(ZEND_STRL("theme"), NULL, 0);
-			if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
-				tstr = tpldir;
-				tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(themeName));
-				zend_string_release(tstr);
-			}
-		}
-		add_assoc_str_ex(&env, ZEND_STRL("tpldir"), tpldir);
-		// upate environ
-		zend_update_property(azaleaViewCe, pView, ZEND_STRL("_environ"), &env);
-		zval_ptr_dtor(&env);
-		// data
-		array_init(&data);
-		zend_update_property(azaleaViewCe, pView, ZEND_STRL("_data"), &data);
-		zval_ptr_dtor(&data);
-	}
+	azaleaViewInit(this, controllerName);
 
 	// call __init method
 	if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {

@@ -10,11 +10,13 @@
 #include "azalea/azalea.h"
 #include "azalea/loader.h"
 #include "azalea/config.h"
+#include "azalea/controller.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
 #include "azalea/viewtag.h"
 #include "azalea/exception.h"
 
+#include "ext/standard/php_string.h"	// for php_trim
 #include "ext/standard/php_var.h"	// for php_var_dump
 #include "ext/standard/php_filestat.h"	// for php_stat
 
@@ -47,6 +49,50 @@ AZALEA_STARTUP_FUNCTION(view)
 	return SUCCESS;
 }
 /* }}} */
+
+void azaleaViewInit(azalea_controller_t *controllerInstance, zend_string *controllerName)
+{
+	azalea_view_t view = {{0}}, *this;
+	zval data, env, *staticHost, *staticPath, *themeName;
+	zend_string *tpldir, *tstr;
+
+	tstr = strpprintf(0, "_view_%s", ZSTR_VAL(controllerName));
+	this = &view;
+	object_init_ex(this, azaleaViewCe);
+	add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), this);	// 加入 instances
+	zend_string_release(tstr);
+	zend_update_property(azaleaControllerCe, controllerInstance, ZEND_STRL("view"), this);
+	// environ
+	array_init(&env);
+	// environ.tpldir
+	staticHost = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("static_host"));
+	if (staticHost && Z_TYPE_P(staticHost) != IS_NULL && Z_STRLEN_P(staticHost)) {
+		tpldir = zend_string_copy(Z_STR_P(staticHost));
+	} else {
+		tpldir = php_trim(AZALEA_G(baseUri), ZEND_STRL("/"), 2);
+		staticPath = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("static"));
+		if (staticPath && Z_TYPE_P(staticPath) != IS_NULL && Z_STRLEN_P(staticPath)) {
+			tstr = tpldir;
+			tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(staticPath));
+			zend_string_release(tstr);
+		}
+		themeName = azaleaConfigSubFindEx(ZEND_STRL("theme"), NULL, 0);
+		if (themeName && Z_TYPE_P(themeName) != IS_NULL && Z_STRLEN_P(themeName)) {
+			tstr = tpldir;
+			tpldir = strpprintf(0, "%s%c%s", ZSTR_VAL(tpldir), DEFAULT_SLASH, Z_STRVAL_P(themeName));
+			zend_string_release(tstr);
+		}
+	}
+	add_assoc_str_ex(&env, ZEND_STRL("tpldir"), tpldir);	// tpldir 不需要 release
+	add_assoc_str_ex(&env, ZEND_STRL("locale"), zend_string_copy(AZALEA_G(locale)));
+	// upate environ
+	zend_update_property(azaleaViewCe, this, ZEND_STRL("_environ"), &env);
+	zval_ptr_dtor(&env);
+	// data
+	array_init(&data);
+	zend_update_property(azaleaViewCe, this, ZEND_STRL("_data"), &data);
+	zval_ptr_dtor(&data);
+}
 
 /* {{{ proto assignToData */
 static void assignToData(azalea_view_t *this, zend_string *name, zval *value)
@@ -269,7 +315,7 @@ static int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend
 /* }}} */
 
 /* {{{ proto azaleaViewRender */
-void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, zval *viewInstance)
+void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance)
 {
 	zend_string *tplname, *viewsPath, *tplPath;
 	zval *vars = NULL, exists, *environVars;
