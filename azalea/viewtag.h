@@ -11,6 +11,7 @@ AZALEA_STARTUP_FUNCTION(viewtag);
 
 PHP_FUNCTION(azalea_viewtag_js);
 PHP_FUNCTION(azalea_viewtag_css);
+PHP_FUNCTION(azalea_viewtag_link);
 
 void azaleaViewtagCallFunction(INTERNAL_FUNCTION_PARAMETERS);
 

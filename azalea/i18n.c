@@ -199,6 +199,16 @@ static void azaleaI18nTranslateMessage(zval *return_value, zend_string *message,
 {
 	zval *pTextDomain, *pMessage;
 
+	if (message == NULL) {
+		RETURN_STR(ZSTR_EMPTY_ALLOC());
+	}
+	if (textDomain == NULL) {
+		textDomain = ZSTR_EMPTY_ALLOC();
+	}
+	if (locale == NULL) {
+		locale = AZALEA_G(locale);
+	}
+
 	if (translation && Z_TYPE_P(translation) == IS_ARRAY) {
 		// 检查是否已存在 textDomain
 		pTextDomain = zend_hash_find(Z_ARRVAL_P(translation), textDomain);
@@ -258,12 +268,12 @@ PHP_METHOD(azalea_i18n, addTranslationFile)
 /* {{{ proto translate */
 PHP_METHOD(azalea_i18n, translate)
 {
-	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	azaleaI18nTranslateFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void azaleaI18nTranslate(INTERNAL_FUNCTION_PARAMETERS)
+void azaleaI18nTranslateFunction(INTERNAL_FUNCTION_PARAMETERS)
 {
-	zval *translation, *values = NULL, *argTextDomain = NULL, *argLocale = NULL;
+	zval *values = NULL, *argTextDomain = NULL, *argLocale = NULL;
 	zend_string *message, *textDomain = NULL, *locale = NULL;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|zzz", &message, &values, &argTextDomain, &argLocale) == FAILURE) {
@@ -284,13 +294,23 @@ void azaleaI18nTranslate(INTERNAL_FUNCTION_PARAMETERS)
 	if (locale == NULL) {
 		locale = AZALEA_G(locale);
 	}
+	azaleaI18nTranslate(return_value, message, values, textDomain, locale);
+}
+/* }}} */
+
+void azaleaI18nTranslate(zval *return_value, zend_string *message, zval *values, zend_string *textDomain, zend_string *locale)
+{
+	zval *translation;
+
+	if (locale == NULL) {
+		locale = AZALEA_G(locale);
+	}
 	if (!azaleaI18nInit(&translation, locale)) {
 		translation = NULL;
 	}
 
 	azaleaI18nTranslateMessage(return_value, message, values, translation, textDomain, locale);
 }
-/* }}} */
 
 static zend_bool azaleaI18nCheckPlural(zval *translation, zval *values, zend_string *locale)
 {
@@ -347,10 +367,10 @@ static zend_bool azaleaI18nCheckPlural(zval *translation, zval *values, zend_str
 /* {{{ proto translatePlural */
 PHP_METHOD(azalea_i18n, translatePlural)
 {
-	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	azaleaI18nTranslatePluralFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
-void azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAMETERS)
+void azaleaI18nTranslatePluralFunction(INTERNAL_FUNCTION_PARAMETERS)
 {
 	zval *translation, *values = NULL, *argTextDomain = NULL, *argLocale = NULL;
 	zend_string *messageSingular, *messagePlural, *textDomain = NULL, *locale = NULL;

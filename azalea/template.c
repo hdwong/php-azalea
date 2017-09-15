@@ -34,7 +34,9 @@ static zend_function_entry azalea_template_functions[] = {
 	ZEND_NAMED_FE(_sp, ZEND_FN(azalea_template_return), NULL)	// escape & return
 	ZEND_NAMED_FE(_render, ZEND_FN(azalea_template_render), NULL)	// render & echo
 	ZEND_NAMED_FE(_t, ZEND_FN(azalea_template_translate), NULL)	// translate & echo
+	ZEND_NAMED_FE(_st, azaleaI18nTranslateFunction, NULL)	// translate & return
 	ZEND_NAMED_FE(_tp, ZEND_FN(azalea_template_translatePlural), NULL)	// translatePlural & echo
+	ZEND_NAMED_FE(_stp, azaleaI18nTranslatePluralFunction, NULL)	// translatePlural & reutrn
 	ZEND_NAMED_FE(_url, ZEND_FN(azalea_url), NULL)	// like Azalea\url
 	ZEND_NAMED_FE(_conf, ZEND_MN(azalea_config_get), NULL)	// like Azalea\Config::get
 	ZEND_NAMED_FE(_debug, ZEND_FN(azalea_debug), NULL)	// like Azalea\debug
@@ -75,7 +77,7 @@ PHP_FUNCTION(azalea_template_render)
 			instanceof_function(Z_OBJCE(execute_data->prev_execute_data->This), azaleaViewCe)) {
 		zval retval;
 		return_value = &retval;
-		azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
+		azaleaViewRenderFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, &(execute_data->prev_execute_data->This));
 		if (Z_TYPE_P(return_value) == IS_STRING) {
 			PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 		}
@@ -89,7 +91,7 @@ PHP_FUNCTION(azalea_template_translate)
 {
 	zval retval;
 	return_value = &retval;
-	azaleaI18nTranslate(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	azaleaI18nTranslateFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	if (Z_TYPE_P(return_value) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	}
@@ -102,7 +104,7 @@ PHP_FUNCTION(azalea_template_translatePlural)
 {
 	zval retval;
 	return_value = &retval;
-	azaleaI18nTranslatePlural(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+	azaleaI18nTranslatePluralFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 	if (Z_TYPE_P(return_value) == IS_STRING) {
 		PHPWRITE(Z_STRVAL_P(return_value), Z_STRLEN_P(return_value));
 	}

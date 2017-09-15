@@ -67,7 +67,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zval instances;					// 实例缓存变量
 	zval config;					// 配置项变量
 	zval translations;				// 翻译字符变量
-	zval viewTagsUser;				// 视图标签变量 (用户定义)
+	zval viewTagFunctionsUser;		// 视图标签变量 (用户定义)
 
 	zend_string *docRoot;			// 入口文件根目录
 	zend_string *appRoot;			// 系统文件根目录

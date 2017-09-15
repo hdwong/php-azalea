@@ -122,6 +122,7 @@ PHP_RINIT_FUNCTION(azalea)
 #ifdef WITH_I18N
 	array_init(&AZALEA_G(translations));
 #endif
+	array_init(&AZALEA_G(viewTagFunctionsUser));
 
 #if defined(COMPILE_DL_AZALEA) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
@@ -188,6 +189,7 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 #ifdef WITH_I18N
 	zval_ptr_dtor(&AZALEA_G(translations));
 #endif
+	zval_ptr_dtor(&AZALEA_G(viewTagFunctionsUser));
 
 	return SUCCESS;
 }

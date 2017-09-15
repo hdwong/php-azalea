@@ -25,6 +25,7 @@ zend_class_entry *azaleaViewCe;
 /* {{{ class Azalea\View methods */
 static zend_function_entry azalea_view_methods[] = {
 	PHP_ME(azalea_view, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
+	PHP_ME(azalea_view, registerTag, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_view, render, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, assign, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_view, append, NULL, ZEND_ACC_PUBLIC)
@@ -258,6 +259,19 @@ static void destroySymbolTable(zend_array *symbolTable)
 PHP_METHOD(azalea_view, __construct) {}
 /* }}} */
 
+/* {{{ proto registerTag */
+PHP_METHOD(azalea_view, registerTag)
+{
+	zend_string *tagName;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcic;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sf", &tagName, &fci, &fcic) == FAILURE) {
+		return;
+	}
+}
+/* }}} */
+
 /* {{{ int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend_string *filename, zval *ret) */
 static int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend_string *filename, zval *ret)
 {
@@ -315,7 +329,7 @@ static int renderTemplateFile(azalea_view_t *this, zend_array *symbolTable, zend
 /* }}} */
 
 /* {{{ proto azaleaViewRender */
-void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance)
+void azaleaViewRenderFunction(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance)
 {
 	zend_string *tplname, *viewsPath, *tplPath;
 	zval *vars = NULL, exists, *environVars;
@@ -371,7 +385,7 @@ void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance)
 /* {{{ proto string render(string $tplname, array $data = null) */
 PHP_METHOD(azalea_view, render)
 {
-	azaleaViewRender(INTERNAL_FUNCTION_PARAM_PASSTHRU, NULL);
+	azaleaViewRenderFunction(INTERNAL_FUNCTION_PARAM_PASSTHRU, NULL);
 }
 /* }}} */
 

@@ -6,8 +6,10 @@
 
 #include "php.h"
 #include "php_azalea.h"
+#include "azalea/azalea.h"
 #include "azalea/view.h"
 #include "azalea/viewtag.h"
+#include "azalea/i18n.h"
 
 #include "Zend/zend_smart_str.h"	// for smart_str
 #include "ext/standard/php_var.h"
@@ -16,6 +18,7 @@
 static zend_function_entry azalea_viewtag_functions[] = {
 	ZEND_NAMED_FE(js, ZEND_FN(azalea_viewtag_js), NULL)
 	ZEND_NAMED_FE(css, ZEND_FN(azalea_viewtag_css), NULL)
+	ZEND_NAMED_FE(a, ZEND_FN(azalea_viewtag_link), NULL)
 	PHP_FE_END
 };
 /* }}} */
@@ -80,7 +83,7 @@ void azaleaViewtagCallFunction(INTERNAL_FUNCTION_PARAMETERS)
 	zval_ptr_dtor(return_value);
 }
 
-/* {{{ proto _js */
+/* {{{ proto js */
 PHP_FUNCTION(azalea_viewtag_js)
 {
 	zval *pData, *js, *tpldir, *this = getThis();
@@ -118,7 +121,7 @@ PHP_FUNCTION(azalea_viewtag_js)
 }
 /* }}} */
 
-/* {{{ proto _css */
+/* {{{ proto css */
 PHP_FUNCTION(azalea_viewtag_css)
 {
 	zval *pData, *css, *tpldir, *this = getThis();
@@ -159,5 +162,106 @@ PHP_FUNCTION(azalea_viewtag_css)
 	smart_str_0(&buf);
 	RETVAL_STRINGL(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
 	smart_str_free(&buf);
+}
+/* }}} */
+
+/* {{{ proto a */
+PHP_FUNCTION(azalea_viewtag_link)
+{
+	zval *pTitle, *pUrl, *attributes, *pData, dummy;
+	zend_string *title = NULL, *textDomain = NULL, *locale = NULL, *url = NULL, *key, *attr, *tstr;
+	zend_long index;
+	zend_bool escapeUrl = 1;
+	smart_str buf = {0};
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "zz|z", &pTitle, &pUrl, &attributes) == FAILURE) {
+		return;
+	}
+	if (Z_TYPE_P(pTitle) != IS_STRING && Z_TYPE_P(pTitle) != IS_ARRAY) {
+		php_error_docref(NULL, E_ERROR, "The first argument must be a stirng or an array");
+		return;
+	}
+	if (Z_TYPE_P(pUrl) != IS_STRING && Z_TYPE_P(pUrl) != IS_ARRAY) {
+		php_error_docref(NULL, E_ERROR, "The second argument must be a stirng or an array");
+		return;
+	}
+	// title
+	if (Z_TYPE_P(pTitle) == IS_ARRAY) {
+		// array
+		ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(pTitle), index, pData) {
+			if (index < 3 && Z_TYPE_P(pData) != IS_STRING) {
+				php_error_docref(NULL, E_ERROR, "The first array can only passed string");
+				return;
+			} else if (index >= 3) {
+				break;
+			}
+			if (index == 0) {
+				title = Z_STR_P(pData);
+			} else if (index == 1) {
+				textDomain = Z_STR_P(pData);
+			} else {
+				locale = Z_STR_P(pData);
+			}
+		} ZEND_HASH_FOREACH_END();
+		azaleaI18nTranslate(&dummy, title, NULL, textDomain, locale);
+		title = zend_string_copy(Z_STR(dummy));
+		zval_ptr_dtor(&dummy);
+	} else if (Z_TYPE_P(pTitle) == IS_STRING) {
+		// string
+		title = zend_string_copy(Z_STR_P(pTitle));
+	}
+	// url
+	if (Z_TYPE_P(pUrl) == IS_ARRAY) {
+		ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(pUrl), index, pData) {
+			if (index == 0 && Z_TYPE_P(pData) != IS_STRING) {
+				php_error_docref(NULL, E_ERROR, "The second array can only passed string to first element");
+				zend_string_release(title);
+				return;
+			} else if (index >= 2) {
+				break;
+			}
+			if (index == 0) {
+				url = Z_STR_P(pData);
+			} else if (index == 1) {
+				escapeUrl = zend_is_true(pData);
+			}
+		} ZEND_HASH_FOREACH_END();
+		if (url == NULL) {
+			url = ZSTR_EMPTY_ALLOC();
+		}
+		if (escapeUrl) {
+			url = azaleaUrl(url, 0);
+		} else {
+			zend_string_addref(url);
+		}
+	} else {
+		url = azaleaUrl(Z_STR_P(pUrl), 0);
+	}
+	// build output
+	tstr = strpprintf(0, "<a href=\"%s\"", ZSTR_VAL(url));
+	smart_str_append(&buf, tstr);
+	zend_string_release(tstr);
+	// join attributes
+	if (Z_TYPE_P(attributes) == IS_ARRAY) {
+		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(attributes), key, pData) {
+			if (key) {
+				attr = zval_get_string(pData);
+				tstr = strpprintf(0, " %s=\"%s\"", ZSTR_VAL(key), ZSTR_VAL(attr));
+				smart_str_append(&buf, tstr);
+				zend_string_release(tstr);
+				zend_string_release(attr);
+			}
+		} ZEND_HASH_FOREACH_END();
+	}
+	tstr = strpprintf(0, ">%s</a>", ZSTR_VAL(title));
+	smart_str_append(&buf, tstr);
+	zend_string_release(tstr);
+
+	zend_string_release(url);
+	zend_string_release(title);
+	smart_str_0(&buf);
+	RETVAL_STRINGL(ZSTR_VAL(buf.s), ZSTR_LEN(buf.s));
+	smart_str_free(&buf);
+
 }
 /* }}} */

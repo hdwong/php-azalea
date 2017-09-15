@@ -10,13 +10,14 @@
 AZALEA_STARTUP_FUNCTION(view);
 
 PHP_METHOD(azalea_view, __construct);
+PHP_METHOD(azalea_view, registerTag);
 PHP_METHOD(azalea_view, render);
 PHP_METHOD(azalea_view, assign);
 PHP_METHOD(azalea_view, append);
 PHP_METHOD(azalea_view, clean);
 
 void azaleaViewInit(azalea_controller_t *controllerInstance, zend_string *controllerName);
-void azaleaViewRender(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance);
+void azaleaViewRenderFunction(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewInstance);
 zval * azaleaViewTpldir(zval *this);
 
 extern zend_class_entry *azaleaViewCe;
