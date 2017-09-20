@@ -168,7 +168,7 @@ PHP_FUNCTION(azalea_viewtag_css)
 /* {{{ proto a */
 PHP_FUNCTION(azalea_viewtag_link)
 {
-	zval *pTitle, *pUrl, *attributes, *pData, dummy;
+	zval *pTitle, *pUrl, *attributes = NULL, *pData, dummy;
 	zend_string *title = NULL, *textDomain = NULL, *locale = NULL, *url = NULL, *key, *attr, *tstr;
 	zend_long index;
 	zend_bool escapeUrl = 1;
@@ -203,13 +203,14 @@ PHP_FUNCTION(azalea_viewtag_link)
 				locale = Z_STR_P(pData);
 			}
 		} ZEND_HASH_FOREACH_END();
-		azaleaI18nTranslate(&dummy, title, NULL, textDomain, locale);
-		title = zend_string_copy(Z_STR(dummy));
-		zval_ptr_dtor(&dummy);
 	} else if (Z_TYPE_P(pTitle) == IS_STRING) {
 		// string
-		title = zend_string_copy(Z_STR_P(pTitle));
+		title = Z_STR_P(pTitle);
 	}
+	azaleaI18nTranslate(&dummy, title, NULL, textDomain, locale);
+	title = zend_string_copy(Z_STR(dummy));
+	zval_ptr_dtor(&dummy);
+
 	// url
 	if (Z_TYPE_P(pUrl) == IS_ARRAY) {
 		ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(pUrl), index, pData) {
@@ -242,16 +243,18 @@ PHP_FUNCTION(azalea_viewtag_link)
 	smart_str_append(&buf, tstr);
 	zend_string_release(tstr);
 	// join attributes
-	if (Z_TYPE_P(attributes) == IS_ARRAY) {
-		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(attributes), key, pData) {
-			if (key) {
-				attr = zval_get_string(pData);
-				tstr = strpprintf(0, " %s=\"%s\"", ZSTR_VAL(key), ZSTR_VAL(attr));
-				smart_str_append(&buf, tstr);
-				zend_string_release(tstr);
-				zend_string_release(attr);
-			}
-		} ZEND_HASH_FOREACH_END();
+	if (attributes) {
+		if (Z_TYPE_P(attributes) == IS_ARRAY) {
+			ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(attributes), key, pData) {
+				if (key) {
+					attr = zval_get_string(pData);
+					tstr = strpprintf(0, " %s=\"%s\"", ZSTR_VAL(key), ZSTR_VAL(attr));
+					smart_str_append(&buf, tstr);
+					zend_string_release(tstr);
+					zend_string_release(attr);
+				}
+			} ZEND_HASH_FOREACH_END();
+		}
 	}
 	tstr = strpprintf(0, ">%s</a>", ZSTR_VAL(title));
 	smart_str_append(&buf, tstr);
