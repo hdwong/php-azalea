@@ -320,13 +320,13 @@ PHP_METHOD(azalea_request, isMobile)
 	}
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(server), ZEND_STRL("HTTP_USER_AGENT")))) {
 		static const char * uastrs[] = {
-			"nokia", "sony", "ericsson", "mot",
-			"samsung", "htc", "sgh", "lg", "sharp", "sie-",
-			"philips", "panasonic", "alcatel", "lenovo", "iphone",
-			"ipod", "ipad", "blackberry", "meizu", "android",
-			"netfront", "symbian", "ucweb", "windowsce", "palm",
-			"operamini", "operamobi", "openwave", "nexusone", "cldc",
-			"midp", "wap", "mobile"
+			"hiptop", "fennec", "ericsson", "mot",
+			"sgh", "lg", "sharp", "webos", "philips",
+			"panasonic", "alcatel", "lenovo", "blackberry", "meizu",
+			"netfront", "symbian", "ucweb", "opera mobi", "opera mini",
+			"openwave", "nexusone", "cldc", "midp", "samsung",
+			"itouch", "ipod", "ipad", "htc", "nokia", "sony", "kindle",
+			"palm", "windows ce", "wap", "mobile", "android", "phone"
 		};
 		int i;
 		tstr = php_string_tolower(Z_STR_P(field));
