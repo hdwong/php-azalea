@@ -563,7 +563,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, column)
 {
 	zval dummy, *value, *index = NULL;
 	MYSQLND_RES *result;
-	zend_string *keyValue;
+	zend_string *keyIndex;
 	zend_bool hasNext;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &index) == FAILURE) {
@@ -578,18 +578,18 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, column)
 	}
 
 	AZALEA_MYSQLND_FETCH_RESOURCE_QR(result, getThis());
-	keyValue = azaleaMysqlndFindFieldName(result, index);
-	if (!keyValue) {
+	keyIndex = azaleaMysqlndFindFieldName(result, index);
+	if (!keyIndex) {
 		// 找不到字段
 		php_error_docref(NULL, E_NOTICE, "Field index not found");
 		RETURN_FALSE;
 	}
 	array_init(return_value);	// make sure return_value is an array
 	do {
-		zval dummy;
 		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
-			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
+			value = zend_hash_find(Z_ARRVAL(dummy), keyIndex);
 			add_next_index_zval(return_value, value);
+			zval_add_ref(value);
 			zval_ptr_dtor(&dummy);
 		}
 	} while (hasNext);
@@ -601,7 +601,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, columnWithKey)
 {
 	zval dummy, *key, *value, *index = NULL;
 	MYSQLND_RES *result;
-	zend_string *keyField, *keyValue;
+	zend_string *keyField, *keyIndex;
 	zend_bool hasNext;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|z", &key, &index) == FAILURE) {
@@ -626,19 +626,19 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, columnWithKey)
 		php_error_docref(NULL, E_NOTICE, "Key not found");
 		RETURN_FALSE;
 	}
-	keyValue = azaleaMysqlndFindFieldName(result, index);
-	if (!keyValue) {
+	keyIndex = azaleaMysqlndFindFieldName(result, index);
+	if (!keyIndex) {
 		// 找不到字段
 		php_error_docref(NULL, E_NOTICE, "Field index not found");
 		RETURN_FALSE;
 	}
 	array_init(return_value);	// make sure return_value is an array
 	do {
-		zval dummy;
 		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
 			key = zend_hash_find(Z_ARRVAL(dummy), keyField);
-			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
+			value = zend_hash_find(Z_ARRVAL(dummy), keyIndex);
 			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), value);
+			zval_add_ref(value);
 			zval_ptr_dtor(&dummy);
 		}
 	} while (hasNext);
