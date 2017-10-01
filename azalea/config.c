@@ -20,6 +20,7 @@ static zend_function_entry azalea_config_methods[] = {
 	PHP_ME(azalea_config, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_config, get, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_config, getAll, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_config, set, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -349,9 +350,8 @@ PHP_METHOD(azalea_config, __construct) {}
 /* {{{ proto mixed get */
 PHP_METHOD(azalea_config, get)
 {
-	zend_string *key, *subKey;
-	zval *def = NULL;
-	zval *val;
+	zend_string *key;
+	zval *def = NULL, *val;
 	char *p;
 	size_t lenKey;
 
@@ -380,5 +380,51 @@ PHP_METHOD(azalea_config, get)
 PHP_METHOD(azalea_config, getAll)
 {
 	RETURN_ZVAL(&AZALEA_G(config), 1, 0);
+}
+/* }}} */
+
+/* {{{ proto mixed set */
+PHP_METHOD(azalea_config, set)
+{
+	zval *value, *val, *subVal;
+	zend_string *key, *subKey = NULL;
+	char *p;
+	size_t lenKey;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "Sz", &key, &value) == FAILURE) {
+		return;
+	}
+
+	p = strchr(ZSTR_VAL(key), '.');
+	if (p) {
+		lenKey = p - ZSTR_VAL(key);
+		subKey = zend_string_init(p + 1, ZSTR_LEN(key) - lenKey - 1, 0);
+		key = zend_string_init(ZSTR_VAL(key), lenKey, 0);
+	} else {
+		zend_string_addref(key);
+	}
+	if (subKey) {
+		if ((val = zend_hash_find(Z_ARRVAL(AZALEA_G(config)), key))) {
+			if (Z_TYPE_P(val) != IS_ARRAY) {
+				// 不是数组，设置 subKey 错误
+				php_error_docref(NULL, E_ERROR, "Config `%s` is not an array", ZSTR_VAL(key));
+				return;
+			}
+			zend_hash_update(Z_ARRVAL_P(val), subKey, value);
+		} else {
+			zval dummy;
+			array_init(&dummy);
+			zend_hash_update(Z_ARRVAL(dummy), subKey, value);
+			zend_hash_update(Z_ARRVAL(AZALEA_G(config)), key, &dummy);
+		}
+	} else {
+		zend_hash_update(Z_ARRVAL(AZALEA_G(config)), key, value);
+	}
+	zval_add_ref(value);
+
+	zend_string_release(key);
+	if (subKey) {
+		zend_string_release(subKey);
+	}
 }
 /* }}} */

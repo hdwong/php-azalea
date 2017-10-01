@@ -12,6 +12,7 @@ AZALEA_STARTUP_FUNCTION(config);
 PHP_METHOD(azalea_config, __construct);
 PHP_METHOD(azalea_config, get);
 PHP_METHOD(azalea_config, getAll);
+PHP_METHOD(azalea_config, set);
 
 void azaleaLoadConfig(zval *);
 #define azaleaConfigFind(key) azaleaConfigSubFindEx(key, strlen(key), NULL, 0)
