@@ -157,7 +157,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 		controllerName = zend_string_copy(Z_STR_P(field));
 	}
 	// action
-	if ((field = zend_hash_str_find(Z_ARRVAL(array), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
+	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
 		actionName = zend_string_copy(Z_STR_P(field));
 		isCallback = 1;
 	} else {
