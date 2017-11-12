@@ -127,6 +127,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 	zval *array, *field, pathArgs;
 	azalea_controller_t *controller;
 	zend_string *folderName = NULL, *controllerName = NULL, *actionName = NULL;
+	zend_bool isCallback = 0;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "a", &array) == FAILURE) {
 		return;
@@ -156,11 +157,16 @@ PHP_METHOD(azalea_response, gotoRoute)
 		controllerName = zend_string_copy(Z_STR_P(field));
 	}
 	// action
-	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
+	if ((field = zend_hash_str_find(Z_ARRVAL(array), ZEND_STRL("callback"))) && Z_TYPE_P(field) == IS_STRING) {
 		actionName = zend_string_copy(Z_STR_P(field));
-	} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_action")))) {
-		// default action
-		actionName = zend_string_copy(Z_STR_P(field));
+		isCallback = 1;
+	} else {
+		if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("action"))) && Z_TYPE_P(field) == IS_STRING) {
+			actionName = zend_string_copy(Z_STR_P(field));
+		} else if ((field = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("default_action")))) {
+			// default action
+			actionName = zend_string_copy(Z_STR_P(field));
+		}
 	}
 	// arguments
 	if ((field = zend_hash_str_find(Z_ARRVAL_P(array), ZEND_STRL("arguments"))) && Z_TYPE_P(field) == IS_ARRAY) {
@@ -171,7 +177,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 
 	// try to dispatch new route
 	RETVAL_NULL();
-	azaleaDispatch(folderName, controllerName, actionName, &pathArgs, return_value);
+	azaleaDispatchEx(folderName, controllerName, actionName, isCallback, &pathArgs, return_value);
 
 	if (folderName) {
 		zend_string_release(folderName);
