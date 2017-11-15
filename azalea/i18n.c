@@ -237,6 +237,7 @@ static void azaleaI18nTranslateMessage(zval *return_value, zend_string *message,
 			}
 			key = strpprintf(0, ":%s", ZSTR_VAL(key));
 			zend_hash_add(Z_ARRVAL(callFuncParams[1]), key, pData);
+			zval_add_ref(pData);
 			zend_string_release(key);
 		} ZEND_HASH_FOREACH_END();
 
