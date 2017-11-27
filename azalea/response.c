@@ -59,13 +59,14 @@ azalea_response_t * azaleaGetResponse(azalea_controller_t *controller)
 	tstr = strpprintf(0, "_response_%s", Z_STRVAL_P(controllerName));
 	if (!(pRes = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), tstr))) {
 		azalea_response_t res = {{0}};
-		pRes = &res;
-		object_init_ex(pRes, azaleaResponseCe);
-		zend_update_property(azaleaResponseCe, pRes, ZEND_STRL("_instance"), controller);
-		if (SUCCESS == add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), pRes)) {
+		object_init_ex(&res, azaleaResponseCe);
+		zend_update_property(azaleaResponseCe, &res, ZEND_STRL("_instance"), controller);
+		if (SUCCESS == add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), &res)) {
 			pRes = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), tstr);
 		} else {
 			// TODO error?
+			pRes = NULL;
+			zval_ptr_dtor(&res);
 		}
 	}
 	zend_string_release(tstr);

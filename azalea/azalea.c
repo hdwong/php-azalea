@@ -40,9 +40,13 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 	zval *field;
 	zend_string *hostname, *tstr, *returnUrl;
 
+	if (!strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) ||
+			!strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
+		return zend_string_copy(url);
+	}
+
 	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
-
 		if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTPS")))) {
 			hostname = zend_string_init(ZEND_STRL("https://"), 0);
 		} else {

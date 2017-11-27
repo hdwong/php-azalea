@@ -74,7 +74,12 @@ void azaleaControllerInit(zval *this, zend_class_entry *ce, zend_string *folderN
 	// request
 	zend_update_property(azaleaControllerCe, this, ZEND_STRL("req"), azaleaGetRequest());
 	// response
-	zend_update_property(azaleaControllerCe, this, ZEND_STRL("res"), azaleaGetResponse(this));
+	pRes = azaleaGetResponse(this);
+	if (pRes) {
+		zend_update_property(azaleaControllerCe, this, ZEND_STRL("res"), pRes);
+	} else {
+		zend_update_property_null(azaleaControllerCe, this, ZEND_STRL("res"));
+	}
 
 	// view
 	azaleaViewInit(this, controllerName);
