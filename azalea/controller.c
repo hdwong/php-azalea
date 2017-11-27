@@ -72,24 +72,10 @@ void azaleaControllerInit(zval *this, zend_class_entry *ce, zend_string *folderN
 	}
 	zend_update_property_str(azaleaControllerCe, this, ZEND_STRL("_controller"), controllerName);
 	// request
-	if (!(pReq = zend_hash_str_find(Z_ARRVAL(AZALEA_G(instances)), ZEND_STRL("_request")))) {
-		azalea_request_t req = {{0}};
-		pReq = &req;
-		object_init_ex(pReq, azaleaRequestCe);
-		add_assoc_zval_ex(&AZALEA_G(instances), ZEND_STRL("_request"), pReq);
-	}
-	zend_update_property(azaleaControllerCe, this, ZEND_STRL("req"), pReq);
+	zend_update_property(azaleaControllerCe, this, ZEND_STRL("req"), azaleaGetRequest());
 	// response
-	{
-		azalea_response_t res = {{0}};
-		tstr = strpprintf(0, "_response_%s", ZSTR_VAL(controllerName));
-		pRes = &res;
-		object_init_ex(pRes, azaleaResponseCe);
-		zend_update_property(azaleaResponseCe, pRes, ZEND_STRL("_instance"), this);
-		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), pRes);
-		zend_string_release(tstr);
-		zend_update_property(azaleaControllerCe, this, ZEND_STRL("res"), pRes);
-	}
+	zend_update_property(azaleaControllerCe, this, ZEND_STRL("res"), azaleaGetResponse(this));
+
 	// view
 	azaleaViewInit(this, controllerName);
 
@@ -110,14 +96,14 @@ PHP_METHOD(azalea_controller, getSession)
 /* {{{ proto loadModel */
 PHP_METHOD(azalea_controller, loadModel)
 {
-	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
 /* {{{ proto getModel */
 PHP_METHOD(azalea_controller, getModel)
 {
-	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 

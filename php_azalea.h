@@ -65,6 +65,7 @@ ZEND_BEGIN_MODULE_GLOBALS(azalea)
 	zend_bool registeredTemplateFunctions;	// 是否已注册模板函数
 	zend_bool startSession;			// 是否开启回话
 	zval instances;					// 实例缓存变量
+	azalea_request_t request;		// Azalea\Request 实例变量
 	zval config;					// 配置项变量
 	zval translations;				// 翻译字符变量
 	zval viewTagFunctionsUser;		// 视图标签变量 (用户定义)

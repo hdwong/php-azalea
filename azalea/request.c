@@ -88,6 +88,17 @@ zend_string * azaleaGetRequestUri(void)
 }
 /* }}} */
 
+/* {{{ proto azaleaGetRequest */
+azalea_request_t * azaleaGetRequest(void)
+{
+	azalea_request_t *pReq = &AZALEA_G(request);
+	if (Z_TYPE_P(pReq) != IS_OBJECT) {
+		object_init_ex(pReq, azaleaRequestCe);
+	}
+	return pReq;
+}
+/* }}} */
+
 /* {{{ proto __construct */
 PHP_METHOD(azalea_request, __construct) {}
 /* }}} */

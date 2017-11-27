@@ -72,15 +72,7 @@ PHP_METHOD(azalea_model, __construct) {}
 /* {{{ proto getRequest */
 PHP_METHOD(azalea_model, getRequest)
 {
-	zval *pReq;
-
-	if (!(pReq = zend_hash_str_find(Z_ARRVAL(AZALEA_G(instances)), ZEND_STRL("_request")))) {
-		azalea_request_t req = {{0}};
-		pReq = &req;
-		object_init_ex(pReq, azaleaRequestCe);
-		add_assoc_zval_ex(&AZALEA_G(instances), ZEND_STRL("_request"), pReq);
-	}
-
+	azalea_request_t *pReq = azaleaGetRequest();
 	RETURN_ZVAL(pReq, 1, 0);
 }
 /* }}} */
@@ -88,19 +80,19 @@ PHP_METHOD(azalea_model, getRequest)
 /* {{{ proto loadModel */
 PHP_METHOD(azalea_model, loadModel)
 {
-	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+	azaleaLoadModel(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
 /* {{{ proto getModel */
 PHP_METHOD(azalea_model, getModel)
 {
-	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU, getThis());
+	azaleaGetModel(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
 
-/** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
-void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS, zval *form)
+/** {{{ int azaleaLoadModel(zend_execute_data *execute_data, zval *return_value) */
+void azaleaLoadModel(INTERNAL_FUNCTION_PARAMETERS)
 {
 	zval *models;
 	zend_string *filename, *lcName, *tstr;
@@ -159,8 +151,8 @@ static zend_class_entry * azaleaModelGetExtModelClassEntry(zend_string *name)
 }
 /* }}} */
 
-/** {{{ int azaleaGetModel(zend_execute_data *execute_data, zval *return_value, zval *instance) */
-void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS, zval *from)
+/** {{{ int azaleaGetModel(zend_execute_data *execute_data, zval *return_value) */
+void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 {
 	zend_string *modelName;
 	zend_string *name, *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *cacheId, *modelClass, *tstr;

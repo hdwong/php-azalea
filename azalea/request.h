@@ -31,6 +31,7 @@ PHP_METHOD(azalea_request, isAndroidDevice);
 zend_string * azaleaGetBaseUri(void);
 zend_string * azaleaGetUri(void);
 zend_string * azaleaGetRequestUri(void);
+azalea_request_t * azaleaGetRequest(void);
 
 extern zend_class_entry *azaleaRequestCe;
 

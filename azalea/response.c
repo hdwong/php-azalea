@@ -48,6 +48,30 @@ AZALEA_STARTUP_FUNCTION(response)
 }
 /* }}} */
 
+azalea_response_t * azaleaGetResponse(azalea_controller_t *controller)
+{
+	zval *controllerName, *pRes;
+	zend_string *tstr;
+
+	if (!(controllerName = zend_read_property(azaleaControllerCe, controller, ZEND_STRL("_controller"), 1, NULL))) {
+		return NULL;
+	}
+	tstr = strpprintf(0, "_response_%s", Z_STRVAL_P(controllerName));
+	if (!(pRes = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), tstr))) {
+		azalea_response_t res = {{0}};
+		pRes = &res;
+		object_init_ex(pRes, azaleaResponseCe);
+		zend_update_property(azaleaResponseCe, pRes, ZEND_STRL("_instance"), controller);
+		if (SUCCESS == add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(tstr), ZSTR_LEN(tstr), pRes)) {
+			pRes = zend_hash_find(Z_ARRVAL(AZALEA_G(instances)), tstr);
+		} else {
+			// TODO error?
+		}
+	}
+	zend_string_release(tstr);
+	return pRes;
+}
+
 /* {{{ proto __construct */
 PHP_METHOD(azalea_response, __construct) {}
 /* }}} */

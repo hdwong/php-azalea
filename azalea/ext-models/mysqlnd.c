@@ -4,9 +4,9 @@
  * Created by Bun Wong on 17-9-3.
  */
 
-#ifdef HAVE_CONFIG_H
+//#ifdef HAVE_CONFIG_H
 #include "../../config.h"
-#endif
+//#endif
 
 #ifdef WITH_MYSQLND
 
@@ -163,7 +163,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 	zval *pHost, *pPort, *pUsername, *pPasswd, *pDbname, *pCharset;
 	zend_string *host, *username, *passwd, *dbname, *charset, *tstr;
 	zend_long port, flags = 0, allowLocalInfile = 1;
-	zend_bool persistent = 0;
+	zend_bool persistent = 1;
 	MYSQLND *mysql;
 
 	// init _queries array

@@ -52,6 +52,7 @@ if test "$PHP_AZALEA" != "no"; then
         azalea/response.c \
         azalea/session.c \
         azalea/model.c \
+        azalea/object.c \
         azalea/view.c \
         azalea/template.c \
         azalea/viewtag.c \

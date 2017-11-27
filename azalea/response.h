@@ -18,6 +18,8 @@ PHP_METHOD(azalea_response, getBody);
 PHP_METHOD(azalea_response, setBody);
 PHP_METHOD(azalea_response, setCookie);
 
+azalea_response_t * azaleaGetResponse(azalea_controller_t *controller);
+
 extern zend_class_entry *azaleaResponseCe;
 
 #endif /* AZALEA_RESPONSE_H_ */

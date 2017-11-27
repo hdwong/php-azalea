@@ -37,6 +37,7 @@
 #include "azalea/response.h"
 #include "azalea/session.h"
 #include "azalea/model.h"
+#include "azalea/object.h"
 #include "azalea/view.h"
 #include "azalea/template.h"
 #include "azalea/text.h"
@@ -67,6 +68,7 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(response);
     AZALEA_STARTUP(session);
     AZALEA_STARTUP(model);
+    AZALEA_STARTUP(object);
     AZALEA_STARTUP(view);
     AZALEA_STARTUP(text);
     AZALEA_STARTUP(exception);
@@ -118,6 +120,7 @@ PHP_RINIT_FUNCTION(azalea)
 	AZALEA_G(actionName) = NULL;
 	array_init(&AZALEA_G(pathArgs));
 	array_init(&AZALEA_G(instances));
+	ZVAL_NULL(&AZALEA_G(request));
 	array_init(&AZALEA_G(config));
 #ifdef WITH_I18N
 	array_init(&AZALEA_G(translations));
@@ -185,6 +188,7 @@ PHP_RSHUTDOWN_FUNCTION(azalea)
 	}
 	zval_ptr_dtor(&AZALEA_G(pathArgs));
 	zval_ptr_dtor(&AZALEA_G(instances));
+	zval_ptr_dtor(&AZALEA_G(request));
 	zval_ptr_dtor(&AZALEA_G(config));
 #ifdef WITH_I18N
 	zval_ptr_dtor(&AZALEA_G(translations));
