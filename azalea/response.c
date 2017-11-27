@@ -25,7 +25,7 @@ static zend_function_entry azalea_response_methods[] = {
 	PHP_ME(azalea_response, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_response, gotoUrl, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, reload, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(azalea_response, gotoRoute, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_response, gotoRouter, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setHeader, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, getBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_response, setBody, NULL, ZEND_ACC_PUBLIC)
@@ -145,8 +145,8 @@ PHP_METHOD(azalea_response, reload)
 }
 /* }}} */
 
-/* {{{ proto mixed gotoRoute(array route) */
-PHP_METHOD(azalea_response, gotoRoute)
+/* {{{ proto mixed gotoRouter(array router) */
+PHP_METHOD(azalea_response, gotoRouter)
 {
 	zval *array, *field, pathArgs;
 	azalea_controller_t *controller;
@@ -199,7 +199,7 @@ PHP_METHOD(azalea_response, gotoRoute)
 		array_init(&pathArgs);
 	}
 
-	// try to dispatch new route
+	// try to dispatch new router
 	RETVAL_NULL();
 	azaleaDispatchEx(folderName, controllerName, actionName, isCallback, &pathArgs, return_value);
 

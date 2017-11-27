@@ -31,7 +31,7 @@ zend_class_entry *azaleaBootstrapCe;
  */
 static zend_function_entry azalea_bootstrap_methods[] = {
 	PHP_ME(azalea_bootstrap, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_FINAL|ZEND_ACC_PRIVATE)
-	PHP_ME(azalea_bootstrap, getRoute, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(azalea_bootstrap, getRouter, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, init, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(azalea_bootstrap, run, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
@@ -549,8 +549,8 @@ defaultViews:
 }
 /* }}} */
 
-/* {{{ proto string getRoute(void) */
-PHP_METHOD(azalea_bootstrap, getRoute)
+/* {{{ proto string getRouter(void) */
+PHP_METHOD(azalea_bootstrap, getRouter)
 {
 	array_init(return_value);
 	if (AZALEA_G(folderName)) {

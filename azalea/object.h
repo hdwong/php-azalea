@@ -12,6 +12,6 @@ AZALEA_STARTUP_FUNCTION(object);
 PHP_METHOD(azalea_object, loadModel);
 PHP_METHOD(azalea_object, getModel);
 
-extern zend_class_entry *azaleaModelCe;
+extern zend_class_entry *azaleaObjectCe;
 
 #endif /* AZALEA_OBJECT_H_ */

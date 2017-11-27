@@ -27,7 +27,7 @@ static zend_function_entry azalea_exception_methods[] = {
  */
 static zend_function_entry azalea_e404exception_methods[] = {
 	PHP_ME(azalea_exception404, getUri, NULL, ZEND_ACC_PUBLIC)
-	PHP_ME(azalea_exception404, getRoute, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_exception404, getRouter, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -54,7 +54,7 @@ AZALEA_STARTUP_FUNCTION(exception)
 	INIT_CLASS_ENTRY(e404_ce, AZALEA_NS_NAME(E404Exception), azalea_e404exception_methods);
 	azaleaException404Ce = zend_register_internal_class_ex(&e404_ce, azaleaExceptionCe);
 	zend_declare_property_null(azaleaException404Ce, ZEND_STRL("_uri"), ZEND_ACC_PRIVATE);
-	zend_declare_property_null(azaleaException404Ce, ZEND_STRL("_route"), ZEND_ACC_PRIVATE);
+	zend_declare_property_null(azaleaException404Ce, ZEND_STRL("_router"), ZEND_ACC_PRIVATE);
 
 	INIT_CLASS_ENTRY(e500_ce, AZALEA_NS_NAME(E500Exception), azalea_e500exception_methods);
 	azaleaException500Ce = zend_register_internal_class_ex(&e500_ce, azaleaExceptionCe);
@@ -76,23 +76,23 @@ PHP_METHOD(azalea_exception404, getUri)
 }
 /* }}} */
 
-/* {{{ proto string getRoute(void) */
-PHP_METHOD(azalea_exception404, getRoute)
+/* {{{ proto string getRouter(void) */
+PHP_METHOD(azalea_exception404, getRouter)
 {
-	zval *route;
+	zval *router;
 
-	route = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_route"), 1, NULL);
-	if (!route) {
+	router = zend_read_property(azaleaException404Ce, getThis(), ZEND_STRL("_router"), 1, NULL);
+	if (!router) {
 		RETURN_NULL();
 	}
-	RETURN_ZVAL(route, 1, 0);
+	RETURN_ZVAL(router, 1, 0);
 }
 /* }}} */
 
 /* {{{ proto throw404Str */
 void throw404Str(const char *message, size_t len)
 {
-	zval route;
+	zval router;
 	azalea_exception_t rv = {{0}}, *exception = &rv;
 
 	object_init_ex(exception, azaleaException404Ce);
@@ -101,19 +101,19 @@ void throw404Str(const char *message, size_t len)
 	zend_update_property_long(zend_ce_exception, exception, ZEND_STRL("code"), 404);
 	// uri
 	zend_update_property_str(azaleaException404Ce, exception, ZEND_STRL("_uri"), AZALEA_G(uri));
-	// route
-	array_init(&route);
+	// router
+	array_init(&router);
 	if (AZALEA_G(folderName)) {
-		add_assoc_str(&route, "folder", zend_string_copy(AZALEA_G(folderName)));
+		add_assoc_str(&router, "folder", zend_string_copy(AZALEA_G(folderName)));
 	} else {
-		add_assoc_null(&route, "folder");
+		add_assoc_null(&router, "folder");
 	}
-	add_assoc_str(&route, "controller", zend_string_copy(AZALEA_G(controllerName)));
-	add_assoc_str(&route, "action", zend_string_copy(AZALEA_G(actionName)));
-	add_assoc_zval(&route, "arguments", &AZALEA_G(pathArgs));
+	add_assoc_str(&router, "controller", zend_string_copy(AZALEA_G(controllerName)));
+	add_assoc_str(&router, "action", zend_string_copy(AZALEA_G(actionName)));
+	add_assoc_zval(&router, "arguments", &AZALEA_G(pathArgs));
 	zval_add_ref(&AZALEA_G(pathArgs));
-	zend_update_property(azaleaException404Ce, exception, ZEND_STRL("_route"), &route);
-	zval_ptr_dtor(&route);
+	zend_update_property(azaleaException404Ce, exception, ZEND_STRL("_router"), &router);
+	zval_ptr_dtor(&router);
 	zend_throw_exception_object(exception);
 }
 /* }}} */

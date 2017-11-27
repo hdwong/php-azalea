@@ -16,6 +16,7 @@
 #include "azalea/azalea.h"
 #include "azalea/config.h"
 #include "azalea/model.h"
+#include "azalea/object.h"
 #include "azalea/exception.h"
 #include "azalea/ext-models/mysqlnd.h"
 
@@ -474,6 +475,10 @@ static zend_bool azaleaMysqlndFetchRow(zval *return_value, MYSQLND_RES *result, 
 		} else {
 			zend_merge_properties(return_value, Z_ARRVAL(dataset));
 			zval_ptr_dtor(&dataset);
+		}
+		// check if instanceof Azalea\Object and call __fetch method
+		if (instanceof_function(ce, azaleaObjectCe) && zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__fetch"))) {
+			zend_call_method_with_0_params(return_value, ce, NULL, "__fetch", NULL);
 		}
 	} else {
 		ZVAL_ZVAL(return_value, &dataset, 0, 0);

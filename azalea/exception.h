@@ -10,7 +10,7 @@
 AZALEA_STARTUP_FUNCTION(exception);
 
 PHP_METHOD(azalea_exception404, getUri);
-PHP_METHOD(azalea_exception404, getRoute);
+PHP_METHOD(azalea_exception404, getRouter);
 
 #define throw404(message) \
 	if (message) throw404Str((message)->val, (message)->len); \
