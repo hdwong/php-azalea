@@ -251,8 +251,10 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
 			zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);
 		}
-		// cache instance
-		add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
+		if (!EG(exception)) {
+			// 没有异常则加入缓存
+			add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
+		}
 	}
 	zend_string_release(lcName);
 	zend_string_release(modelClass);

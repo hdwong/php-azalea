@@ -504,7 +504,7 @@ defaultViews:
 
 	// try ... catch \Exception
 	if (EG(exception) && instanceof_function(EG(exception)->ce, zend_ce_exception)) {
-		php_output_clean();
+		php_output_clean_all();
 
 		zval exception, errorArgs, *errorController, *errorAction;
 		ZVAL_OBJ(&exception, EG(exception));
@@ -515,24 +515,15 @@ defaultViews:
 		errorController = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("error_controller"));
 		errorAction = azaleaConfigSubFindEx(ZEND_STRL("dispatch"), ZEND_STRL("error_action"));
 		azaleaDispatch(NULL, Z_STR_P(errorController), Z_STR_P(errorAction), &errorArgs, &ret);
-		processContent(&ret);
 		zval_ptr_dtor(&errorArgs);
 
 		if (EG(exception)) {
-			php_output_clean();
-
 			// catch new exception from error controller action or view, ignore it
-			zend_string *message;
-			if (Z_TYPE_P(azaleaConfigSubFindEx(ZEND_STRL("debug"), NULL, 0)) == IS_TRUE) {
-				zval newException;
-				ZVAL_OBJ(&newException, EG(exception));
-				message = zval_get_string(zend_read_property(zend_ce_exception, &newException, ZEND_STRL("message"), 1, NULL));
-			} else {
-				message = zval_get_string(zend_read_property(zend_ce_exception, &exception, ZEND_STRL("message"), 1, NULL));
-			}
-			PHPWRITE(ZSTR_VAL(message), ZSTR_LEN(message));
+			php_output_clean_all();
+			// zend_clear_exception();
+		} else {
+			processContent(&ret);
 		}
-		zend_clear_exception();
 		zend_bailout();
 	} else {
 		// process and output result content
