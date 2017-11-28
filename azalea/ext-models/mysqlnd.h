@@ -14,15 +14,15 @@
 #define AZALEA_MYSQLND_FETCH_RESOURCE_CONN(__ptr, __this) \
 { \
 	zval *res = zend_read_property(azalea_ext_model_mysqlnd_ce, __this, "_connection", sizeof("_connection") - 1, 1, NULL); \
-	if (!res || !(__ptr = (MYSQLND *)Z_RES_VAL_P(res))) { \
-		php_error_docref(NULL, E_WARNING, "Invalid object or resource"); \
+	if (!res || Z_TYPE_P(res) != IS_RESOURCE || !(__ptr = (MYSQLND *)Z_RES_VAL_P(res))) { \
+		php_error_docref(NULL, E_ERROR, "Invalid Mysql connect"); \
 	} \
 }
 #define AZALEA_MYSQLND_FETCH_RESOURCE_QR(__ptr, __this) \
 { \
 	zval *res = zend_read_property(mysqlndResultCe, __this, "_result", sizeof("_result") - 1, 1, NULL); \
-	if (!res || !(__ptr = (MYSQLND_RES *)Z_RES_VAL_P(res))) { \
-		php_error_docref(NULL, E_WARNING, "Invalid object or resource"); \
+	if (!res || Z_TYPE_P(res) != IS_RESOURCE || !(__ptr = (MYSQLND_RES *)Z_RES_VAL_P(res))) { \
+		php_error_docref(NULL, E_ERROR, "Invalid Mysql query result"); \
 	} \
 }
 #define MYSQLND_RETURN_LONG(__val) \

@@ -157,7 +157,6 @@ static void azaleaMysqndThrowError(MYSQLND *mysql, const char *str)
 /* }}} */
 
 /* {{{ proto __construct */
-PHP_METHOD(azalea_ext_model_mysqlnd, __construct) {}
 PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 {
 	zval dummy, rsrc, *this = getThis(), *mysqlConfig, *lcName;
@@ -204,10 +203,10 @@ PHP_METHOD(azalea_ext_model_mysqlnd, __init)
 	if (mysqlnd_connect(mysql, ZSTR_VAL(host), ZSTR_VAL(username), ZSTR_VAL(passwd),
 			ZSTR_LEN(passwd), ZSTR_VAL(dbname), ZSTR_LEN(dbname), port, NULL, flags,
 			MYSQLND_CLIENT_KNOWS_RSET_COPY_DATA) == NULL) {
-		// throws exception
-		azaleaMysqndThrowError(mysql, "Mysql connect error");
 		// free mysql structure
 		mysqlnd_close(mysql, MYSQLND_CLOSE_DISCONNECTED);
+		// throws exception
+		azaleaMysqndThrowError(mysql, "Mysql connect error");
 		goto end;
 	}
 	mysqlnd_options(mysql, MYSQL_OPT_LOCAL_INFILE, (char *)&allowLocalInfile);
