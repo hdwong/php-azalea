@@ -180,3 +180,37 @@ double azaleaGetMicrotime()
 	return (double)(tp.tv_sec + tp.tv_usec / 1000000.00);
 }
 /* }}} */
+
+/** {{{ proto azaleaDeepCopy(zval *dst, zval *src) */
+void azaleaDeepCopy(zval *dst, zval *src) {
+	zval *pzval, *dstpzval, value;
+	zend_ulong idx;
+	zend_string *key;
+
+	ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(src), idx, key, pzval) {
+		if (key) {
+			if (Z_TYPE_P(pzval) == IS_ARRAY) {
+				array_init(&value);
+				if ((dstpzval = zend_hash_find(Z_ARRVAL_P(dst), key)) && Z_TYPE_P(dstpzval) == IS_ARRAY) {
+					azaleaDeepCopy(&value, dstpzval);
+				}
+				azaleaDeepCopy(&value, pzval);
+			} else {
+				ZVAL_DUP(&value, pzval);
+			}
+			zend_hash_update(Z_ARRVAL_P(dst), key, &value);
+		} else {
+			if (Z_TYPE_P(pzval) == IS_ARRAY) {
+				array_init(&value);
+				if ((dstpzval = zend_hash_index_find(Z_ARRVAL_P(dst), idx)) && Z_TYPE_P(dstpzval) == IS_ARRAY) {
+					azaleaDeepCopy(&value, dstpzval);
+				}
+				azaleaDeepCopy(&value, pzval);
+			} else {
+				ZVAL_DUP(&value, pzval);
+			}
+			zend_hash_index_update(Z_ARRVAL_P(dst), idx, &value);
+		}
+	} ZEND_HASH_FOREACH_END();
+}
+/* }}} */

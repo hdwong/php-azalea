@@ -80,10 +80,9 @@ PHP_METHOD(azalea_session, set)
 	}
 	if (Z_TYPE_P(val) == IS_NULL) {
 		// unset
-		zval *session;
-		session = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SESSION"));
-		if (session && Z_TYPE_P(session) == IS_REFERENCE) {
-			zend_hash_del(Z_ARRVAL_P(Z_REFVAL_P(session)), name);
+		// IF_SESSION_VARS()
+		if (Z_ISREF_P(&PS(http_session_vars)) && Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) == IS_ARRAY) {
+			zend_hash_del(Z_ARRVAL_P(Z_REFVAL(PS(http_session_vars))), name);
 		}
 	} else {
 		php_set_session_var(name, val, NULL);
@@ -95,15 +94,13 @@ PHP_METHOD(azalea_session, set)
 /* {{{ proto void clean(void) */
 PHP_METHOD(azalea_session, clean)
 {
-	zval *session;
-
 	if (!AZALEA_G(startSession)) {
 		return;
 	}
 
-	session = zend_hash_str_find(&EG(symbol_table), ZEND_STRL("_SESSION"));
-	if (session && Z_TYPE_P(session) == IS_REFERENCE) {
-		zend_hash_clean(Z_ARRVAL_P(Z_REFVAL_P(session)));
+	// IF_SESSION_VARS()
+	if (Z_ISREF_P(&PS(http_session_vars)) && Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) == IS_ARRAY) {
+		zend_hash_clean(Z_ARRVAL_P(Z_REFVAL(PS(http_session_vars))));
 		RETURN_TRUE;
 	}
 	RETURN_FALSE;

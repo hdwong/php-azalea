@@ -36,6 +36,7 @@
 #include "azalea/request.h"
 #include "azalea/response.h"
 #include "azalea/session.h"
+#include "azalea/message.h"
 #include "azalea/model.h"
 #include "azalea/object.h"
 #include "azalea/view.h"
@@ -67,6 +68,7 @@ PHP_MINIT_FUNCTION(azalea)
     AZALEA_STARTUP(request);
     AZALEA_STARTUP(response);
     AZALEA_STARTUP(session);
+    AZALEA_STARTUP(message);
     AZALEA_STARTUP(model);
     AZALEA_STARTUP(object);
     AZALEA_STARTUP(view);

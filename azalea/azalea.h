@@ -21,5 +21,6 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost);
 zval * azaleaGlobalsFind(uint type, zend_string *name);
 zval * azaleaGlobalsStrFind(uint type, char *name, size_t len);
 zend_bool azaleaDebugMode();
+void azaleaDeepCopy(zval *dst, zval *src);
 
 #endif
