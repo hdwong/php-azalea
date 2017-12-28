@@ -222,6 +222,12 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 			// require model file
 			if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
 				// 保持 Exception throws
+				// release
+				zend_string_release(lcName);
+				zend_string_release(modelClass);
+				zend_string_release(lcClassName);
+				zend_string_release(cacheId);
+				zval_ptr_dtor(&modelPath);
 				RETURN_FALSE;
 			}
 			zval_ptr_dtor(&modelPath);
