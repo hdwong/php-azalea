@@ -313,6 +313,48 @@ void azaleaI18nTranslate(zval *return_value, zend_string *message, zval *values,
 	azaleaI18nTranslateMessage(return_value, message, values, translation, textDomain, locale);
 }
 
+zend_bool azaleaI18nTranslateZval(zval *return_value, zval *value)
+{
+	uint32_t len, i = 0;
+	zend_string *message = NULL, *textDomain = NULL, *locale = NULL;
+	zval *pData, *values = NULL;
+
+	if (Z_TYPE_P(value) == IS_ARRAY) {
+		len = zend_hash_num_elements(Z_ARRVAL_P(value));
+		if (len == 0) {
+			return 0;
+		}
+		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(value), pData) {
+			if (i == 0) {
+				message = zval_get_string(pData);
+			} else if (i == 1) {
+				values = pData;
+			} else if (i == 2) {
+				textDomain = zval_get_string(pData);
+			} else if (i == 3) {
+				locale = zval_get_string(pData);
+			} else {
+				break;
+			}
+			++i;
+		} ZEND_HASH_FOREACH_END();
+	} else {
+		message = zval_get_string(value);
+	}
+
+	azaleaI18nTranslate(return_value, message, values, textDomain, locale);
+	if (message) {
+		zend_string_release(message);
+	}
+	if (textDomain) {
+		zend_string_release(textDomain);
+	}
+	if (locale) {
+		zend_string_release(locale);
+	}
+	return 1;
+}
+
 static zend_bool azaleaI18nCheckPlural(zval *translation, zval *values, zend_string *locale)
 {
 	zval *plural = NULL, *pNum;

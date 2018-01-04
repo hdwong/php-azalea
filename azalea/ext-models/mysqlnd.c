@@ -4,9 +4,9 @@
  * Created by Bun Wong on 17-9-3.
  */
 
-//#ifdef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include "../../config.h"
-//#endif
+#endif
 
 #ifdef WITH_MYSQLND
 

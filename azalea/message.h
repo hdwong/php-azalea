@@ -18,8 +18,12 @@ PHP_METHOD(azalea_message, addInfo);
 PHP_METHOD(azalea_message, addWarning);
 PHP_METHOD(azalea_message, addSuccess);
 PHP_METHOD(azalea_message, addError);
+PHP_METHOD(azalea_message, addT);
+PHP_METHOD(azalea_message, addInfoT);
+PHP_METHOD(azalea_message, addWarningT);
+PHP_METHOD(azalea_message, addSuccessT);
+PHP_METHOD(azalea_message, addErrorT);
 
 extern zend_class_entry *azaleaMessageCe;
-
 
 #endif /* AZALEA_MESSAGE_H_ */

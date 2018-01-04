@@ -17,6 +17,7 @@ PHP_METHOD(azalea_i18n, translate);
 PHP_METHOD(azalea_i18n, translatePlural);
 
 void azaleaI18nTranslate(zval *return_value, zend_string *message, zval *values, zend_string *textDomain, zend_string *locale);
+zend_bool azaleaI18nTranslateZval(zval *return_value, zval *zval);
 void azaleaI18nTranslateFunction(INTERNAL_FUNCTION_PARAMETERS);
 void azaleaI18nTranslatePluralFunction(INTERNAL_FUNCTION_PARAMETERS);
 
