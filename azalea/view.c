@@ -360,7 +360,7 @@ void azaleaViewRenderFunction(INTERNAL_FUNCTION_PARAMETERS, azalea_view_t *viewI
 		appendToSymbolTable(symbolTable, environVars);
 	}
 	// extract vars
-	if (vars) {
+	if (vars && Z_TYPE_P(vars) == IS_ARRAY) {
 		assignToDataHt(this, Z_ARRVAL_P(vars));
 	}
 	if ((vars = zend_read_property(azaleaViewCe, this, ZEND_STRL("_data"), 1, NULL)) &&
