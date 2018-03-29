@@ -555,8 +555,9 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, allWithKey)
 	do {
 		zval dummy;
 		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, ce, 1))) {
-			key = zend_read_property(ce, &dummy, ZSTR_VAL(keyField), ZSTR_LEN(keyField), 1, NULL);
-			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), &dummy);
+			if ((key = zend_read_property(ce, &dummy, ZSTR_VAL(keyField), ZSTR_LEN(keyField), 1, NULL))) {
+				add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), &dummy);
+			}
 		}
 	} while (hasNext);
 }
@@ -591,9 +592,10 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, column)
 	array_init(return_value);	// make sure return_value is an array
 	do {
 		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
-			value = zend_hash_find(Z_ARRVAL(dummy), keyIndex);
-			add_next_index_zval(return_value, value);
-			zval_add_ref(value);
+			if ((value = zend_hash_find(Z_ARRVAL(dummy), keyIndex))) {
+				add_next_index_zval(return_value, value);
+				zval_add_ref(value);
+			}
 			zval_ptr_dtor(&dummy);
 		}
 	} while (hasNext);
@@ -639,10 +641,11 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, columnWithKey)
 	array_init(return_value);	// make sure return_value is an array
 	do {
 		if ((hasNext = azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
-			key = zend_hash_find(Z_ARRVAL(dummy), keyField);
-			value = zend_hash_find(Z_ARRVAL(dummy), keyIndex);
-			add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), value);
-			zval_add_ref(value);
+			if ((key = zend_hash_find(Z_ARRVAL(dummy), keyField)) &&
+					(value = zend_hash_find(Z_ARRVAL(dummy), keyIndex))) {
+				add_assoc_zval_ex(return_value, Z_STRVAL_P(key), Z_STRLEN_P(key), value);
+				zval_add_ref(value);
+			}
 			zval_ptr_dtor(&dummy);
 		}
 	} while (hasNext);
@@ -708,8 +711,11 @@ PHP_METHOD(azalea_ext_model_mysqlnd_query, field)
 	{
 		zval dummy;
 		if ((azaleaMysqlndFetchRow(&dummy, result, NULL, 0))) {
-			value = zend_hash_find(Z_ARRVAL(dummy), keyValue);
-			RETVAL_ZVAL(value, 1, 0);
+			if ((value = zend_hash_find(Z_ARRVAL(dummy), keyValue))) {
+				RETVAL_ZVAL(value, 1, 0);
+			} else {
+				RETVAL_NULL();
+			}
 			zval_ptr_dtor(&dummy);
 		}
 	}
