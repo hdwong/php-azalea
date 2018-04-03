@@ -59,7 +59,7 @@ PHP_METHOD(azalea_bootstrap, __construct) {}
 PHP_METHOD(azalea_bootstrap, init)
 {
 	zval *config = NULL, *field, *conf, *pData, iniValue;
-	zend_string *environ = NULL, *iniName, *tstr, *docRoot = NULL, *baseUri = NULL, *uri = NULL;
+	zend_string *environ = NULL, *iniName, *tstr, *docRoot = NULL, *baseUri = NULL, *uri = NULL, *appRoot = NULL;
 	int module_number = 0;
 	size_t len;
 	char *cwd = NULL;
@@ -237,6 +237,27 @@ PHP_METHOD(azalea_bootstrap, init)
 	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "DOCROOT", ZSTR_VAL(docRoot), ZSTR_LEN(docRoot), CONST_CS);
 	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "BASEPATH", ZSTR_VAL(baseUri), ZSTR_LEN(baseUri), CONST_CS);
 
+	// get paths
+	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("basepath"));
+	if (conf && Z_TYPE_P(conf) == IS_STRING) {
+		char realpath[MAXPATHLEN];
+		if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
+			appRoot = zend_string_init(realpath, strlen(realpath), 0);
+		}
+	}
+	if (!appRoot) {
+		appRoot = zend_string_copy(AZALEA_G(docRoot));
+	}
+	if (!IS_SLASH(ZSTR_VAL(appRoot)[ZSTR_LEN(appRoot) - 1])) {
+		tstr = appRoot;
+		appRoot = strpprintf(0, "%s%c", ZSTR_VAL(appRoot), DEFAULT_SLASH);
+		zend_string_release(tstr);
+	}
+
+	// define AZALEA magic const
+	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "APPROOT", ZSTR_VAL(appRoot), ZSTR_LEN(appRoot), CONST_CS);
+	AZALEA_G(appRoot) = appRoot;
+
 	// set session if in session.environ list
 	field = azaleaConfigSubFindEx(ZEND_STRL("session"), ZEND_STRL("env"));
 	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(field), pData) {
@@ -321,6 +342,8 @@ PHP_METHOD(azalea_bootstrap, run)
 
 	// request uri
 	uri = AZALEA_G(uri);
+	// appRoot
+	appRoot = AZALEA_G(appRoot);
 	// static router
 	field = azaleaConfigSubFindEx(ZEND_STRL("router"), NULL, 0);
 	if (ZSTR_LEN(uri) > 0 && field && Z_TYPE_P(field) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(field)) > 0) {
@@ -361,28 +384,6 @@ PHP_METHOD(azalea_bootstrap, run)
 			} while (p > ZSTR_VAL(uri));
 		} while (len);
 	}
-
-	// get paths
-	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("basepath"));
-	if (conf && Z_TYPE_P(conf) == IS_STRING) {
-		char realpath[MAXPATHLEN];
-		if (VCWD_REALPATH(Z_STRVAL_P(conf), realpath)) {
-			appRoot = zend_string_init(realpath, strlen(realpath), 0);
-		}
-	}
-	if (!appRoot) {
-		appRoot = zend_string_copy(AZALEA_G(docRoot));
-	}
-	if (!IS_SLASH(ZSTR_VAL(appRoot)[ZSTR_LEN(appRoot) - 1])) {
-		tstr = appRoot;
-		appRoot = strpprintf(0, "%s%c", ZSTR_VAL(appRoot), DEFAULT_SLASH);
-		zend_string_release(tstr);
-	}
-
-	// define AZALEA magic const
-	module_number = AG(moduleNumber);
-	REGISTER_NS_STRINGL_CONSTANT(AZALEA_NS, "APPROOT", ZSTR_VAL(appRoot), ZSTR_LEN(appRoot), CONST_CS);
-	AZALEA_G(appRoot) = appRoot;
 
 	conf = azaleaConfigSubFindEx(ZEND_STRL("path"), ZEND_STRL("controllers"));
 	if (conf && Z_TYPE_P(conf) == IS_STRING) {
