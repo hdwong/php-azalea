@@ -168,7 +168,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 //	lcName = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
 //	zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
 	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(lcName));
-	toupper(ZSTR_VAL(modelClass)[0]); // ucfirst
+	ZSTR_VAL(modelClass)[0] = toupper(ZSTR_VAL(modelClass)[0]); // ucfirst
 
 	lcClassName = zend_string_tolower(modelClass);
 	if (arg1) {	// 生成 Model Cache Id
