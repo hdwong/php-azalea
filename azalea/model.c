@@ -200,7 +200,6 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 				}
 				ce = azaleaModelGetExtModelClassEntry(extModelLcName);
 				zend_string_release(extModelLcName);
-				break;
 			}
 			if (!ce) {
 				// load local model file
@@ -258,6 +257,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 			if (!EG(exception)) {
 				// 没有异常则加入缓存
 				add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
+				zval_add_ref(instance);
 			}
 		} while (0);
 	}
