@@ -155,8 +155,8 @@ static zend_class_entry * azaleaModelGetExtModelClassEntry(zend_string *name)
 void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 {
 	zend_string *modelName;
-	zend_string *name, *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *cacheId, *modelClass, *tstr;
-	zend_class_entry *ce;
+	zend_string *lcName, *nodeBeautyLcName, *extModelLcName, *lcClassName, *cacheId, *modelClass, *tstr;
+	zend_class_entry *ce = NULL;
 	azalea_model_t *instance = NULL, rv = {{0}};
 	zval *conf, *field, *arg1 = NULL;
 
@@ -164,12 +164,11 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 		return;
 	}
 
-	lcName = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
-	zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
-	name = zend_string_dup(lcName, 0);
-	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);	// ucfirst
-	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(name));
-	zend_string_release(name);
+	lcName = zend_string_tolower(modelName);
+//	lcName = zend_string_init(ZSTR_VAL(modelName), ZSTR_LEN(modelName), 0);
+//	zend_str_tolower(ZSTR_VAL(lcName), ZSTR_LEN(lcName));
+	modelClass = strpprintf(0, "%sModel", ZSTR_VAL(lcName));
+	toupper(ZSTR_VAL(modelClass)[0]); // ucfirst
 
 	lcClassName = zend_string_tolower(modelClass);
 	if (arg1) {	// 生成 Model Cache Id
@@ -188,7 +187,6 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 	if (instance) {
 		ce = Z_OBJCE_P(instance);
 	} else {
-		ce = NULL;
 		do {
 			// try to load extend models
 			conf = azaleaConfigSubFindEx(ZEND_STRL("ext-model"), NULL, 0);
