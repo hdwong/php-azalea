@@ -67,7 +67,7 @@ static zval * azaleaMessageFindSpace(zend_string *space)
 	zval *pMessages;
 
 	// IF_SESSION_VARS()
-	if (!Z_ISREF_P(&PS(http_session_vars)) || !Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) == IS_ARRAY) {
+	if (!Z_ISREF_P(&PS(http_session_vars)) || Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) != IS_ARRAY) {
 		return NULL;
 	}
 	// find _messages
