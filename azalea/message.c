@@ -129,7 +129,7 @@ PHP_METHOD(azalea_message, clean)
 	zval *pMessages;
 
 	// IF_SESSION_VARS()
-	if (!Z_ISREF_P(&PS(http_session_vars)) || !Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) == IS_ARRAY) {
+	if (!Z_ISREF_P(&PS(http_session_vars)) || Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) != IS_ARRAY) {
 		RETURN_FALSE;
 	}
 	// find _messages
@@ -146,7 +146,7 @@ static void azaleaMessageAdd(zend_string *message, zend_string *level, zend_stri
 	zval *pMessages, *pSpace, dummy;
 
 	// IF_SESSION_VARS()
-	if (!Z_ISREF_P(&PS(http_session_vars)) || !Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) == IS_ARRAY) {
+	if (!Z_ISREF_P(&PS(http_session_vars)) || Z_TYPE_P(Z_REFVAL(PS(http_session_vars))) != IS_ARRAY) {
 		RETURN_FALSE;
 	}
 
