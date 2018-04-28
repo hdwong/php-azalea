@@ -159,6 +159,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 	zend_class_entry *ce = NULL;
 	azalea_model_t *instance = NULL, rv = {{0}};
 	zval *conf, *field, *arg1 = NULL;
+	zend_bool hasError = 0;
 
 	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "S|z", &modelName, &arg1) == FAILURE) {
 		return;
@@ -201,70 +202,73 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 				zend_string_release(extModelLcName);
 				break;
 			}
-		} while (0);
-		if (!ce) {
-			// load local model file
-			zval modelPath, exists;
-			ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
-			tstr = Z_STR(modelPath);
-			Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
-			zend_string_release(tstr);
-			// check file exists
-			php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
-			if (Z_TYPE(exists) == IS_FALSE) {
-				tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
-				throw404(tstr);
+			if (!ce) {
+				// load local model file
+				zval modelPath, exists;
+				ZVAL_STR(&modelPath, zend_string_dup(AZALEA_G(modelsPath), 0));
+				tstr = Z_STR(modelPath);
+				Z_STR(modelPath) = strpprintf(0, "%s%c%s.php", ZSTR_VAL(tstr), DEFAULT_SLASH, ZSTR_VAL(lcName));
 				zend_string_release(tstr);
-				RETURN_FALSE;
-			}
-			// require model file
-			if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
-				// 保持 Exception throws
-				// release
-				zend_string_release(lcName);
-				zend_string_release(modelClass);
-				zend_string_release(lcClassName);
-				zend_string_release(cacheId);
+				// check file exists
+				php_stat(Z_STRVAL(modelPath), (php_stat_len) Z_STRLEN(modelPath), FS_IS_R, &exists);
+				if (Z_TYPE(exists) == IS_FALSE) {
+					tstr = strpprintf(0, "Model file `%s` not found.", Z_STRVAL(modelPath));
+					throw404(tstr);
+					zend_string_release(tstr);
+					hasError = 1;
+					break;
+				}
+				// require model file
+				if (!azaleaRequire(Z_STRVAL(modelPath), 1)) {
+					// 保持 Exception throws
+					zval_ptr_dtor(&modelPath);
+					hasError = 1;
+					break;
+				}
 				zval_ptr_dtor(&modelPath);
-				RETURN_FALSE;
+				// check model class exists
+				if (!(ce = zend_hash_find_ptr(EG(class_table), lcClassName))) {
+					tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
+					throw404(tstr);
+					zend_string_release(tstr);
+					hasError = 1;
+					break;
+				}
 			}
-			zval_ptr_dtor(&modelPath);
-			// check model class exists
-			if (!(ce = zend_hash_find_ptr(EG(class_table), lcClassName))) {
-				tstr = strpprintf(0, "Model class `%s` not found.", ZSTR_VAL(modelClass));
-				throw404(tstr);
-				zend_string_release(tstr);
-				RETURN_FALSE;
+			// check super class name
+			if (!instanceof_function(ce, azaleaModelCe)) {
+				throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
+				hasError = 1;
+				break;
 			}
-		}
-		// check super class name
-		if (!instanceof_function(ce, azaleaModelCe)) {
-			throw404Str(ZEND_STRL("Model class must be an instance of " AZALEA_NS_NAME(Model) "."));
-			RETURN_FALSE;
-		}
-		// init controller instance
-		instance = &rv;
-		object_init_ex(instance, ce);
-		if (!instance) {
-			throw404Str(ZEND_STRL("Model initialization is failed."));
-			RETURN_FALSE;
-		}
-		// save lcName to property
-		zend_update_property_str(azaleaModelCe, instance, ZEND_STRL("_modelname"), lcName);
-		// call __init method
-		if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
-			zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);
-		}
-		if (!EG(exception)) {
-			// 没有异常则加入缓存
-			add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
-		}
+			// init controller instance
+			instance = &rv;
+			object_init_ex(instance, ce);
+			if (!instance) {
+				throw404Str(ZEND_STRL("Model initialization is failed."));
+				hasError = 1;
+				break;
+			}
+			// save lcName to property
+			zend_update_property_str(azaleaModelCe, instance, ZEND_STRL("_modelname"), lcName);
+			// call __init method
+			if (zend_hash_str_exists(&(ce->function_table), ZEND_STRL("__init"))) {
+				zend_call_method(instance, ce, NULL, ZEND_STRL("__init"), NULL, arg1 ? 1 : 0, arg1, NULL);
+			}
+			if (!EG(exception)) {
+				// 没有异常则加入缓存
+				add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
+			}
+		} while (0);
 	}
 	zend_string_release(lcName);
 	zend_string_release(modelClass);
 	zend_string_release(lcClassName);
 	zend_string_release(cacheId);
-
+	if (hasError) {
+		// has error and RETURN_FALSE
+		RETURN_FALSE;
+	}
 	RETURN_ZVAL(instance, 1, 0);
 }
 /* }}} */
