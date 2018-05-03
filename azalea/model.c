@@ -257,7 +257,7 @@ void azaleaGetModel(INTERNAL_FUNCTION_PARAMETERS)
 			if (!EG(exception)) {
 				// 没有异常则加入缓存
 				add_assoc_zval_ex(&AZALEA_G(instances), ZSTR_VAL(cacheId), ZSTR_LEN(cacheId), instance);
-				zval_add_ref(instance);
+				// zval_add_ref(instance); 不需要增加计数
 			}
 		} while (0);
 	}
