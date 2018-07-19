@@ -35,7 +35,7 @@ const zend_function_entry azalea_functions[] = {
 /* }}} */
 
 /* {{{ proto azaleaUrl */
-zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
+zend_string * azaleaUrl(zend_string *url, zend_bool includeHost, zend_bool forceHttps)
 {
 	zval *field;
 	zend_string *hostname, *tstr, *returnUrl;
@@ -47,10 +47,17 @@ zend_string * azaleaUrl(zend_string *url, zend_bool includeHost)
 
 	// init AZALEA_G(host)
 	if (!AZALEA_G(host)) {
-		if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTPS")))) {
+		// check forceHttps
+		if (forceHttps != 0) {
+			// force https
 			hostname = zend_string_init(ZEND_STRL("https://"), 0);
 		} else {
-			hostname = zend_string_init(ZEND_STRL("http://"), 0);
+			// auto detect
+			if ((field = azaleaGlobalsStrFind(TRACK_VARS_SERVER, ZEND_STRL("HTTPS")))) {
+				hostname = zend_string_init(ZEND_STRL("https://"), 0);
+			} else {
+				hostname = zend_string_init(ZEND_STRL("http://"), 0);
+			}
 		}
 		field = azaleaConfigSubFindEx(ZEND_STRL("hostname"), NULL, 0);	// get from config
 		if (!field) {
@@ -89,13 +96,13 @@ PHP_FUNCTION(azalea_timer)
 PHP_FUNCTION(azalea_url)
 {
 	zend_string *url;
-	zend_bool includeHost = 0;
+	zend_bool includeHost = 0, forceHttps = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &url, &includeHost) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|bb", &url, &includeHost, &forceHttps) == FAILURE) {
 		return;
 	}
 
-	RETURN_STR(azaleaUrl(url, includeHost));
+	RETURN_STR(azaleaUrl(url, includeHost, forceHttps));
 }
 /* }}} */
 
