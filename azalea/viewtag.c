@@ -231,12 +231,12 @@ PHP_FUNCTION(azalea_viewtag_link)
 			url = ZSTR_EMPTY_ALLOC();
 		}
 		if (escapeUrl) {
-			url = azaleaUrl(url, 0);
+			url = azaleaUrlDefault(url);
 		} else {
 			zend_string_addref(url);
 		}
 	} else {
-		url = azaleaUrl(Z_STR_P(pUrl), 0);
+		url = azaleaUrlDefault(Z_STR_P(pUrl));
 	}
 	// build output
 	tstr = strpprintf(0, "<a href=\"%s\"", ZSTR_VAL(url));

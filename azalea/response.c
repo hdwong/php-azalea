@@ -115,7 +115,7 @@ PHP_METHOD(azalea_response, gotoUrl)
 	if (strncasecmp(ZSTR_VAL(url), ZEND_STRL("http://")) &&
 			strncasecmp(ZSTR_VAL(url), ZEND_STRL("https://"))) {
 		// add url prefix
-		url = azaleaUrl(url, 0);
+		url = azaleaUrlDefault(url);
 	}
 	zend_string *ctrLine = strpprintf(0, "Location: %s", ZSTR_VAL(url));
 	zend_string_release(url);
