@@ -44,7 +44,6 @@ PHP_METHOD(azalea_ext_model_mysqlnd, getSqlBuilder);
 
 PHP_METHOD(azalea_ext_model_mysqlnd_result, __construct);
 PHP_METHOD(azalea_ext_model_mysqlnd_result, getSql);
-PHP_METHOD(azalea_ext_model_mysqlnd_result, getError);
 PHP_METHOD(azalea_ext_model_mysqlnd_result, getTimer);
 
 PHP_METHOD(azalea_ext_model_mysqlnd_query, count);
