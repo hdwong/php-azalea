@@ -125,11 +125,10 @@ PHP_METHOD(azalea_text, random)
 
 static zend_string * _getMaskString(zend_string *string, zend_string *maskString, zend_long minLength)
 {
-	zend_long stringLength, mbStringLength, len, maskLength, prefixLength;
+	zend_long stringLength, mbStringLength, len, maskLength;
 	zend_string *pResult;
 	mbfl_string str, *prefix;
 	smart_str buf = {0};
-//	char mask = maskString && ZSTR_LEN(maskString) > 0 ? ZSTR_VAL(maskString)[0] : '*';
 
 	stringLength = ZSTR_LEN(string);	// 内存长度
 	// 获取字符串 mbfl 结构
@@ -142,7 +141,7 @@ static zend_string * _getMaskString(zend_string *string, zend_string *maskString
 
 	if (stringLength) {
 		// 获取前缀长度
-		prefixLength = (int) floor(mbStringLength / 2);
+		zend_long prefixLength = (int) floor(mbStringLength / 2);
 		if (prefixLength == 0) {
 			prefixLength = 1;
 		}
