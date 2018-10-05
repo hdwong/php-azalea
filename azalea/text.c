@@ -11,6 +11,8 @@
 #include "azalea/text.h"
 
 #include "ext/standard/php_rand.h"
+#include "ext/mbstring/mbstring.h"
+#include "Zend/zend_smart_str.h"	// for smart_str
 
 zend_class_entry *azaleaTextCe;
 
@@ -121,23 +123,87 @@ PHP_METHOD(azalea_text, random)
 }
 /* }}} */
 
+static zend_string * _getMaskString(zend_string *string, zend_string *maskString, zend_long minLength)
+{
+	zend_long stringLength, mbStringLength, len, maskLength, prefixLength;
+	zend_string *pResult;
+	mbfl_string str, *prefix;
+	smart_str buf = {0};
+//	char mask = maskString && ZSTR_LEN(maskString) > 0 ? ZSTR_VAL(maskString)[0] : '*';
+
+	stringLength = ZSTR_LEN(string);	// 内存长度
+	// 获取字符串 mbfl 结构
+	mbfl_string_init(&str);
+	str.val = (unsigned char *) ZSTR_VAL(string);
+	str.len = (uint32_t) stringLength;
+	str.no_encoding = mbfl_name2no_encoding("UTF8");
+	mbStringLength = mbfl_strlen(&str);	// mb 长度
+	maskLength = mbStringLength > minLength ? mbStringLength : minLength;	// 掩码长度
+
+	if (stringLength) {
+		// 获取前缀长度
+		prefixLength = (int) floor(mbStringLength / 2);
+		if (prefixLength == 0) {
+			prefixLength = 1;
+		}
+		// 截取前缀字符串
+		mbfl_string dummy;
+		prefix = mbfl_substr(&str, &dummy, 0, prefixLength);
+		smart_str_appendl_ex(&buf, (char *) prefix->val, prefix->len, 0);
+		mbfl_string_clear(prefix);
+		// 更新掩码长度
+		maskLength -= prefixLength;
+	}
+	// 生成掩码
+	do {
+		zend_long len = maskLength > ZSTR_LEN(maskString) ? ZSTR_LEN(maskString) : maskLength;	// 取小值
+		smart_str_appendl_ex(&buf, ZSTR_VAL(maskString), len, 0);
+		maskLength -= ZSTR_LEN(maskString);
+	} while (maskLength > 0);
+	smart_str_0(&buf);	// 字符串结尾
+	pResult = zend_string_dup(buf.s, 0);
+	smart_str_free(&buf);
+
+	return pResult;
+}
+
 /* {{{ proto mask */
 PHP_METHOD(azalea_text, mask)
 {
-	zend_string *string;
-	zend_bool isEmail = 0;
+	zend_long minLength = 3, type = 0;	// type:0 默认模式, type:1 电子邮箱模式
+	zend_string *string, *mode = NULL, *maskString = NULL, *pResult, *newString, *tstr;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &string, &isEmail) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|SSl", &string, &mode, &maskString, &minLength) == FAILURE) {
 		return;
 	}
-	string = zend_string_init(ZSTR_VAL(string), ZSTR_LEN(string), 0);
-	if (ZSTR_LEN(string) > 1) {
-		if (!isEmail) {
-			// normal string
+
+	// 模式
+	if (mode && 0 == strcasecmp(ZSTR_VAL(mode), "email")) {
+		type = 1;
+	}
+	// 默认掩码
+	if (!maskString) {
+		maskString = zend_string_init(ZEND_STRL("*"), 0);
+	} else {
+		zend_string_addref(maskString);
+	}
+	if (type == 0) {
+		// 默认模式
+		RETVAL_STR(_getMaskString(string, maskString, minLength));
+	} else if (type == 1) {
+		// 电子邮箱模式
+		char *suffix = strrchr(ZSTR_VAL(string), '@');
+		if (!suffix) {
+			// 找不到 @ 后缀，默认处理
+			RETVAL_STR(_getMaskString(string, maskString, minLength));
 		} else {
-			// email
+			newString = zend_string_init(ZSTR_VAL(string), ZSTR_LEN(string) - strlen(suffix), 0);
+			tstr = _getMaskString(newString, maskString, minLength);
+			RETVAL_STR(strpprintf(0, "%s%s", ZSTR_VAL(tstr), suffix));
+			zend_string_release(newString);
+			zend_string_release(tstr);
 		}
 	}
-	RETURN_STR(string);
+	zend_string_release(maskString);
 }
 /* }}} */
