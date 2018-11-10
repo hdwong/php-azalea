@@ -571,10 +571,29 @@ zend_bool azaleaDispatchEx(zend_string *folderName, zend_string *controllerName,
 	zend_string *name, *lcName, *controllerClass, *controllerPath, *actionMethod = NULL, *tstr;
 	zend_class_entry *ce;
 	azalea_controller_t *instance = NULL, rv = {{0}};
+	char *pOrigin, *pName;
+	zend_bool needUpCase = 1;
 
 	// controller name
-	name = zend_string_init(ZSTR_VAL(controllerName), ZSTR_LEN(controllerName), 0);
-	ZSTR_VAL(name)[0] = toupper(ZSTR_VAL(name)[0]);	// ucfirst
+	name = zend_string_alloc(ZSTR_LEN(controllerName), 0);	// alloc memory
+	pOrigin = ZSTR_VAL(controllerName);
+	pName = ZSTR_VAL(name);
+	while (*pOrigin) {
+		if (*pOrigin == '.' || *pOrigin == '-') {
+			++pOrigin;
+			needUpCase = 1;
+			continue;
+		}
+		if (needUpCase) {
+			*pName = toupper(*pOrigin);
+			needUpCase = 0;
+		} else  {
+			*pName = *pOrigin;
+		}
+		++pOrigin;
+		++pName;
+	}
+	*pName = '\0';
 	controllerClass = strpprintf(0, "%sController", ZSTR_VAL(name));
 	zend_string_release(name);
 	if (folderName) {
