@@ -271,6 +271,7 @@ PHP_METHOD(azalea_response, setCookie)
 {
 	zend_string *name, *value = NULL, *path = NULL;
 	zend_long expires = 0;
+	int resultSetCookie;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|SlS", &name, &value, &expires, &path) == FAILURE) {
 		return;
@@ -278,7 +279,12 @@ PHP_METHOD(azalea_response, setCookie)
 	if (expires > 0) {
 		expires += (zend_long) time(NULL);
 	}
-	if (php_setcookie(name, value, expires, path, NULL, 0, 1, 0) == SUCCESS) {
+#if PHP_VERSION_ID >= 70300
+	resultSetCookie = php_setcookie(name, value, expires, path, NULL, 0, 0, NULL, 1);
+#else
+	resultSetCookie = php_setcookie(name, value, expires, path, NULL, 0, 1, 0);
+#endif
+	if (resultSetCookie == SUCCESS) {
 		RETVAL_TRUE;
 	} else {
 		RETVAL_FALSE;
