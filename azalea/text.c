@@ -110,13 +110,21 @@ PHP_METHOD(azalea_text, random)
 	// 生成前半部分
 	for (i = 0, j = 0; i < len; ++i, ++j) {
 		number = (zend_long) php_mt_rand() >> 1;
+#if PHP_VERSION_ID >= 70300
+		RAND_RANGE_BADSCALING(number, 0, l, PHP_MT_RAND_MAX);
+#else
 		RAND_RANGE(number, 0, l, PHP_MT_RAND_MAX);
+#endif
 		result[j] = *(p + number);
 	}
 	// 生成后半部分
 	for (i = 0; i < len2; ++i, ++j) {
 		number = (zend_long) php_mt_rand() >> 1;
+#if PHP_VERSION_ID >= 70300
+		RAND_RANGE_BADSCALING(number, 0, l2, PHP_MT_RAND_MAX);
+#else
 		RAND_RANGE(number, 0, l2, PHP_MT_RAND_MAX);
+#endif
 		result[j] = *(p2 + number);
 	}
 	RETURN_STRINGL(result, len + len2);
@@ -135,7 +143,11 @@ static zend_string * _getMaskString(zend_string *string, zend_string *maskString
 	mbfl_string_init(&str);
 	str.val = (unsigned char *) ZSTR_VAL(string);
 	str.len = (uint32_t) stringLength;
+#if PHP_VERSION_ID >= 70300
+	str.encoding = mbfl_name2encoding("UTF8");
+#else
 	str.no_encoding = mbfl_name2no_encoding("UTF8");
+#endif
 	mbStringLength = mbfl_strlen(&str);	// mb 长度
 	maskLength = mbStringLength > minLength ? mbStringLength : minLength;	// 掩码长度
 

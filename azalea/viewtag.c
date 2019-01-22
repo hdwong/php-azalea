@@ -69,7 +69,9 @@ void azaleaViewtagCallFunction(INTERNAL_FUNCTION_PARAMETERS)
 #if PHP_VERSION_ID < 70100
 	fci.symbol_table = NULL;
 #endif
+#if PHP_VERSION_ID < 70300
 	fcic.initialized = 1;
+#endif
 	fcic.function_handler = function;	// 设置 function_handler
 	fcic.object = Z_OBJ_P(this);
 

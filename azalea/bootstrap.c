@@ -186,7 +186,11 @@ PHP_METHOD(azalea_bootstrap, init)
 			} else {
 				php_url *urlInfo = php_url_parse(Z_STRVAL_P(field));
 				if (urlInfo && urlInfo->path) {
+#if PHP_VERSION_ID >= 70300
+					uri = zend_string_dup(urlInfo->path, 0);
+#else
 					uri = zend_string_init(urlInfo->path, strlen(urlInfo->path), 0);
+#endif
 				}
 				php_url_free(urlInfo);
 			}
