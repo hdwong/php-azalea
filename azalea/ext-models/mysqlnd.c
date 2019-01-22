@@ -42,6 +42,7 @@ ZEND_END_ARG_INFO()
 static zend_function_entry azalea_ext_model_mysqlnd_methods[] = {
 	PHP_ME(azalea_ext_model_mysqlnd, __init, NULL, ZEND_ACC_PRIVATE)
 	PHP_ME(azalea_ext_model_mysqlnd, escape, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(azalea_ext_model_mysqlnd, escapeLike, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_ext_model_mysqlnd, query, arginfo_mysqlnd_query, ZEND_ACC_PUBLIC)
 	PHP_ME(azalea_ext_model_mysqlnd, getQueries, NULL, ZEND_ACC_PUBLIC)
 #ifdef WITH_SQLBUILDER
@@ -236,7 +237,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, escape)
 		return;
 	}
 
-	sqlBuilderEscapeEx(return_value, value, 1);
+	sqlBuilderEscapeEx(return_value, value, 1, 0);
 #else
 	zend_string *value;
 	char *result;
@@ -256,6 +257,37 @@ PHP_METHOD(azalea_ext_model_mysqlnd, escape)
 		RETVAL_STRINGL(result, lenResult);
 	}
 	efree(result);
+#endif
+}
+/* }}} */
+
+/* {{{ proto escapeLike */
+PHP_METHOD(azalea_ext_model_mysqlnd, escapeLike)
+{
+#ifdef WITH_SQLBUILDER
+	zval *value, *result;
+	zend_string *mode = NULL, *ret = NULL;
+	char *pMode;
+
+	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "z|S", &value, &mode) == FAILURE) {
+		return;
+	}
+
+	sqlBuilderEscapeEx(result, value, 1, 1);	// 转义 value 且 escapeLike
+
+	if (mode) {
+		pMode = ZSTR_VAL(mode);
+		if (0 == strcasecmp(pMode, "start")) {
+			ret = strpprintf(0, "%s%%", Z_STRVAL_P(result));
+		} else if (0 == strcasecmp(pMode, "end")) {
+			ret = strpprintf(0, "%%%s", Z_STRVAL_P(result));
+		}
+	}
+	if (!ret) {
+		ret = strpprintf(0, "%%%s%%", Z_STRVAL_P(result));
+	}
+	zval_ptr_dtor(result);
+	RETVAL_STR(ret);
 #endif
 }
 /* }}} */

@@ -38,6 +38,7 @@ AZALEA_EXT_MODEL_STARTUP_FUNCTION(mysqlnd);
 
 PHP_METHOD(azalea_ext_model_mysqlnd, __init);
 PHP_METHOD(azalea_ext_model_mysqlnd, escape);
+PHP_METHOD(azalea_ext_model_mysqlnd, escapeLike);
 PHP_METHOD(azalea_ext_model_mysqlnd, query);
 PHP_METHOD(azalea_ext_model_mysqlnd, getQueries);
 PHP_METHOD(azalea_ext_model_mysqlnd, getSqlBuilder);
@@ -61,7 +62,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd_execute, affectedRows);
 #ifdef WITH_SQLBUILDER
 extern zend_class_entry * azaleaSqlBuilderGetCe(void);
 extern zend_class_entry * azaleaSqlBuilderGetInterfaceCe(void);
-extern void sqlBuilderEscapeEx(zval *return_value, zval *val, zend_bool escapeValue);
+extern void sqlBuilderEscapeEx(zval *return_value, zval *val, zend_bool escapeValue, zend_bool escapeLike);
 extern zend_string * sqlBuilderCompileBinds(zend_string *segment, zval *binds, zend_bool escapeValue);
 #endif
 
