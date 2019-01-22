@@ -265,7 +265,7 @@ PHP_METHOD(azalea_ext_model_mysqlnd, escape)
 PHP_METHOD(azalea_ext_model_mysqlnd, escapeLike)
 {
 #ifdef WITH_SQLBUILDER
-	zval *value, *result;
+	zval *value, result;
 	zend_string *mode = NULL, *ret = NULL;
 	char *pMode;
 
@@ -273,20 +273,20 @@ PHP_METHOD(azalea_ext_model_mysqlnd, escapeLike)
 		return;
 	}
 
-	sqlBuilderEscapeEx(result, value, 1, 1);	// 转义 value 且 escapeLike
+	sqlBuilderEscapeEx(&result, value, 1, 1);	// 转义 value 且 escapeLike
 
 	if (mode) {
 		pMode = ZSTR_VAL(mode);
 		if (0 == strcasecmp(pMode, "start")) {
-			ret = strpprintf(0, "%s%%", Z_STRVAL_P(result));
+			ret = strpprintf(0, "%s%%", Z_STRVAL(result));
 		} else if (0 == strcasecmp(pMode, "end")) {
-			ret = strpprintf(0, "%%%s", Z_STRVAL_P(result));
+			ret = strpprintf(0, "%%%s", Z_STRVAL(result));
 		}
 	}
 	if (!ret) {
-		ret = strpprintf(0, "%%%s%%", Z_STRVAL_P(result));
+		ret = strpprintf(0, "%%%s%%", Z_STRVAL(result));
 	}
-	zval_ptr_dtor(result);
+	zval_ptr_dtor(&result);
 	RETVAL_STR(ret);
 #endif
 }
