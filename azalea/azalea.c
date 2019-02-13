@@ -97,9 +97,17 @@ PHP_FUNCTION(azalea_url)
 {
 	zend_string *url;
 	zend_bool includeHost = 0, forceHttps = 0;
+	zval *configForceHttps;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|bb", &url, &includeHost, &forceHttps) == FAILURE) {
 		return;
+	}
+
+	if (!forceHttps) {
+		configForceHttps = azaleaConfigSubFindEx(ZEND_STRL("https"), NULL, 0);
+		if (configForceHttps && zend_is_true(configForceHttps)) {
+			forceHttps = 1;
+		}
 	}
 
 	RETURN_STR(azaleaUrl(url, includeHost, forceHttps));
